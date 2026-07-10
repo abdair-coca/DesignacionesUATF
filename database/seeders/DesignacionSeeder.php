@@ -17,8 +17,8 @@ class DesignacionSeeder extends Seeder
         $docentes = Docente::pluck('id', 'ci');
         $materias = Materia::pluck('id', 'sigla');
         $gestion2026 = Gestion::where('nombre', '2026')->value('id');
-        $periodoI = Periodo::where('nombre', 'I')->value('id');
-        $periodoII = Periodo::where('nombre', 'II')->value('id');
+        $periodoI = Periodo::where('nombre', '1')->value('id');
+        $periodoII = Periodo::where('nombre', '2')->value('id');
 
         $grupoA = fn (string $sigla) => Grupo::where('materia_id', $materias[$sigla])->where('codigo', 'A')->value('id');
 

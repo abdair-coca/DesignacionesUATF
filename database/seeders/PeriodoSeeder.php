@@ -10,8 +10,8 @@ class PeriodoSeeder extends Seeder
     public function run(): void
     {
         Periodo::insert([
-            ['nombre' => 'I'],
-            ['nombre' => 'II'],
+            ['nombre' => '1'],
+            ['nombre' => '2'],
             ['nombre' => 'Verano'],
         ]);
     }

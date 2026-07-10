@@ -11,7 +11,8 @@ use App\Models\Materia;
 use App\Models\Periodo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DesignacionController extends Controller
 {
@@ -24,18 +25,21 @@ class DesignacionController extends Controller
         'estado',
     ];
 
-    public function index(): View
+    public function index(): Response
     {
         $designaciones = Designacion::with(['docente', 'materia', 'grupo', 'gestion', 'periodo'])
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('designaciones.index', compact('designaciones'));
+        return Inertia::render('Designaciones/Index', [
+            'designaciones' => $designaciones,
+        ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        return view('designaciones.create', $this->catalogos());
+        return Inertia::render('Designaciones/Create', $this->catalogos());
     }
 
     public function store(Request $request): RedirectResponse
@@ -48,9 +52,9 @@ class DesignacionController extends Controller
             ->with('status', 'Designación creada correctamente.');
     }
 
-    public function edit(Designacion $designacion): View
+    public function edit(Designacion $designacion): Response
     {
-        return view('designaciones.edit', array_merge(
+        return Inertia::render('Designaciones/Edit', array_merge(
             $this->catalogos(),
             ['designacion' => $designacion]
         ));
@@ -86,12 +90,12 @@ class DesignacionController extends Controller
             ->with('status', 'Designación eliminada.');
     }
 
-    public function historial(Designacion $designacion): View
+    public function historial(Designacion $designacion): Response
     {
         $designacion->load(['docente', 'materia', 'grupo', 'gestion', 'periodo']);
         $historial = $designacion->historial()->orderByDesc('fecha')->get();
 
-        return view('designaciones.historial', compact('designacion', 'historial'));
+        return Inertia::render('Designaciones/Historial', compact('designacion', 'historial'));
     }
 
     private function validarDatos(Request $request): array

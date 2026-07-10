@@ -11,7 +11,7 @@ Desarrollado como parte de las prácticas laborales de Abdair en el datacenter d
 
 Puntos clave del dominio (ver `docs/ERD.md` para el modelo completo):
 - Una materia puede aparecer en la malla curricular de varias carreras (tabla `malla_curricular`).
-- Gestión (año, ej. "2026") y periodo (ej. "I", "II", "Verano") son catálogos globales,
+- Gestión (año, ej. "2026") y periodo (ej. "1", "2", "Verano") son catálogos globales,
   compartidos por toda la universidad.
 - Los grupos pertenecen a una materia y se reutilizan entre periodos; se pueden deshabilitar
   manualmente. No se debe "corregir" este comportamiento sin consultarlo antes.
@@ -25,20 +25,32 @@ Puntos clave del dominio (ver `docs/ERD.md` para el modelo completo):
 
 ## Stack técnico
 
-- Laravel (última versión LTS estable)
-- SQLite en desarrollo
-- Template de interfaz: Color Admin v2 (SeanTheme) — usar sus componentes y estructura
-  existentes estrictamente, no crear HTML/CSS propio fuera del template.
-- Blade para vistas
-- PSR-12 para estilo de código PHP
+- Laravel (última versión LTS estable) como backend monolítico — sin API REST separada.
+- **Inertia.js + React** como capa de vistas (reemplaza Blade para las páginas de la app).
+  Los controllers devuelven `Inertia::render(...)`, no `view(...)`. El routing sigue siendo
+  100% Laravel (`routes/web.php`), no hay cliente SPA independiente ni tokens de API.
+  Páginas en `resources/js/Pages/`, layouts compartidos en `resources/js/Layouts/`.
+- **PostgreSQL** en desarrollo y producción (mismo motor que la base de datos real de la
+  universidad, para evitar sorpresas al desplegar). No usar SQLite en este proyecto.
+- Tailwind CSS v4 (ya viene con el scaffold de Laravel) para estilos, hasta que se defina
+  qué hacer con el template de interfaz (ver abajo).
+- PSR-12 para estilo de código PHP.
 
-## Estado actual del template de interfaz
+## Estado actual del template de interfaz (Color Admin v2)
 
 Los archivos de Color Admin v2 (SeanTheme) todavía no están disponibles en este equipo
-(es un template de pago, no se debe descargar de otra fuente). Mientras no se entreguen:
-las vistas de este proyecto usan Bootstrap 5 (CDN) con marcado simple, sin intentar imitar
-el theme. Cuando se entreguen los archivos del template, hay que reemplazar ese marcado
-por los componentes reales de Color Admin — no antes.
+(es un template de pago, no se debe descargar de otra fuente). Con el cambio a React
+(Inertia), si el template llega, hay que portar su HTML/CSS a componentes React reutilizables
+en `resources/js/Pages` y `resources/js/Components` — ya no aplica copiarlo como Blade.
+Mientras tanto, las páginas usan Tailwind con un layout propio simple (`AppLayout.jsx`).
+
+## Base de datos de desarrollo
+
+- Motor: PostgreSQL local (servicio `postgresql-x64-18` en este equipo).
+- Base de datos dedicada a este proyecto: `designaciones_uatf` (no reutilizar `colab_db` ni
+  otras bases de datos de otros proyectos que puedan compartir el mismo servidor Postgres).
+- Credenciales reales solo en `.env` (no versionado). `.env.example` trae la estructura de
+  variables sin credenciales reales.
 
 ## Reglas de documentación (OBLIGATORIO)
 
