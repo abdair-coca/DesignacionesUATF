@@ -37,22 +37,24 @@ export default function AppLayout({ title, children }) {
                         );
                     })}
                 </ul>
-
-                {auth?.user && (
-                    <div className="mt-6 border-t border-gray-800 pt-4 text-sm">
-                        <p className="mb-2 truncate text-gray-300">{auth.user.name}</p>
-                        <button
-                            onClick={logout}
-                            className="w-full rounded px-3 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-white"
-                        >
-                            Cerrar sesión
-                        </button>
-                    </div>
-                )}
             </nav>
 
             <main className="flex-1 p-8">
-                <h2 className="text-2xl font-semibold mb-6">{title}</h2>
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold">{title}</h2>
+
+                    {auth?.user && (
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="text-gray-600">{auth.user.name}</span>
+                            <button
+                                onClick={logout}
+                                className="rounded-md border border-gray-300 px-3 py-1.5 text-gray-700 hover:bg-gray-100"
+                            >
+                                Cerrar sesión
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {status && (
                     <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">

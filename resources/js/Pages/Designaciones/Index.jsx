@@ -17,12 +17,26 @@ export default function Index({ designaciones }) {
 
     return (
         <AppLayout title="Designación de Docentes">
-            <Link
-                href={route('designaciones.create')}
-                className="mb-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-            >
-                Nueva designación
-            </Link>
+            <div className="mb-4 flex flex-wrap gap-2">
+                <Link
+                    href={route('designaciones.create')}
+                    className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                >
+                    Nueva designación
+                </Link>
+                <Link
+                    href={route('designaciones.asignar')}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                    Asignar por carrera
+                </Link>
+                <Link
+                    href={route('designaciones.copiar')}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                    Copiar de otra gestión
+                </Link>
+            </div>
 
             <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
