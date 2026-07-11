@@ -7,7 +7,7 @@ const estadoBadge = {
     propuesta: 'bg-gray-100 text-gray-800',
 };
 
-export default function Index({ designaciones }) {
+export default function Lista({ designaciones, carrera }) {
     function eliminar(designacion) {
         if (!confirm('¿Eliminar esta designación?')) {
             return;
@@ -16,25 +16,19 @@ export default function Index({ designaciones }) {
     }
 
     return (
-        <AppLayout title="Designación de Docentes">
-            <div className="mb-4 flex flex-wrap gap-2">
+        <AppLayout title={carrera ? `Designaciones — ${carrera.nombre}` : 'Designaciones'}>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Link
+                    href={route('designaciones.index')}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                    ← Volver a carreras
+                </Link>
                 <Link
                     href={route('designaciones.create')}
-                    className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                    className="rounded-md bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
                 >
                     Nueva designación
-                </Link>
-                <Link
-                    href={route('designaciones.asignar')}
-                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                    Asignar por carrera
-                </Link>
-                <Link
-                    href={route('designaciones.copiar')}
-                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                    Copiar de otra gestión
                 </Link>
             </div>
 

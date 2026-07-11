@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function () {
     Route::redirect('/', '/designaciones');
 
+    Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
+        ->name('designaciones.lista');
     Route::get('designaciones/asignar', [DesignacionMasivaController::class, 'asignarForm'])
         ->name('designaciones.asignar');
     Route::post('designaciones/asignar', [DesignacionMasivaController::class, 'asignarStore'])
