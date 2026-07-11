@@ -1,28 +1,54 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
+
+const navItems = [
+    { label: 'Designación de Docentes', href: () => route('designaciones.index'), match: '/designaciones' },
+];
 
 export default function AppLayout({ title, children }) {
-    const { flash, url } = usePage().props;
+    const { flash, auth } = usePage().props;
+    const currentUrl = usePage().url;
     const status = flash?.status;
-    const isDesignaciones = usePage().url.startsWith('/designaciones');
+
+    function logout(e) {
+        e.preventDefault();
+        router.post(route('logout'));
+    }
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900">
-            <nav className="w-64 shrink-0 bg-gray-900 text-white p-4">
+            <nav className="flex w-64 shrink-0 flex-col bg-gray-900 text-white p-4">
                 <h1 className="text-lg font-semibold mb-6">UATF · Designaciones</h1>
-                <ul className="space-y-1">
-                    <li>
-                        <Link
-                            href={route('designaciones.index')}
-                            className={`block rounded px-3 py-2 text-sm transition-colors ${
-                                isDesignaciones
-                                    ? 'bg-gray-800 font-medium text-white'
-                                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                            }`}
-                        >
-                            Designación de Docentes
-                        </Link>
-                    </li>
+                <ul className="flex-1 space-y-1">
+                    {navItems.map((item) => {
+                        const active = currentUrl.startsWith(item.match);
+                        return (
+                            <li key={item.label}>
+                                <Link
+                                    href={item.href()}
+                                    className={`block rounded px-3 py-2 text-sm transition-colors ${
+                                        active
+                                            ? 'bg-gray-800 font-medium text-white'
+                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            </li>
+                        );
+                    })}
                 </ul>
+
+                {auth?.user && (
+                    <div className="mt-6 border-t border-gray-800 pt-4 text-sm">
+                        <p className="mb-2 truncate text-gray-300">{auth.user.name}</p>
+                        <button
+                            onClick={logout}
+                            className="w-full rounded px-3 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-white"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </div>
+                )}
             </nav>
 
             <main className="flex-1 p-8">

@@ -50,4 +50,14 @@ class Designacion extends Model
     {
         return $this->hasMany(DesignacionHistorial::class, 'designacion_id');
     }
+
+    public function creador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    public function aprobador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'aprobado_por');
+    }
 }

@@ -29,4 +29,9 @@ class DesignacionHistorial extends Model
     {
         return $this->belongsTo(Designacion::class, 'designacion_id');
     }
+
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
 }

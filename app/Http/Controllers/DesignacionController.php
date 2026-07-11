@@ -45,6 +45,7 @@ class DesignacionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validarDatos($request);
+        $data['creado_por'] = $request->user()->id;
 
         Designacion::create($data);
 
@@ -72,6 +73,7 @@ class DesignacionController extends Controller
                     'valor_anterior' => (string) $designacion->$campo,
                     'valor_nuevo' => (string) $data[$campo],
                     'fecha' => now(),
+                    'usuario_id' => $request->user()->id,
                 ]);
             }
         }
