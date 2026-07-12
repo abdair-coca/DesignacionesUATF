@@ -3,12 +3,12 @@ import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 
 const paletaIcono = [
-    'from-blue-50 to-blue-100 text-blue-700 ring-blue-200/60',
-    'from-emerald-50 to-emerald-100 text-emerald-700 ring-emerald-200/60',
-    'from-violet-50 to-violet-100 text-violet-700 ring-violet-200/60',
-    'from-rose-50 to-rose-100 text-rose-700 ring-rose-200/60',
-    'from-amber-50 to-amber-100 text-amber-700 ring-amber-200/60',
-    'from-cyan-50 to-cyan-100 text-cyan-700 ring-cyan-200/60',
+    'bg-blue-50 text-blue-700 ring-blue-200/60',
+    'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+    'bg-violet-50 text-violet-700 ring-violet-200/60',
+    'bg-rose-50 text-rose-700 ring-rose-200/60',
+    'bg-amber-50 text-amber-700 ring-amber-200/60',
+    'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
 ];
 
 function Icono({ tipo, className = 'h-5 w-5' }) {
@@ -126,17 +126,17 @@ function textoPorcentaje(cantidad, total) {
 
 function TarjetaResumen({ tipo, tono, titulo, valor, subtitulo }) {
     const tonos = {
-        azul: 'from-blue-50 to-blue-100/70 text-blue-600 ring-blue-200/50',
-        verde: 'from-green-50 to-green-100/70 text-green-600 ring-green-200/50',
-        ambar: 'from-amber-50 to-amber-100/70 text-amber-600 ring-amber-200/50',
-        rojo: 'from-red-50 to-red-100/70 text-red-600 ring-red-200/50',
+        azul: 'bg-blue-50 text-blue-600 ring-blue-200/50',
+        verde: 'bg-green-50 text-green-600 ring-green-200/50',
+        ambar: 'bg-amber-50 text-amber-600 ring-amber-200/50',
+        rojo: 'bg-red-50 text-red-600 ring-red-200/50',
     };
 
     return (
         <div className="group rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center gap-2.5">
                 <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${tonos[tono]}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${tonos[tono]}`}
                 >
                     <Icono tipo={tipo} className="h-[18px] w-[18px]" />
                 </span>
@@ -151,9 +151,9 @@ function TarjetaResumen({ tipo, tono, titulo, valor, subtitulo }) {
 function BarraProgreso({ cantidad, total, tono }) {
     const pct = total > 0 ? Math.round((cantidad / total) * 100) : 0;
     const colores = {
-        verde: ['text-green-700', 'bg-gradient-to-r from-green-400 to-green-500'],
-        naranja: ['text-amber-700', 'bg-gradient-to-r from-amber-300 to-amber-400'],
-        rojo: ['text-red-700', 'bg-gradient-to-r from-red-400 to-red-500'],
+        verde: ['text-green-700', 'bg-green-500'],
+        naranja: ['text-amber-700', 'bg-amber-400'],
+        rojo: ['text-red-700', 'bg-red-500'],
     };
     const [texto, barra] = colores[tono];
 
@@ -291,7 +291,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                         </div>
                         <Link
                             href={route('designaciones.create')}
-                            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-b from-blue-800 to-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-inset ring-white/10 transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow active:scale-[0.98]"
+                            className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
                         >
                             <Icono tipo="mas" className="h-4 w-4" />
                             Nueva designación
@@ -489,8 +489,12 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                             <td className="px-4 py-3.5">
                                                 <div className="relative flex items-center gap-0.5">
                                                     <Link
-                                                        href={route('designaciones.lista', { carrera_id: carrera.id })}
-                                                        title="Ver designaciones"
+                                                        href={route('designaciones.carrera', {
+                                                            carrera: carrera.id,
+                                                            gestion_id: filtros.gestion_id,
+                                                            periodo_id: filtros.periodo_id,
+                                                        })}
+                                                        title="Designar en esta carrera"
                                                         className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                                                     >
                                                         <Icono tipo="ojo" className="h-[18px] w-[18px]" />
@@ -632,7 +636,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                         </ul>
                     </div>
 
-                    <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-white p-5 shadow-sm">
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                             <div>
                                 <h3 className="font-semibold tracking-tight text-gray-900">¿Necesitas ayuda?</h3>

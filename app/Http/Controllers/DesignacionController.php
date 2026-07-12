@@ -125,6 +125,7 @@ class DesignacionController extends Controller
 
         $designaciones = Designacion::with(['docente', 'materia', 'grupo', 'gestion', 'periodo'])
             ->when($carrera, fn ($q) => $q->whereHas('materia', fn ($m) => $m->where('carrera_id', $carrera->id)))
+            ->when($request->integer('materia_id'), fn ($q, $materiaId) => $q->where('Id_materia', $materiaId))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -135,9 +136,77 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function carrera(Request $request, Carrera $carrera): Response
     {
-        return Inertia::render('Designaciones/Create', $this->catalogos());
+        $filtros = $request->validate([
+            'gestion_id' => ['nullable', 'exists:gestiones,id'],
+            'periodo_id' => ['nullable', 'exists:periodos,id'],
+        ]);
+
+        $gestionId = (int) ($filtros['gestion_id'] ?? Gestion::max('id') ?? 0);
+        $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::min('id') ?? 0);
+
+        $gruposPorMateria = Grupo::where('estado', 'habilitado')
+            ->whereIn('materia_id', $carrera->materias()->select('id'))
+            ->selectRaw('materia_id, count(*) as total')
+            ->groupBy('materia_id')
+            ->pluck('total', 'materia_id');
+
+        $asignadosPorMateria = Designacion::where('Id_gestion', $gestionId)
+            ->where('Id_periodo', $periodoId)
+            ->where('designaciones.estado', '!=', 'rechazada')
+            ->join('grupos', function ($join) {
+                $join->on('grupos.id', '=', 'designaciones.Id_grupo')
+                    ->where('grupos.estado', 'habilitado');
+            })
+            ->join('materias', 'materias.id', '=', 'designaciones.Id_materia')
+            ->where('materias.carrera_id', $carrera->id)
+            ->selectRaw('designaciones."Id_materia" as materia_id, count(distinct designaciones."Id_grupo") as total')
+            ->groupBy('designaciones.Id_materia')
+            ->pluck('total', 'materia_id');
+
+        $materias = $carrera->materias()->orderBy('sigla')->get()
+            ->map(function (Materia $materia) use ($gruposPorMateria, $asignadosPorMateria) {
+                $total = (int) ($gruposPorMateria[$materia->id] ?? 0);
+                $asignados = min((int) ($asignadosPorMateria[$materia->id] ?? 0), $total);
+                $estado = $total === 0 ? 'sin_grupos' : ($asignados >= $total ? 'asignada' : 'por_asignar');
+
+                return [
+                    'id' => $materia->id,
+                    'sigla' => $materia->sigla,
+                    'nombre' => $materia->nombre,
+                    'grupos_total' => $total,
+                    'grupos_asignados' => $asignados,
+                    'estado' => $estado,
+                ];
+            })
+            ->values();
+
+        $designaciones = Designacion::with(['docente', 'materia', 'grupo'])
+            ->where('Id_gestion', $gestionId)
+            ->where('Id_periodo', $periodoId)
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->orderBy('Id_materia')
+            ->get();
+
+        return Inertia::render('Designaciones/Carrera', [
+            'carrera' => $carrera,
+            'materias' => $materias,
+            'designaciones' => $designaciones,
+            'gestiones' => Gestion::orderBy('nombre')->get(),
+            'periodos' => Periodo::orderBy('nombre')->get(),
+            'filtros' => [
+                'gestion_id' => (string) $gestionId,
+                'periodo_id' => (string) $periodoId,
+            ],
+        ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        return Inertia::render('Designaciones/Create', array_merge($this->catalogos(), [
+            'prefill' => $request->only(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']),
+        ]));
     }
 
     public function store(Request $request): RedirectResponse

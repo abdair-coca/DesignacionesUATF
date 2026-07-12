@@ -34,6 +34,9 @@ Puntos clave del dominio (ver `docs/ERD.md` para el modelo completo):
   universidad, para evitar sorpresas al desplegar). No usar SQLite en este proyecto.
 - Tailwind CSS v4 (ya viene con el scaffold de Laravel) para estilos, hasta que se defina
   qué hacer con el template de interfaz (ver abajo).
+- **Diseño de interfaz: seguir estrictamente `design.md`** (tokens, componentes,
+  animaciones y prohibiciones — ej. los gradientes están prohibidos). Toda pantalla nueva
+  o modificada debe cumplirlo.
 - PSR-12 para estilo de código PHP.
 
 ## Estado actual del template de interfaz (Color Admin v2)

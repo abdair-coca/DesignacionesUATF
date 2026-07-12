@@ -2,13 +2,13 @@ import { Link, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import FormFields from './FormFields';
 
-export default function Create({ docentes, materias, grupos, gestiones, periodos }) {
+export default function Create({ docentes, materias, grupos, gestiones, periodos, prefill }) {
     const { data, setData, post, processing, errors } = useForm({
-        Id_docente: '',
-        Id_materia: '',
-        Id_grupo: '',
-        Id_gestion: '',
-        Id_periodo: '',
+        Id_docente: prefill?.Id_docente ?? '',
+        Id_materia: prefill?.Id_materia ?? '',
+        Id_grupo: prefill?.Id_grupo ?? '',
+        Id_gestion: prefill?.Id_gestion ?? '',
+        Id_periodo: prefill?.Id_periodo ?? '',
         estado: 'propuesta',
     });
 
