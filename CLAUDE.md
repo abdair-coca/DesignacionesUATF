@@ -23,6 +23,15 @@ Puntos clave del dominio (ver `docs/ERD.md` para el modelo completo):
   consistencia con el resto del sistema — declara las claves foráneas explícitamente en
   cada relación Eloquent.
 
+## Autenticación
+
+Ya implementada (Fase 1 del roadmap): sesión de Laravel hecha a mano (sin Breeze/Fortify),
+login por `email` en `/login`, sin registro público ni "olvidé mi contraseña". Las cuentas se
+crean a mano (`database/seeders/UserSeeder.php` o `tinker`). Todo el sistema vive detrás de
+`Route::middleware('auth')`. Esto es solo para **auditoría** (`creado_por` en `designaciones`,
+`usuario_id` en `designaciones_historial`) — cualquier usuario logueado tiene acceso completo,
+no hay roles ni restricción de acceso por carrera todavía (ver regla de abajo).
+
 ## Stack técnico
 
 - Laravel (última versión LTS estable) como backend monolítico — sin API REST separada.
@@ -81,6 +90,7 @@ Conventional Commits, en español: `feat:`, `fix:`, `docs:`, `refactor:`, `chore
 ## Qué NO hacer sin preguntar
 
 - No subir el archivo `.env` ni credenciales reales.
-- No implementar lógica de roles/permisos definitiva — el sistema de roles lo implementará
-  otro equipo; solo dejar los campos preparados.
+- No implementar lógica de roles/permisos definitiva — el login básico (auditoría) ya existe
+  (ver "Autenticación" arriba), pero los roles/permisos por usuario los implementará otro
+  equipo; solo dejar los campos preparados.
 - No asumir reglas de negocio no confirmadas (carga horaria máxima, aprobación, etc.).
