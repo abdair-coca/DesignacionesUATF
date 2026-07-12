@@ -3,6 +3,7 @@
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
+use App\Http\Controllers\MateriaController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -10,6 +11,7 @@ Route::middleware('auth')->group(function () {
 
     // Catálogos
     Route::resource('carreras', CarreraController::class)->except('show');
+    Route::resource('materias', MateriaController::class)->except('show');
 
     Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
         ->name('designaciones.lista');
