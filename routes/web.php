@@ -7,6 +7,7 @@ use App\Http\Controllers\DocenteController;
 use App\Http\Controllers\GestionController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\PeriodoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -20,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('gestiones', GestionController::class)
         ->except('show')
         ->parameters(['gestiones' => 'gestion']);
+    Route::resource('periodos', PeriodoController::class)->except('show');
 
     Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
         ->name('designaciones.lista');
