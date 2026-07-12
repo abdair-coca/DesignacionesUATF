@@ -8,6 +8,7 @@ use App\Models\Docente;
 use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Periodo;
+use App\Support\CargaAcademicaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,10 @@ use Inertia\Response;
 
 class DesignacionMasivaController extends Controller
 {
+    public function __construct(private CargaAcademicaService $cargaAcademica)
+    {
+    }
+
     public function asignarForm(Request $request): Response
     {
         $filtros = $request->validate([
@@ -70,13 +75,7 @@ class DesignacionMasivaController extends Controller
                     continue;
                 }
 
-                $yaAsignado = Designacion::where('Id_grupo', $fila['Id_grupo'])
-                    ->where('Id_gestion', $data['Id_gestion'])
-                    ->where('Id_periodo', $data['Id_periodo'])
-                    ->where('estado', '!=', 'rechazada')
-                    ->exists();
-
-                if ($yaAsignado) {
+                if ($this->cargaAcademica->hayChoque($fila['Id_grupo'], $data['Id_gestion'], $data['Id_periodo'])) {
                     continue;
                 }
 
@@ -165,13 +164,7 @@ class DesignacionMasivaController extends Controller
                     continue;
                 }
 
-                $yaAsignado = Designacion::where('Id_grupo', $fila['Id_grupo'])
-                    ->where('Id_gestion', $data['Id_gestion'])
-                    ->where('Id_periodo', $data['Id_periodo'])
-                    ->where('estado', '!=', 'rechazada')
-                    ->exists();
-
-                if ($yaAsignado) {
+                if ($this->cargaAcademica->hayChoque($fila['Id_grupo'], $data['Id_gestion'], $data['Id_periodo'])) {
                     continue;
                 }
 
