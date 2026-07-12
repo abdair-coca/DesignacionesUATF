@@ -1,7 +1,20 @@
 import { Link, router, usePage } from '@inertiajs/react';
 
-const navItems = [
-    { label: 'Designación de Docentes', href: () => route('designaciones.index'), match: '/designaciones' },
+const navGroups = [
+    {
+        items: [{ label: 'Designación de Docentes', href: () => route('designaciones.index'), match: '/designaciones' }],
+    },
+    {
+        titulo: 'Catálogos',
+        items: [
+            { label: 'Carreras', href: () => route('carreras.index'), match: '/carreras' },
+            { label: 'Materias', href: () => route('materias.index'), match: '/materias' },
+            { label: 'Grupos', href: () => route('grupos.index'), match: '/grupos' },
+            { label: 'Docentes', href: () => route('docentes.index'), match: '/docentes' },
+            { label: 'Gestiones', href: () => route('gestiones.index'), match: '/gestiones' },
+            { label: 'Periodos', href: () => route('periodos.index'), match: '/periodos' },
+        ],
+    },
 ];
 
 export default function AppLayout({ title, children }) {
@@ -19,25 +32,36 @@ export default function AppLayout({ title, children }) {
         <div className="flex min-h-screen bg-gray-50 text-gray-900">
             <nav className="flex w-64 shrink-0 flex-col bg-gray-900 text-white p-4">
                 <h1 className="text-lg font-semibold mb-6">UATF · Designaciones</h1>
-                <ul className="flex-1 space-y-1">
-                    {navItems.map((item) => {
-                        const active = currentUrl.startsWith(item.match);
-                        return (
-                            <li key={item.label}>
-                                <Link
-                                    href={item.href()}
-                                    className={`block rounded px-3 py-2 text-sm transition-colors ${
-                                        active
-                                            ? 'bg-gray-800 font-medium text-white'
-                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                                    }`}
-                                >
-                                    {item.label}
-                                </Link>
-                            </li>
-                        );
-                    })}
-                </ul>
+                <div className="flex-1 space-y-6">
+                    {navGroups.map((grupo, indice) => (
+                        <div key={grupo.titulo ?? indice}>
+                            {grupo.titulo && (
+                                <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                                    {grupo.titulo}
+                                </p>
+                            )}
+                            <ul className="space-y-1">
+                                {grupo.items.map((item) => {
+                                    const active = currentUrl.startsWith(item.match);
+                                    return (
+                                        <li key={item.label}>
+                                            <Link
+                                                href={item.href()}
+                                                className={`block rounded px-3 py-2 text-sm transition-colors ${
+                                                    active
+                                                        ? 'bg-gray-800 font-medium text-white'
+                                                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                                }`}
+                                            >
+                                                {item.label}
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
             </nav>
 
             <main className="flex-1 p-8">

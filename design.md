@@ -175,8 +175,10 @@ Prohibido: parallax, bounce, spinners decorativos, animaciones de más de 600ms.
   botón "← Volver" outline arriba a la derecha.
 - El título de página vive dentro del contenido (AppLayout sin prop `title`);
   el chip de usuario/cerrar sesión queda arriba a la derecha (lo da AppLayout).
-- Sidebar oscuro (`bg-gray-900`): un solo ítem por ahora — no agregar ítems sin pedido
-  explícito del dueño.
+- Sidebar oscuro (`bg-gray-900`): agrupado por secciones (`navGroups` en `AppLayout.jsx`).
+  Título de sección: `text-[11px] font-semibold uppercase tracking-wider text-gray-500`.
+  No agregar secciones o ítems nuevos sin pedido explícito del dueño (la sección
+  "Catálogos" con sus 6 entidades fue pedida en el roadmap de fase 2).
 
 ## Prohibiciones (resumen)
 
