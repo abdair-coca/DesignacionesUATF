@@ -5,36 +5,13 @@ import { Icono, IconoPuntos } from '../../Components/Icono';
 import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
+import StatTile from '../../Components/StatTile';
 import paletaIcono from '../../Components/paletaIcono';
 
 function textoPorcentaje(cantidad, total) {
     if (!total) return '0% del total';
     const pct = (cantidad / total) * 100;
     return `${Number.isInteger(pct) ? pct : pct.toFixed(1)}% del total`;
-}
-
-function TarjetaResumen({ tipo, tono, titulo, valor, subtitulo }) {
-    const tonos = {
-        azul: 'bg-blue-50 text-blue-600 ring-blue-200/50',
-        verde: 'bg-green-50 text-green-600 ring-green-200/50',
-        ambar: 'bg-amber-50 text-amber-600 ring-amber-200/50',
-        rojo: 'bg-red-50 text-red-600 ring-red-200/50',
-    };
-
-    return (
-        <div className="group rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center gap-2.5">
-                <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${tonos[tono]}`}
-                >
-                    <Icono tipo={tipo} className="h-[18px] w-[18px]" />
-                </span>
-                <span className="text-[13px] font-medium text-gray-500">{titulo}</span>
-            </div>
-            <p className="mt-3 text-[26px] font-semibold leading-8 tracking-tight text-gray-900 tabular-nums">{valor}</p>
-            <p className="mt-0.5 text-xs text-gray-400 tabular-nums">{subtitulo}</p>
-        </div>
-    );
 }
 
 function BarraProgreso({ cantidad, total, tono }) {
@@ -188,28 +165,28 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                     </div>
 
                     <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <TarjetaResumen
+                        <StatTile
                             tipo="total"
                             tono="azul"
                             titulo="Total carreras"
                             valor={resumen.total}
                             subtitulo="100% del total"
                         />
-                        <TarjetaResumen
+                        <StatTile
                             tipo="check"
                             tono="verde"
                             titulo="Con designaciones activas"
                             valor={resumen.activas}
                             subtitulo={textoPorcentaje(resumen.activas, resumen.total)}
                         />
-                        <TarjetaResumen
+                        <StatTile
                             tipo="reloj"
                             tono="ambar"
                             titulo="Con pendientes"
                             valor={resumen.pendientes}
                             subtitulo={textoPorcentaje(resumen.pendientes, resumen.total)}
                         />
-                        <TarjetaResumen
+                        <StatTile
                             tipo="equis"
                             tono="rojo"
                             titulo="Sin designaciones"
