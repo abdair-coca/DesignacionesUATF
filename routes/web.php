@@ -4,6 +4,7 @@ use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
 use App\Http\Controllers\DocenteController;
+use App\Http\Controllers\GestionController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\MateriaController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('materias', MateriaController::class)->except('show');
     Route::resource('grupos', GrupoController::class)->except('show');
     Route::resource('docentes', DocenteController::class)->except('show');
+    Route::resource('gestiones', GestionController::class)
+        ->except('show')
+        ->parameters(['gestiones' => 'gestion']);
 
     Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
         ->name('designaciones.lista');
