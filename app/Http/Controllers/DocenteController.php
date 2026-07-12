@@ -21,7 +21,8 @@ class DocenteController extends Controller
         $docentes = Docente::with('carreraOrigen')
             ->withCount('designaciones')
             ->when($filtros['q'] ?? null, fn ($q, $texto) => $q->where(
-                fn ($sub) => $sub->where('nombre', 'ilike', "%{$texto}%")->orWhere('ci', 'ilike', "%{$texto}%")
+                fn ($sub) => $sub->whereRaw('LOWER(nombre) LIKE ?', ['%' . mb_strtolower($texto) . '%'])
+                    ->orWhereRaw('LOWER(ci) LIKE ?', ['%' . mb_strtolower($texto) . '%'])
             ))
             ->when($filtros['carrera_origen_id'] ?? null, fn ($q, $carreraId) => $q->where('carrera_origen_id', $carreraId))
             ->orderBy('nombre')
