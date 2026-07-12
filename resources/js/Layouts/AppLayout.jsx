@@ -2,6 +2,9 @@ import { Link, router, usePage } from '@inertiajs/react';
 
 const navGroups = [
     {
+        items: [{ label: 'Dashboard', href: () => route('dashboard'), match: '/dashboard' }],
+    },
+    {
         items: [{ label: 'Designación de Docentes', href: () => route('designaciones.index'), match: '/designaciones' }],
     },
     {
