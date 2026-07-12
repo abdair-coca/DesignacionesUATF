@@ -178,7 +178,8 @@ Prohibido: parallax, bounce, spinners decorativos, animaciones de más de 600ms.
 - Sidebar oscuro (`bg-gray-900`): agrupado por secciones (`navGroups` en `AppLayout.jsx`).
   Título de sección: `text-[11px] font-semibold uppercase tracking-wider text-gray-500`.
   No agregar secciones o ítems nuevos sin pedido explícito del dueño (la sección
-  "Catálogos" con sus 6 entidades fue pedida en el roadmap de fase 2).
+  "Catálogos" con sus 6 entidades fue pedida en el roadmap de fase 2; el ítem
+  "Dashboard", primero en la lista, fue pedido en el roadmap de fase 5).
 
 ## Prohibiciones (resumen)
 
