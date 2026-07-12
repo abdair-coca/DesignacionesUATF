@@ -1,122 +1,11 @@
 import { useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-
-const paletaIcono = [
-    'bg-blue-50 text-blue-700 ring-blue-200/60',
-    'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
-    'bg-violet-50 text-violet-700 ring-violet-200/60',
-    'bg-rose-50 text-rose-700 ring-rose-200/60',
-    'bg-amber-50 text-amber-700 ring-amber-200/60',
-    'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
-];
-
-function Icono({ tipo, className = 'h-5 w-5' }) {
-    const trazos = {
-        total: (
-            <>
-                <rect x="4" y="4" width="7" height="7" rx="1.5" />
-                <rect x="13" y="4" width="7" height="7" rx="1.5" />
-                <rect x="4" y="13" width="7" height="7" rx="1.5" />
-                <rect x="13" y="13" width="7" height="7" rx="1.5" />
-            </>
-        ),
-        check: (
-            <>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M9 12.5l2 2 4-5" />
-            </>
-        ),
-        reloj: (
-            <>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7.5V12l3 2" />
-            </>
-        ),
-        equis: (
-            <>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M9.5 9.5l5 5m0-5l-5 5" />
-            </>
-        ),
-        buscar: (
-            <>
-                <circle cx="11" cy="11" r="6" />
-                <path d="M20 20l-4-4" />
-            </>
-        ),
-        cerrar: <path d="M6 6l12 12m0-12L6 18" />,
-        embudo: <path d="M4 5h16l-6.2 7v5.5L10.2 19v-7z" />,
-        ojo: (
-            <>
-                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
-                <circle cx="12" cy="12" r="3" />
-            </>
-        ),
-        mas: <path d="M12 5v14m-7-7h14" />,
-        lote: (
-            <>
-                <rect x="4" y="4" width="16" height="6" rx="1.5" />
-                <rect x="4" y="14" width="16" height="6" rx="1.5" />
-            </>
-        ),
-        copiar: (
-            <>
-                <rect x="8" y="8" width="12" height="12" rx="2" />
-                <path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" />
-            </>
-        ),
-        documento: (
-            <>
-                <path d="M7 3.5h7L18.5 8v12a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 20V5A1.5 1.5 0 017 3.5z" />
-                <path d="M14 3.5V8h4.5" />
-            </>
-        ),
-        chevronDerecha: <path d="M9 6l6 6-6 6" />,
-        chevronAbajo: <path d="M6 9l6 6 6-6" />,
-    };
-
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            {trazos[tipo]}
-        </svg>
-    );
-}
-
-function IconoPuntos({ className = 'h-5 w-5' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-            <circle cx="12" cy="5.5" r="1.7" />
-            <circle cx="12" cy="12" r="1.7" />
-            <circle cx="12" cy="18.5" r="1.7" />
-        </svg>
-    );
-}
-
-function Select({ value, onChange, children, className = '' }) {
-    return (
-        <div className={`relative ${className}`}>
-            <select
-                value={value}
-                onChange={onChange}
-                className="w-full cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-                {children}
-            </select>
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
-                <Icono tipo="chevronAbajo" className="h-3.5 w-3.5" />
-            </span>
-        </div>
-    );
-}
+import { Icono, IconoPuntos } from '../../Components/Icono';
+import Select from '../../Components/Select';
+import EmptyState from '../../Components/EmptyState';
+import Pagination from '../../Components/Pagination';
+import paletaIcono from '../../Components/paletaIcono';
 
 function textoPorcentaje(cantidad, total) {
     if (!total) return '0% del total';
@@ -422,23 +311,11 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                     {carreras.data.length === 0 && (
                                         <tr>
                                             <td colSpan={7}>
-                                                <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
-                                                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-300 ring-1 ring-inset ring-gray-200/60">
-                                                        <Icono tipo="buscar" className="h-5 w-5" />
-                                                    </span>
-                                                    <div>
-                                                        <p className="font-medium text-gray-700">Sin resultados</p>
-                                                        <p className="mt-0.5 text-sm text-gray-400">
-                                                            Ninguna carrera coincide con los filtros actuales.
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        onClick={limpiarFiltros}
-                                                        className="text-sm font-medium text-blue-700 hover:underline"
-                                                    >
-                                                        Limpiar filtros
-                                                    </button>
-                                                </div>
+                                                <EmptyState
+                                                    titulo="Sin resultados"
+                                                    subtitulo="Ninguna carrera coincide con los filtros actuales."
+                                                    accion={{ label: 'Limpiar filtros', onClick: limpiarFiltros }}
+                                                />
                                             </td>
                                         </tr>
                                     )}
@@ -451,7 +328,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                             <td className="px-4 py-3.5">
                                                 <div className="flex items-center gap-3">
                                                     <span
-                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-sm font-semibold ring-1 ring-inset ${paletaIcono[carrera.id % paletaIcono.length]}`}
+                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[carrera.id % paletaIcono.length]}`}
                                                     >
                                                         {carrera.sigla.charAt(0)}
                                                     </span>
@@ -548,38 +425,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                             </table>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3">
-                            <p className="text-[13px] text-gray-400 tabular-nums">
-                                Mostrando <span className="font-medium text-gray-600">{carreras.from ?? 0}</span> a{' '}
-                                <span className="font-medium text-gray-600">{carreras.to ?? 0}</span> de{' '}
-                                <span className="font-medium text-gray-600">{carreras.total}</span> carreras
-                            </p>
-                            {carreras.links.length > 3 && (
-                                <div className="flex gap-1">
-                                    {carreras.links.map((link, i) => {
-                                        const etiqueta = link.label.includes('Previous')
-                                            ? '‹'
-                                            : link.label.includes('Next')
-                                              ? '›'
-                                              : link.label;
-                                        return (
-                                            <Link
-                                                key={i}
-                                                href={link.url || '#'}
-                                                dangerouslySetInnerHTML={{ __html: etiqueta }}
-                                                className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm transition-colors tabular-nums ${
-                                                    link.active
-                                                        ? 'bg-blue-900 font-medium text-white shadow-sm'
-                                                        : link.url
-                                                          ? 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                                                          : 'cursor-not-allowed text-gray-300'
-                                                }`}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                        <Pagination paginador={carreras} etiqueta="carreras" />
                     </div>
                 </div>
 

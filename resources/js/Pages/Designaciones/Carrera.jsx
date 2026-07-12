@@ -1,109 +1,10 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-
-const paletaIcono = [
-    'bg-blue-50 text-blue-700 ring-blue-200/60',
-    'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
-    'bg-violet-50 text-violet-700 ring-violet-200/60',
-    'bg-rose-50 text-rose-700 ring-rose-200/60',
-    'bg-amber-50 text-amber-700 ring-amber-200/60',
-    'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
-];
-
-function Icono({ tipo, className = 'h-5 w-5' }) {
-    const trazos = {
-        buscar: (
-            <>
-                <circle cx="11" cy="11" r="6" />
-                <path d="M20 20l-4-4" />
-            </>
-        ),
-        cerrar: <path d="M6 6l12 12m0-12L6 18" />,
-        embudo: <path d="M4 5h16l-6.2 7v5.5L10.2 19v-7z" />,
-        ojo: (
-            <>
-                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
-                <circle cx="12" cy="12" r="3" />
-            </>
-        ),
-        mas: <path d="M12 5v14m-7-7h14" />,
-        lote: (
-            <>
-                <rect x="4" y="4" width="16" height="6" rx="1.5" />
-                <rect x="4" y="14" width="16" height="6" rx="1.5" />
-            </>
-        ),
-        copiar: (
-            <>
-                <rect x="8" y="8" width="12" height="12" rx="2" />
-                <path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" />
-            </>
-        ),
-        calendario: (
-            <>
-                <rect x="4" y="5" width="16" height="15" rx="2" />
-                <path d="M4 9.5h16M8 3v4m8-4v4" />
-            </>
-        ),
-        capas: (
-            <>
-                <path d="M12 3.5l8.5 4.5L12 12.5 3.5 8 12 3.5z" />
-                <path d="M3.5 12L12 16.5 20.5 12M3.5 16L12 20.5 20.5 16" />
-            </>
-        ),
-        libro: (
-            <>
-                <path d="M5 4.5A1.5 1.5 0 016.5 3H19v16.5H6.5A1.5 1.5 0 015 18V4.5z" />
-                <path d="M5 18a1.5 1.5 0 011.5-1.5H19" />
-            </>
-        ),
-        flechaIzq: <path d="M15 6l-6 6 6 6" />,
-        chevronDerecha: <path d="M9 6l6 6-6 6" />,
-        chevronAbajo: <path d="M6 9l6 6 6-6" />,
-    };
-
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            {trazos[tipo]}
-        </svg>
-    );
-}
-
-function IconoPuntos({ className = 'h-5 w-5' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-            <circle cx="12" cy="5.5" r="1.7" />
-            <circle cx="12" cy="12" r="1.7" />
-            <circle cx="12" cy="18.5" r="1.7" />
-        </svg>
-    );
-}
-
-function Select({ value, onChange, children, className = '' }) {
-    return (
-        <div className={`relative ${className}`}>
-            <select
-                value={value}
-                onChange={onChange}
-                className="w-full cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-                {children}
-            </select>
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
-                <Icono tipo="chevronAbajo" className="h-3.5 w-3.5" />
-            </span>
-        </div>
-    );
-}
+import { Icono, IconoPuntos } from '../../Components/Icono';
+import Select from '../../Components/Select';
+import EmptyState from '../../Components/EmptyState';
+import paletaIcono from '../../Components/paletaIcono';
 
 const badgesMateria = {
     por_asignar: ['bg-blue-50 text-blue-700 ring-blue-600/20', 'bg-blue-500', 'Por asignar'],
@@ -488,19 +389,14 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                         {visibles.length === 0 && (
                                             <tr>
                                                 <td colSpan={5}>
-                                                    <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
-                                                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-300 ring-1 ring-inset ring-gray-200/60">
-                                                            <Icono tipo="buscar" className="h-5 w-5" />
-                                                        </span>
-                                                        <div>
-                                                            <p className="font-medium text-gray-700">Sin resultados</p>
-                                                            <p className="mt-0.5 text-sm text-gray-400">
-                                                                {tab === 'asignadas'
-                                                                    ? 'Todavía no hay materias completamente asignadas en este periodo.'
-                                                                    : 'Ninguna materia coincide con la búsqueda.'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
+                                                    <EmptyState
+                                                        titulo="Sin resultados"
+                                                        subtitulo={
+                                                            tab === 'asignadas'
+                                                                ? 'Todavía no hay materias completamente asignadas en este periodo.'
+                                                                : 'Ninguna materia coincide con la búsqueda.'
+                                                        }
+                                                    />
                                                 </td>
                                             </tr>
                                         )}
@@ -622,17 +518,10 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                         {visibles.length === 0 && (
                                             <tr>
                                                 <td colSpan={4}>
-                                                    <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
-                                                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-300 ring-1 ring-inset ring-gray-200/60">
-                                                            <Icono tipo="buscar" className="h-5 w-5" />
-                                                        </span>
-                                                        <div>
-                                                            <p className="font-medium text-gray-700">Sin designaciones</p>
-                                                            <p className="mt-0.5 text-sm text-gray-400">
-                                                                No hay designaciones registradas para este periodo.
-                                                            </p>
-                                                        </div>
-                                                    </div>
+                                                    <EmptyState
+                                                        titulo="Sin designaciones"
+                                                        subtitulo="No hay designaciones registradas para este periodo."
+                                                    />
                                                 </td>
                                             </tr>
                                         )}
