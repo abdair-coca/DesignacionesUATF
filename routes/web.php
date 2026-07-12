@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CarreraController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
 use App\Http\Controllers\DocenteController;
@@ -11,7 +12,8 @@ use App\Http\Controllers\PeriodoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::redirect('/', '/designaciones');
+    Route::redirect('/', '/dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Catálogos
     Route::resource('carreras', CarreraController::class)->except('show');
