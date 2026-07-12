@@ -28,8 +28,6 @@ class DesignacionController extends Controller
         'estado',
     ];
 
-    private const LIMITE_HORAS = 6;
-
     public function __construct(private CargaAcademicaService $cargaAcademica)
     {
     }
@@ -342,8 +340,8 @@ class DesignacionController extends Controller
         return [
             'horasActuales' => $horasActuales,
             'horasProyectadas' => $horasProyectadas,
-            'limite' => self::LIMITE_HORAS,
-            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > self::LIMITE_HORAS,
+            'limite' => CargaAcademicaService::LIMITE_HORAS,
+            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > CargaAcademicaService::LIMITE_HORAS,
             'hayChoque' => $hayChoque,
         ];
     }

@@ -6,6 +6,8 @@ use App\Models\Designacion;
 
 class CargaAcademicaService
 {
+    public const LIMITE_HORAS = 6;
+
     public function horasAsignadas(int $docenteId, int $gestionId, int $periodoId, ?int $excluirDesignacionId = null): int
     {
         return (int) Designacion::query()
