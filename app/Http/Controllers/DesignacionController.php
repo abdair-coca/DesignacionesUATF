@@ -126,20 +126,36 @@ class DesignacionController extends Controller
 
     public function lista(Request $request): Response
     {
-        $carrera = $request->filled('carrera_id')
-            ? Carrera::find($request->integer('carrera_id'))
-            : null;
+        $filtros = $request->validate([
+            'carrera_id' => ['nullable', 'exists:carreras,id'],
+            'materia_id' => ['nullable', 'exists:materias,id'],
+            'gestion_id' => ['nullable', 'exists:gestiones,id'],
+            'periodo_id' => ['nullable', 'exists:periodos,id'],
+            'estado' => ['nullable', 'in:propuesta,aprobada,rechazada'],
+        ]);
 
         $designaciones = Designacion::with(['docente', 'materia', 'grupo', 'gestion', 'periodo'])
-            ->when($carrera, fn ($q) => $q->whereHas('materia', fn ($m) => $m->where('carrera_id', $carrera->id)))
-            ->when($request->integer('materia_id'), fn ($q, $materiaId) => $q->where('Id_materia', $materiaId))
+            ->when($filtros['carrera_id'] ?? null, fn ($q, $carreraId) => $q->whereHas('materia', fn ($m) => $m->where('carrera_id', $carreraId)))
+            ->when($filtros['materia_id'] ?? null, fn ($q, $materiaId) => $q->where('Id_materia', $materiaId))
+            ->when($filtros['gestion_id'] ?? null, fn ($q, $gestionId) => $q->where('Id_gestion', $gestionId))
+            ->when($filtros['periodo_id'] ?? null, fn ($q, $periodoId) => $q->where('Id_periodo', $periodoId))
+            ->when($filtros['estado'] ?? null, fn ($q, $estado) => $q->where('estado', $estado))
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('Designaciones/Lista', [
             'designaciones' => $designaciones,
-            'carrera' => $carrera,
+            'carreras' => Carrera::orderBy('nombre')->get(),
+            'gestiones' => Gestion::orderBy('nombre')->get(),
+            'periodos' => Periodo::orderBy('nombre')->get(),
+            'filtros' => [
+                'carrera_id' => $filtros['carrera_id'] ?? '',
+                'materia_id' => $filtros['materia_id'] ?? '',
+                'gestion_id' => $filtros['gestion_id'] ?? '',
+                'periodo_id' => $filtros['periodo_id'] ?? '',
+                'estado' => $filtros['estado'] ?? '',
+            ],
         ]);
     }
 
