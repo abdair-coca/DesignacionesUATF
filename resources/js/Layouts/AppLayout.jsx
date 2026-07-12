@@ -8,6 +8,7 @@ export default function AppLayout({ title, children }) {
     const { flash, auth } = usePage().props;
     const currentUrl = usePage().url;
     const status = flash?.status;
+    const error = flash?.error;
 
     function logout(e) {
         e.preventDefault();
@@ -59,6 +60,12 @@ export default function AppLayout({ title, children }) {
                 {status && (
                     <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
                         {status}
+                    </div>
+                )}
+
+                {error && (
+                    <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {error}
                     </div>
                 )}
 
