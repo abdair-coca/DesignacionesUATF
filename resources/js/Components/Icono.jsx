@@ -89,6 +89,13 @@ const trazos = {
             <path d="M7 7l1 12a2 2 0 002 2h4a2 2 0 002-2l1-12" />
         </>
     ),
+    alerta: (
+        <>
+            <path d="M12 3.5L21.5 20h-19L12 3.5z" />
+            <path d="M12 9.5v4" />
+            <path d="M12 17v.01" />
+        </>
+    ),
     flechaIzq: <path d="M15 6l-6 6 6 6" />,
     chevronDerecha: <path d="M9 6l6 6-6 6" />,
     chevronAbajo: <path d="M6 9l6 6 6-6" />,
