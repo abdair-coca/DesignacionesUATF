@@ -72,7 +72,7 @@ queda es `Carrera` (detalle)**. Las otras dos se eliminan.
 | `GET /designaciones/carrera/{carrera}` | `Carrera.jsx` | Detalle de una carrera: tabs de materias, estado de cada una | **Se queda y se convierte en la pantalla central** (ver Paso 1) |
 | `GET/POST /designaciones/create` | `Create.jsx` | Formulario individual para una designación | **Eliminar** una vez que el roster cubra el caso de uso (Paso 1 define si queda algún caso borde) |
 | `GET/POST /designaciones/{id}/edit` | `Edit.jsx` | Formulario individual para editar una designación existente | **Se integra** a la edición inline del roster |
-| `GET /designaciones/asignar`, `POST .../asignar` | `AsignarPorCarrera.jsx` | Tabla para asignar varios grupos pendientes de una carrera a la vez | **Se integra** al roster (deja de ser pantalla aparte) |
+| ~~`GET /designaciones/asignar`, `POST .../asignar`~~ | ~~`AsignarPorCarrera.jsx`~~ | Tabla para asignar varios grupos pendientes de una carrera a la vez | **Eliminada (2026-07-15)** — la tabla de `Carrera.jsx` la reemplaza |
 | `GET /designaciones/copiar`, `POST .../copiar` | `Copiar.jsx` | Copiar designaciones de una gestión/periodo a otro, editando antes de guardar | **Se integra** al roster como una acción ("Copiar desde otra gestión") |
 | `GET /designaciones/{id}/historial` | `Historial.jsx` | Historial de cambios de una designación | **Se queda tal cual**, enlazado desde el roster |
 
