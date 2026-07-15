@@ -22,7 +22,7 @@ class CargaAcademicaServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->servicio = new CargaAcademicaService();
+        $this->servicio = new CargaAcademicaService;
     }
 
     public function test_horas_asignadas_suma_solo_designaciones_no_rechazadas_de_la_gestion_y_periodo(): void

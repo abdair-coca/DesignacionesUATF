@@ -58,7 +58,7 @@ class GestionController extends Controller
     private function validarDatos(Request $request, ?Gestion $gestion = null): array
     {
         return $request->validate([
-            'nombre' => ['required', 'string', 'max:20', 'unique:gestiones,nombre,' . ($gestion?->id ?? 'NULL')],
+            'nombre' => ['required', 'string', 'max:20', 'unique:gestiones,nombre,'.($gestion?->id ?? 'NULL')],
         ]);
     }
 }

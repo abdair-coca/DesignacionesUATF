@@ -79,4 +79,26 @@ class DesignacionCrudTest extends TestCase
 
         $this->assertDatabaseMissing('designaciones', ['id' => $designacion->id]);
     }
+
+    public function test_no_permitir_designacion_duplicada(): void
+    {
+        $docente = Docente::factory()->create();
+        $materia = Materia::factory()->create();
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+        $usuario = User::factory()->create();
+
+        $payload = [
+            'Id_docente' => $docente->id,
+            'Id_materia' => $materia->id,
+            'Id_grupo' => $grupo->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'estado' => 'propuesta',
+        ];
+
+        $this->actingAs($usuario)->post('/designaciones', $payload)->assertRedirect();
+        $this->actingAs($usuario)->post('/designaciones', $payload)->assertSessionHasErrors('Id_docente');
+    }
 }

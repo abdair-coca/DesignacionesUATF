@@ -17,9 +17,7 @@ use Inertia\Response;
 
 class DesignacionMasivaController extends Controller
 {
-    public function __construct(private CargaAcademicaService $cargaAcademica)
-    {
-    }
+    public function __construct(private CargaAcademicaService $cargaAcademica) {}
 
     public function asignarForm(Request $request): Response
     {

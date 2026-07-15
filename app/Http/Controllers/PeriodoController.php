@@ -58,7 +58,7 @@ class PeriodoController extends Controller
     private function validarDatos(Request $request, ?Periodo $periodo = null): array
     {
         return $request->validate([
-            'nombre' => ['required', 'string', 'max:20', 'unique:periodos,nombre,' . ($periodo?->id ?? 'NULL')],
+            'nombre' => ['required', 'string', 'max:20', 'unique:periodos,nombre,'.($periodo?->id ?? 'NULL')],
         ]);
     }
 }

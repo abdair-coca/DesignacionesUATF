@@ -15,7 +15,7 @@ class GestionFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombre' => (string) fake()->unique()->numberBetween(2000, 2100),
+            'nombre' => (string) fake()->unique()->numberBetween(3000, 3999),
         ];
     }
 }

@@ -35,12 +35,12 @@ class DesignacionSeeder extends Seeder
             $periodoId = Periodo::where('nombre', $escenario['periodo'])->value('id');
 
             foreach ($grupos as $grupo) {
-                if (!fake()->boolean((int) round($escenario['cobertura'] * 100))) {
+                if (! fake()->boolean((int) round($escenario['cobertura'] * 100))) {
                     continue;
                 }
 
                 $candidatos = $docentesPorCarrera->get($grupo->materia->carrera_id);
-                if (!$candidatos || $candidatos->isEmpty()) {
+                if (! $candidatos || $candidatos->isEmpty()) {
                     continue;
                 }
 

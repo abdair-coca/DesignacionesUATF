@@ -28,9 +28,7 @@ class DesignacionController extends Controller
         'estado',
     ];
 
-    public function __construct(private CargaAcademicaService $cargaAcademica)
-    {
-    }
+    public function __construct(private CargaAcademicaService $cargaAcademica) {}
 
     public function index(Request $request): Response
     {
@@ -255,7 +253,7 @@ class DesignacionController extends Controller
 
     public function update(Request $request, Designacion $designacion): RedirectResponse
     {
-        $data = $this->validarDatos($request);
+        $data = $this->validarDatos($request, $designacion->id);
 
         foreach (self::CAMPOS_RASTREADOS as $campo) {
             if ((string) $designacion->$campo !== (string) $data[$campo]) {
@@ -292,10 +290,22 @@ class DesignacionController extends Controller
         return Inertia::render('Designaciones/Historial', compact('designacion', 'historial'));
     }
 
-    private function validarDatos(Request $request): array
+    private function validarDatos(Request $request, ?int $excludeId = null): array
     {
         return $request->validate([
-            'Id_docente' => ['required', 'exists:docentes,id'],
+            'Id_docente' => ['required', 'exists:docentes,id', function ($attribute, $value, $fail) use ($request, $excludeId) {
+                $existe = Designacion::where('Id_docente', $value)
+                    ->where('Id_materia', $request->input('Id_materia'))
+                    ->where('Id_grupo', $request->input('Id_grupo'))
+                    ->where('Id_gestion', $request->input('Id_gestion'))
+                    ->where('Id_periodo', $request->input('Id_periodo'))
+                    ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+                    ->exists();
+
+                if ($existe) {
+                    $fail('Esta designación ya existe.');
+                }
+            }],
             'Id_materia' => ['required', 'exists:materias,id'],
             'Id_grupo' => ['required', 'exists:grupos,id'],
             'Id_gestion' => ['required', 'exists:gestiones,id'],

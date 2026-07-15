@@ -16,7 +16,7 @@ class CarreraFactory extends Factory
     {
         return [
             'sigla' => strtoupper(fake()->unique()->lexify('???')),
-            'nombre' => 'Carrera de ' . fake()->unique()->words(2, true),
+            'nombre' => 'Carrera de '.fake()->unique()->words(2, true),
         ];
     }
 }

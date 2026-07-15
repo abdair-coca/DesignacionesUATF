@@ -58,7 +58,7 @@ class CarreraController extends Controller
     private function validarDatos(Request $request, ?Carrera $carrera = null): array
     {
         return $request->validate([
-            'sigla' => ['required', 'string', 'max:20', 'unique:carreras,sigla,' . ($carrera?->id ?? 'NULL')],
+            'sigla' => ['required', 'string', 'max:20', 'unique:carreras,sigla,'.($carrera?->id ?? 'NULL')],
             'nombre' => ['required', 'string', 'max:150'],
         ]);
     }

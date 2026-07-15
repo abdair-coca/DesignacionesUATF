@@ -15,7 +15,7 @@ class PeriodoFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombre' => fake()->unique()->randomElement(['1', '2', 'Verano']),
+            'nombre' => (string) fake()->unique()->numberBetween(100, 999),
         ];
     }
 }

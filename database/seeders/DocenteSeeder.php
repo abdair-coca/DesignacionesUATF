@@ -31,7 +31,7 @@ class DocenteSeeder extends Seeder
 
             for ($i = 0; $i < $cantidad; $i++) {
                 Docente::create([
-                    'nombre' => fake()->randomElement(self::NOMBRES) . ' ' . fake()->randomElement(self::APELLIDOS),
+                    'nombre' => fake()->randomElement(self::NOMBRES).' '.fake()->randomElement(self::APELLIDOS),
                     'ci' => fake()->unique()->numerify('#######'),
                     'carrera_origen_id' => $carrera->id,
                 ]);

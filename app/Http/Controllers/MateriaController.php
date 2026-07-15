@@ -77,7 +77,7 @@ class MateriaController extends Controller
     private function validarDatos(Request $request, ?Materia $materia = null): array
     {
         return $request->validate([
-            'sigla' => ['required', 'string', 'max:20', 'unique:materias,sigla,' . ($materia?->id ?? 'NULL')],
+            'sigla' => ['required', 'string', 'max:20', 'unique:materias,sigla,'.($materia?->id ?? 'NULL')],
             'nombre' => ['required', 'string', 'max:150'],
             'carrera_id' => ['required', 'exists:carreras,id'],
             'horas' => ['required', 'integer', 'min:0', 'max:40'],
