@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Carrera;
 use App\Models\Designacion;
-use App\Models\DesignacionHistorial;
 use App\Models\Docente;
 use App\Models\Gestion;
 use App\Models\Grupo;
@@ -20,15 +19,6 @@ use Inertia\Response;
 
 class DesignacionController extends Controller
 {
-    private const CAMPOS_RASTREADOS = [
-        'Id_docente',
-        'Id_materia',
-        'Id_grupo',
-        'Id_gestion',
-        'Id_periodo',
-        'estado',
-    ];
-
     public function __construct(
         private CargaAcademicaService $cargaAcademica,
         private DesignacionReportService $reportes,
@@ -186,19 +176,6 @@ class DesignacionController extends Controller
     public function update(Request $request, Designacion $designacion): RedirectResponse
     {
         $data = $this->validarDatos($request, $designacion->id);
-
-        foreach (self::CAMPOS_RASTREADOS as $campo) {
-            if ((string) $designacion->$campo !== (string) $data[$campo]) {
-                DesignacionHistorial::create([
-                    'designacion_id' => $designacion->id,
-                    'campo' => $campo,
-                    'valor_anterior' => (string) $designacion->$campo,
-                    'valor_nuevo' => (string) $data[$campo],
-                    'fecha' => now(),
-                    'usuario_id' => $request->user()->id,
-                ]);
-            }
-        }
 
         $designacion->update($data);
 
