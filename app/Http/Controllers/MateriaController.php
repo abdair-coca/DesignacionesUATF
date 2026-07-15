@@ -2,85 +2,99 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\CatalogoCrud;
 use App\Models\Carrera;
 use App\Models\Materia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MateriaController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        $filtros = $request->validate([
-            'carrera_id' => ['nullable', 'exists:carreras,id'],
-        ]);
+    use CatalogoCrud;
 
-        $materias = Materia::with('carrera')
-            ->withCount('grupos')
-            ->when($filtros['carrera_id'] ?? null, fn ($q, $carreraId) => $q->where('carrera_id', $carreraId))
-            ->orderBy('sigla')
-            ->paginate(15)
-            ->withQueryString();
+    protected function modelo(): string
+    {
+        return Materia::class;
+    }
+
+    protected function nombreEntidad(): string
+    {
+        return 'Materia';
+    }
+
+    protected function rutaIndex(): string
+    {
+        return 'materias.index';
+    }
+
+    protected function destroyRelacion(): ?string
+    {
+        return 'mallaCurricular';
+    }
+
+    protected function destroyEtiqueta(): string
+    {
+        return 'mallas curriculares';
+    }
+
+    protected function reglas(Request $request, ?int $id = null): array
+    {
+        $siglaRule = Rule::unique('materias', 'sigla');
+        if ($id) {
+            $siglaRule->ignore($id);
+        }
+
+        return $request->validate([
+            'sigla' => ['required', 'string', 'max:20', $siglaRule],
+            'nombre' => ['required', 'string', 'max:100'],
+            'carrera_id' => ['required', 'exists:carreras,id'],
+            'horas' => ['required', 'integer', 'min:1', 'max:20'],
+            'area' => ['nullable', 'string', 'max:50'],
+        ]);
+    }
+
+    public function index(): Response
+    {
+        $carreraId = request('carrera_id');
 
         return Inertia::render('Materias/Index', [
-            'materias' => $materias,
-            'carreras' => Carrera::orderBy('nombre')->get(),
-            'filtros' => ['carrera_id' => $filtros['carrera_id'] ?? ''],
+            'materias' => Materia::query()
+                ->with('carreras')
+                ->when($carreraId, fn ($q, $id) => $q->whereHas('carreras', fn ($cq) => $cq->where('carreras.id', $id)))
+                ->orderBy('sigla')
+                ->get(),
+            'carreras' => Carrera::orderBy('sigla')->get(),
+            'carrera_id' => $carreraId,
         ]);
     }
 
     public function create(): Response
     {
         return Inertia::render('Materias/Create', [
-            'carreras' => Carrera::orderBy('nombre')->get(),
+            'carreras' => Carrera::orderBy('sigla')->get(),
         ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        Materia::create($this->validarDatos($request));
-
-        return redirect()->route('materias.index')
-            ->with('status', 'Materia creada correctamente.');
     }
 
     public function edit(Materia $materia): Response
     {
+        $materia->load('carreras');
+
         return Inertia::render('Materias/Edit', [
             'materia' => $materia,
-            'carreras' => Carrera::orderBy('nombre')->get(),
+            'carreras' => Carrera::orderBy('sigla')->get(),
         ]);
     }
 
     public function update(Request $request, Materia $materia): RedirectResponse
     {
-        $materia->update($this->validarDatos($request, $materia));
-
-        return redirect()->route('materias.index')
-            ->with('status', 'Materia actualizada correctamente.');
+        return $this->actualizarModelo($request, $materia);
     }
 
     public function destroy(Materia $materia): RedirectResponse
     {
-        if ($materia->grupos()->exists()) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar: la materia tiene grupos asociados.');
-        }
-
-        $materia->delete();
-
-        return redirect()->back()->with('status', 'Materia eliminada.');
-    }
-
-    private function validarDatos(Request $request, ?Materia $materia = null): array
-    {
-        return $request->validate([
-            'sigla' => ['required', 'string', 'max:20', 'unique:materias,sigla,'.($materia?->id ?? 'NULL')],
-            'nombre' => ['required', 'string', 'max:150'],
-            'carrera_id' => ['required', 'exists:carreras,id'],
-            'horas' => ['required', 'integer', 'min:0', 'max:40'],
-        ]);
+        return $this->eliminarModelo($materia);
     }
 }

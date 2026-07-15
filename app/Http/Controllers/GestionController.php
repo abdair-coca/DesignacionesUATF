@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\CatalogoCrud;
 use App\Models\Gestion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,6 +11,35 @@ use Inertia\Response;
 
 class GestionController extends Controller
 {
+    use CatalogoCrud;
+
+    protected function modelo(): string
+    {
+        return Gestion::class;
+    }
+
+    protected function nombreEntidad(): string
+    {
+        return 'Gestión';
+    }
+
+    protected function rutaIndex(): string
+    {
+        return 'gestiones.index';
+    }
+
+    protected function destroyRelacion(): ?string
+    {
+        return 'designaciones';
+    }
+
+    protected function reglas(Request $request, ?int $id = null): array
+    {
+        return $request->validate([
+            'nombre' => ['required', 'string', 'max:20', 'unique:gestiones,nombre,'.($id ?? 'NULL')],
+        ]);
+    }
+
     public function index(): Response
     {
         return Inertia::render('Gestiones/Index', [
@@ -22,14 +52,6 @@ class GestionController extends Controller
         return Inertia::render('Gestiones/Create');
     }
 
-    public function store(Request $request): RedirectResponse
-    {
-        Gestion::create($this->validarDatos($request));
-
-        return redirect()->route('gestiones.index')
-            ->with('status', 'Gestión creada correctamente.');
-    }
-
     public function edit(Gestion $gestion): Response
     {
         return Inertia::render('Gestiones/Edit', ['gestion' => $gestion]);
@@ -37,28 +59,11 @@ class GestionController extends Controller
 
     public function update(Request $request, Gestion $gestion): RedirectResponse
     {
-        $gestion->update($this->validarDatos($request, $gestion));
-
-        return redirect()->route('gestiones.index')
-            ->with('status', 'Gestión actualizada correctamente.');
+        return $this->actualizarModelo($request, $gestion);
     }
 
     public function destroy(Gestion $gestion): RedirectResponse
     {
-        if ($gestion->designaciones()->exists()) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar: la gestión tiene designaciones asociadas.');
-        }
-
-        $gestion->delete();
-
-        return redirect()->back()->with('status', 'Gestión eliminada.');
-    }
-
-    private function validarDatos(Request $request, ?Gestion $gestion = null): array
-    {
-        return $request->validate([
-            'nombre' => ['required', 'string', 'max:20', 'unique:gestiones,nombre,'.($gestion?->id ?? 'NULL')],
-        ]);
+        return $this->eliminarModelo($gestion);
     }
 }

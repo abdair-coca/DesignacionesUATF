@@ -15,7 +15,7 @@ class CarreraFactory extends Factory
     public function definition(): array
     {
         return [
-            'sigla' => strtoupper(fake()->unique()->lexify('???')),
+            'sigla' => strtoupper(fake()->unique()->bothify('??##')),
             'nombre' => 'Carrera de '.fake()->unique()->words(2, true),
         ];
     }

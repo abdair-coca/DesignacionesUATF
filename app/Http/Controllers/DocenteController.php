@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Carrera;
+use App\Http\Controllers\Concerns\CatalogoCrud;
 use App\Models\Docente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,83 +11,70 @@ use Inertia\Response;
 
 class DocenteController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        $filtros = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'carrera_origen_id' => ['nullable', 'exists:carreras,id'],
-        ]);
+    use CatalogoCrud;
 
-        $docentes = Docente::with('carreraOrigen')
-            ->withCount('designaciones')
-            ->when($filtros['q'] ?? null, fn ($q, $texto) => $q->where(
-                fn ($sub) => $sub->whereRaw('LOWER(nombre) LIKE ?', ['%'.mb_strtolower($texto).'%'])
-                    ->orWhereRaw('LOWER(ci) LIKE ?', ['%'.mb_strtolower($texto).'%'])
-            ))
-            ->when($filtros['carrera_origen_id'] ?? null, fn ($q, $carreraId) => $q->where('carrera_origen_id', $carreraId))
-            ->orderBy('nombre')
-            ->paginate(15)
-            ->withQueryString();
+    protected function modelo(): string
+    {
+        return Docente::class;
+    }
+
+    protected function nombreEntidad(): string
+    {
+        return 'Docente';
+    }
+
+    protected function rutaIndex(): string
+    {
+        return 'docentes.index';
+    }
+
+    protected function destroyRelacion(): ?string
+    {
+        return 'designaciones';
+    }
+
+    protected function reglas(Request $request, ?int $id = null): array
+    {
+        return $request->validate([
+            'nombre' => ['required', 'string', 'max:150'],
+            'ci' => ['required', 'string', 'max:20', 'unique:docentes,ci,'.($id ?? 'NULL')],
+            'email' => ['nullable', 'email', 'max:150', 'unique:docentes,email,'.($id ?? 'NULL')],
+            'telefono' => ['nullable', 'string', 'max:20'],
+            'direccion' => ['nullable', 'string', 'max:200'],
+        ]);
+    }
+
+    public function index(): Response
+    {
+        $busqueda = request('busqueda');
 
         return Inertia::render('Docentes/Index', [
-            'docentes' => $docentes,
-            'carreras' => Carrera::orderBy('nombre')->get(),
-            'filtros' => [
-                'q' => $filtros['q'] ?? '',
-                'carrera_origen_id' => $filtros['carrera_origen_id'] ?? '',
-            ],
+            'docentes' => Docente::query()
+                ->when($busqueda, fn ($q, $b) => $q->where('nombre', 'ilike', "%{$b}%"))
+                ->withCount('designaciones')
+                ->orderBy('nombre')
+                ->get(),
+            'busqueda' => $busqueda,
         ]);
     }
 
     public function create(): Response
     {
-        return Inertia::render('Docentes/Create', [
-            'carreras' => Carrera::orderBy('nombre')->get(),
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        Docente::create($this->validarDatos($request));
-
-        return redirect()->route('docentes.index')
-            ->with('status', 'Docente creado correctamente.');
+        return Inertia::render('Docentes/Create');
     }
 
     public function edit(Docente $docente): Response
     {
-        return Inertia::render('Docentes/Edit', [
-            'docente' => $docente,
-            'carreras' => Carrera::orderBy('nombre')->get(),
-        ]);
+        return Inertia::render('Docentes/Edit', ['docente' => $docente]);
     }
 
     public function update(Request $request, Docente $docente): RedirectResponse
     {
-        $docente->update($this->validarDatos($request, $docente));
-
-        return redirect()->route('docentes.index')
-            ->with('status', 'Docente actualizado correctamente.');
+        return $this->actualizarModelo($request, $docente);
     }
 
     public function destroy(Docente $docente): RedirectResponse
     {
-        if ($docente->designaciones()->exists()) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar: el docente tiene designaciones asociadas.');
-        }
-
-        $docente->delete();
-
-        return redirect()->back()->with('status', 'Docente eliminado.');
-    }
-
-    private function validarDatos(Request $request, ?Docente $docente = null): array
-    {
-        return $request->validate([
-            'nombre' => ['required', 'string', 'max:150'],
-            'ci' => ['required', 'string', 'max:20', 'unique:docentes,ci,'.($docente?->id ?? 'NULL')],
-            'carrera_origen_id' => ['nullable', 'exists:carreras,id'],
-        ]);
+        return $this->eliminarModelo($docente);
     }
 }
