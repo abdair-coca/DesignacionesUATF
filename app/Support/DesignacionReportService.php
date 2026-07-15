@@ -11,6 +11,8 @@ use Illuminate\Support\Collection;
 
 class DesignacionReportService
 {
+    public function __construct(private CargaAcademicaService $cargaAcademica) {}
+
     /**
      * Resumen por carrera: materias, grupos habilitados, asignados, situación.
      */
@@ -159,6 +161,40 @@ class DesignacionReportService
             ],
             'docentesBajoLimite' => $docentesBajoLimite,
             'limiteHoras' => CargaAcademicaService::LIMITE_HORAS,
+        ];
+    }
+
+    /**
+     * Resumen de carga horaria para el form de crear/editar designación.
+     */
+    public function resumenCarga(array $inputs, ?int $excluirDesignacionId = null): array
+    {
+        $docenteId = ! empty($inputs['Id_docente']) ? (int) $inputs['Id_docente'] : null;
+        $materiaId = ! empty($inputs['Id_materia']) ? (int) $inputs['Id_materia'] : null;
+        $grupoId = ! empty($inputs['Id_grupo']) ? (int) $inputs['Id_grupo'] : null;
+        $gestionId = ! empty($inputs['Id_gestion']) ? (int) $inputs['Id_gestion'] : null;
+        $periodoId = ! empty($inputs['Id_periodo']) ? (int) $inputs['Id_periodo'] : null;
+
+        $horasActuales = null;
+        $horasMateria = $materiaId ? (int) (Materia::find($materiaId)?->horas ?? 0) : 0;
+        $hayChoque = false;
+
+        if ($docenteId && $gestionId && $periodoId) {
+            $horasActuales = $this->cargaAcademica->horasAsignadas($docenteId, $gestionId, $periodoId, $excluirDesignacionId);
+        }
+
+        if ($grupoId && $gestionId && $periodoId) {
+            $hayChoque = $this->cargaAcademica->hayChoque($grupoId, $gestionId, $periodoId, $excluirDesignacionId);
+        }
+
+        $horasProyectadas = $horasActuales === null ? null : $horasActuales + $horasMateria;
+
+        return [
+            'horasActuales' => $horasActuales,
+            'horasProyectadas' => $horasProyectadas,
+            'limite' => CargaAcademicaService::LIMITE_HORAS,
+            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > CargaAcademicaService::LIMITE_HORAS,
+            'hayChoque' => $hayChoque,
         ];
     }
 }

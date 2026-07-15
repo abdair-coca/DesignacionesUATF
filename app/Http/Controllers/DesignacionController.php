@@ -274,7 +274,9 @@ class DesignacionController extends Controller
     {
         return Inertia::render('Designaciones/Create', array_merge($this->catalogos(), [
             'prefill' => $request->only(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']),
-            'resumenCarga' => $this->resumenCarga($request),
+            'resumenCarga' => $this->reportes->resumenCarga($request->only([
+                'Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo',
+            ])),
         ]));
     }
 
@@ -295,7 +297,9 @@ class DesignacionController extends Controller
             $this->catalogos(),
             [
                 'designacion' => $designacion,
-                'resumenCarga' => $this->resumenCarga($request, $designacion->id),
+                'resumenCarga' => $this->reportes->resumenCarga($request->only([
+                    'Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo',
+                ]), $designacion->id),
             ]
         ));
     }
@@ -332,37 +336,6 @@ class DesignacionController extends Controller
             'grupos' => Grupo::with('materia')->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
-        ];
-    }
-
-    private function resumenCarga(Request $request, ?int $excluirDesignacionId = null): array
-    {
-        $docenteId = $request->filled('Id_docente') ? (int) $request->input('Id_docente') : null;
-        $materiaId = $request->filled('Id_materia') ? (int) $request->input('Id_materia') : null;
-        $grupoId = $request->filled('Id_grupo') ? (int) $request->input('Id_grupo') : null;
-        $gestionId = $request->filled('Id_gestion') ? (int) $request->input('Id_gestion') : null;
-        $periodoId = $request->filled('Id_periodo') ? (int) $request->input('Id_periodo') : null;
-
-        $horasActuales = null;
-        $horasMateria = $materiaId ? (int) (Materia::find($materiaId)?->horas ?? 0) : 0;
-        $hayChoque = false;
-
-        if ($docenteId && $gestionId && $periodoId) {
-            $horasActuales = $this->cargaAcademica->horasAsignadas($docenteId, $gestionId, $periodoId, $excluirDesignacionId);
-        }
-
-        if ($grupoId && $gestionId && $periodoId) {
-            $hayChoque = $this->cargaAcademica->hayChoque($grupoId, $gestionId, $periodoId, $excluirDesignacionId);
-        }
-
-        $horasProyectadas = $horasActuales === null ? null : $horasActuales + $horasMateria;
-
-        return [
-            'horasActuales' => $horasActuales,
-            'horasProyectadas' => $horasProyectadas,
-            'limite' => CargaAcademicaService::LIMITE_HORAS,
-            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > CargaAcademicaService::LIMITE_HORAS,
-            'hayChoque' => $hayChoque,
         ];
     }
 }
