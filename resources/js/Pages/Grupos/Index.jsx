@@ -1,12 +1,13 @@
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
-import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
-import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
+import DataTable from '@/Components/DataTable';
+import FilaAcciones from '@/Components/FilaAcciones';
+import FilterBar from '@/Components/FilterBar';
 
 const badgeEstado = {
     habilitado: { tono: 'verde', icono: 'check', etiqueta: 'Habilitado' },
@@ -40,117 +41,91 @@ export default function Index({ grupos, materias, filtros }) {
                 </Link>
             </div>
 
-            <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                <div className="w-56">
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Materia</label>
-                    <Select value={filtros.materia_id} onChange={(e) => aplicarFiltros({ materia_id: e.target.value })}>
-                        <option value="">Todas</option>
-                        {materias.map((materia) => (
-                            <option key={materia.id} value={materia.id}>
-                                {materia.sigla} — {materia.nombre}
-                            </option>
+            <FilterBar
+                campos={[
+                    {
+                        key: 'materia_id',
+                        label: 'Materia',
+                        valor: filtros.materia_id,
+                        todos: 'Todas',
+                        opciones: materias.map((m) => ({ value: m.id, label: `${m.sigla} — ${m.nombre}` })),
+                    },
+                    {
+                        key: 'estado',
+                        label: 'Estado',
+                        valor: filtros.estado,
+                        todos: 'Todos',
+                        opciones: [
+                            { value: 'habilitado', label: 'Habilitado' },
+                            { value: 'deshabilitado', label: 'Deshabilitado' },
+                        ],
+                    },
+                ]}
+                onChange={aplicarFiltros}
+                onLimpiar={() => aplicarFiltros({ materia_id: '', estado: '' })}
+                hayFiltrosActivos={hayFiltros}
+            />
+
+            <DataTable>
+                <thead className="bg-gray-50/80">
+                    <tr>
+                        {['Grupo', 'Materia', 'Estado', 'Designaciones', 'Acciones'].map((encabezado) => (
+                            <th
+                                key={encabezado}
+                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                            >
+                                {encabezado}
+                            </th>
                         ))}
-                    </Select>
-                </div>
-
-                <div className="w-44">
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">Estado</label>
-                    <Select value={filtros.estado} onChange={(e) => aplicarFiltros({ estado: e.target.value })}>
-                        <option value="">Todos</option>
-                        <option value="habilitado">Habilitado</option>
-                        <option value="deshabilitado">Deshabilitado</option>
-                    </Select>
-                </div>
-
-                <button
-                    onClick={() => aplicarFiltros({ materia_id: '', estado: '' })}
-                    disabled={!hayFiltros}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    title="Limpiar filtros"
-                >
-                    <Icono tipo="embudo" className="h-4 w-4" />
-                    Filtros
-                </button>
-            </div>
-
-            <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50/80">
-                            <tr>
-                                {['Grupo', 'Materia', 'Estado', 'Designaciones', 'Acciones'].map((encabezado) => (
-                                    <th
-                                        key={encabezado}
-                                        className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {grupos.data.length === 0 && (
+                        <tr>
+                            <td colSpan={5}>
+                                <EmptyState
+                                    titulo="Sin resultados"
+                                    subtitulo="Ningún grupo coincide con los filtros actuales."
+                                    accion={hayFiltros ? { label: 'Limpiar filtros', onClick: () => aplicarFiltros({ materia_id: '', estado: '' }) } : undefined}
+                                />
+                            </td>
+                        </tr>
+                    )}
+                    {grupos.data.map((grupo, indice) => (
+                        <tr
+                            key={grupo.id}
+                            className="fila-entra transition-colors hover:bg-gray-50/60"
+                            style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+                        >
+                            <td className="px-4 py-3.5">
+                                <div className="flex items-center gap-3">
+                                    <span
+                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[grupo.id % paletaIcono.length]}`}
                                     >
-                                        {encabezado}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {grupos.data.length === 0 && (
-                                <tr>
-                                    <td colSpan={5}>
-                                        <EmptyState
-                                            titulo="Sin resultados"
-                                            subtitulo="Ningún grupo coincide con los filtros actuales."
-                                            accion={hayFiltros ? { label: 'Limpiar filtros', onClick: () => aplicarFiltros({ materia_id: '', estado: '' }) } : undefined}
-                                        />
-                                    </td>
-                                </tr>
-                            )}
-                            {grupos.data.map((grupo, indice) => (
-                                <tr
-                                    key={grupo.id}
-                                    className="fila-entra transition-colors hover:bg-gray-50/60"
-                                    style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
-                                >
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-3">
-                                            <span
-                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[grupo.id % paletaIcono.length]}`}
-                                            >
-                                                {grupo.codigo}
-                                            </span>
-                                            <div>
-                                                <p className="font-medium text-gray-900">Grupo {grupo.codigo}</p>
-                                                <p className="mt-0.5 text-xs text-gray-400">{grupo.materia.carrera.sigla}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3.5 text-gray-600">
-                                        {grupo.materia.sigla} — {grupo.materia.nombre}
-                                    </td>
-                                    <td className="px-4 py-3.5">
-                                        <Badge tono={badgeEstado[grupo.estado].tono} icono={badgeEstado[grupo.estado].icono}>
-                                            {badgeEstado[grupo.estado].etiqueta}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3.5 text-gray-600 tabular-nums">{grupo.designaciones_count}</td>
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-0.5">
-                                            <Link
-                                                href={route('grupos.edit', grupo.id)}
-                                                title="Editar"
-                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                            >
-                                                <Icono tipo="lapiz" className="h-[18px] w-[18px]" />
-                                            </Link>
-                                            <ConfirmDeleteButton
-                                                deleteUrl={route('grupos.destroy', grupo.id)}
-                                                mensaje={`¿Eliminar el grupo ${grupo.codigo} de ${grupo.materia.sigla}?`}
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                        {grupo.codigo}
+                                    </span>
+                                    <div>
+                                        <p className="font-medium text-gray-900">Grupo {grupo.codigo}</p>
+                                        <p className="mt-0.5 text-xs text-gray-400">{grupo.materia.carrera.sigla}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="px-4 py-3.5 text-gray-600">
+                                {grupo.materia.sigla} — {grupo.materia.nombre}
+                            </td>
+                            <td className="px-4 py-3.5">
+                                <Badge tono={badgeEstado[grupo.estado].tono} icono={badgeEstado[grupo.estado].icono}>
+                                    {badgeEstado[grupo.estado].etiqueta}
+                                </Badge>
+                            </td>
+                            <td className="px-4 py-3.5 text-gray-600 tabular-nums">{grupo.designaciones_count}</td>
+                            <FilaAcciones editRoute={route('grupos.edit', grupo.id)} deleteRoute={route('grupos.destroy', grupo.id)} />
+                        </tr>
+                    ))}
+                </tbody>
+            </DataTable>
 
-                <Pagination paginador={grupos} etiqueta="grupos" />
-            </div>
+            <Pagination paginador={grupos} etiqueta="grupos" />
         </AppLayout>
     );
 }

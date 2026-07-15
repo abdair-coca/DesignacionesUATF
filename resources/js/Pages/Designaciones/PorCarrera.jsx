@@ -8,6 +8,9 @@ import StatTile from '../../Components/StatTile';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 import { useDebouncedSearch } from '../../Hooks/useDebouncedSearch';
+import FilterBar from '@/Components/FilterBar';
+import GraficoAnillo from '@/Components/GraficoAnillo';
+import BarraProgreso from '@/Components/BarraProgreso';
 
 function textoPorcentaje(cantidad, total) {
     if (!total) return '0% del total';
@@ -15,81 +18,6 @@ function textoPorcentaje(cantidad, total) {
     return `${Number.isInteger(pct) ? pct : pct.toFixed(1)}% del total`;
 }
 
-function BarraProgreso({ cantidad, total, tono }) {
-    const pct = total > 0 ? Math.round((cantidad / total) * 100) : 0;
-    const colores = {
-        verde: ['text-green-700', 'bg-green-500'],
-        naranja: ['text-amber-700', 'bg-amber-400'],
-        rojo: ['text-red-700', 'bg-red-500'],
-    };
-    const [texto, barra] = colores[tono];
-
-    return (
-        <div>
-            <p className="text-sm tabular-nums">
-                <span className={`font-semibold ${texto}`}>{cantidad}</span>{' '}
-                <span className="text-xs text-gray-400">({pct}%)</span>
-            </p>
-            <div className="mt-1.5 h-1.5 w-24 overflow-hidden rounded-full bg-gray-100 ring-1 ring-inset ring-gray-200/50">
-                <div
-                    className={`h-full rounded-full transition-[width] duration-500 ease-out ${barra}`}
-                    style={{ width: `${pct}%` }}
-                />
-            </div>
-        </div>
-    );
-}
-
-function Dona({ resumen }) {
-    const radio = 40;
-    const circunferencia = 2 * Math.PI * radio;
-    const total = resumen.total || 1;
-    const segmentos = [
-        { cantidad: resumen.activas, color: '#22c55e' },
-        { cantidad: resumen.pendientes, color: '#f59e0b' },
-        { cantidad: resumen.sin, color: '#ef4444' },
-    ];
-    const visibles = segmentos.filter((s) => s.cantidad > 0).length;
-    const separacion = visibles > 1 ? 1.8 : 0;
-
-    let acumulado = 0;
-    const arcos = segmentos.map((segmento) => {
-        const inicio = acumulado;
-        acumulado += segmento.cantidad;
-        return { ...segmento, inicio };
-    });
-
-    return (
-        <div className="relative">
-            <svg viewBox="0 0 100 100" className="h-40 w-40">
-                <circle cx="50" cy="50" r={radio} fill="none" stroke="#f3f4f6" strokeWidth="12" />
-                {arcos.map(
-                    (arco, i) =>
-                        arco.cantidad > 0 && (
-                            <circle
-                                key={i}
-                                cx="50"
-                                cy="50"
-                                r={radio}
-                                fill="none"
-                                stroke={arco.color}
-                                strokeWidth="12"
-                                strokeLinecap={visibles > 1 ? 'round' : 'butt'}
-                                strokeDasharray={`${Math.max((arco.cantidad / total) * circunferencia - separacion, 0.6)} ${circunferencia}`}
-                                strokeDashoffset={-(arco.inicio / total) * circunferencia - separacion / 2}
-                                transform="rotate(-90 50 50)"
-                                className="[transition:stroke-dasharray_.5s_ease,stroke-dashoffset_.5s_ease]"
-                            />
-                        )
-                )}
-            </svg>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-semibold tracking-tight text-gray-900 tabular-nums">{resumen.total}</span>
-                <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">carreras</span>
-            </div>
-        </div>
-    );
-}
 
 export default function PorCarrera({ carreras, resumen, gestiones, periodos, filtros }) {
     const [busqueda, buscar] = useDebouncedSearch(filtros, { only: ['carreras', 'resumen', 'filtros'] });
@@ -186,77 +114,39 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                         />
                     </div>
 
-                    <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                        <div className="relative min-w-52 flex-1">
-                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                <Icono tipo="buscar" className="h-4 w-4" />
-                            </span>
-                            <input
-                                type="text"
-                                placeholder="Buscar carrera..."
-                                value={busqueda}
-                                onChange={(e) => buscar(e.target.value)}
-                                className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-9 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                            />
-                            {busqueda !== '' && (
-                                <button
-                                    onClick={() => buscar('')}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500"
-                                    title="Limpiar búsqueda"
-                                >
-                                    <Icono tipo="cerrar" className="h-3.5 w-3.5" />
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="w-32">
-                            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                                Gestión
-                            </label>
-                            <Select value={filtros.gestion_id} onChange={(e) => aplicarFiltros({ gestion_id: e.target.value })}>
-                                {gestiones.map((gestion) => (
-                                    <option key={gestion.id} value={gestion.id}>
-                                        {gestion.nombre}
-                                    </option>
-                                ))}
-                            </Select>
-                        </div>
-
-                        <div className="w-32">
-                            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                                Periodo
-                            </label>
-                            <Select value={filtros.periodo_id} onChange={(e) => aplicarFiltros({ periodo_id: e.target.value })}>
-                                {periodos.map((periodo) => (
-                                    <option key={periodo.id} value={periodo.id}>
-                                        {periodo.nombre}
-                                    </option>
-                                ))}
-                            </Select>
-                        </div>
-
-                        <div className="w-44">
-                            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                                Estado
-                            </label>
-                            <Select value={filtros.estado} onChange={(e) => aplicarFiltros({ estado: e.target.value })}>
-                                <option value="">Todas</option>
-                                <option value="activas">Con designaciones activas</option>
-                                <option value="pendientes">Con pendientes</option>
-                                <option value="sin">Sin designaciones</option>
-                            </Select>
-                        </div>
-
-                        <button
-                            onClick={limpiarFiltros}
-                            disabled={!hayFiltrosActivos}
-                            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            title="Limpiar filtros"
-                        >
-                            <Icono tipo="embudo" className="h-4 w-4" />
-                            Filtros
-                        </button>
-                    </div>
+                    <FilterBar
+                        busqueda={busqueda}
+                        onBusquedaChange={buscar}
+                        placeholder="Buscar carrera..."
+                        campos={[
+                            {
+                                key: 'gestion_id',
+                                label: 'Gestión',
+                                valor: filtros.gestion_id,
+                                opciones: gestiones.map((g) => ({ value: g.id, label: g.nombre })),
+                            },
+                            {
+                                key: 'periodo_id',
+                                label: 'Periodo',
+                                valor: filtros.periodo_id,
+                                opciones: periodos.map((p) => ({ value: p.id, label: p.nombre })),
+                            },
+                            {
+                                key: 'estado',
+                                label: 'Estado',
+                                valor: filtros.estado,
+                                todos: 'Todas',
+                                opciones: [
+                                    { value: 'activas', label: 'Con designaciones activas' },
+                                    { value: 'pendientes', label: 'Con pendientes' },
+                                    { value: 'sin', label: 'Sin designaciones' },
+                                ],
+                            },
+                        ]}
+                        onChange={aplicarFiltros}
+                        onLimpiar={limpiarFiltros}
+                        hayFiltrosActivos={hayFiltrosActivos}
+                    />
 
                     <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
                         <div className="overflow-x-auto">
@@ -365,7 +255,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                     <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
                         <h3 className="font-semibold tracking-tight text-gray-900">Resumen general</h3>
                         <div className="mt-4 flex justify-center">
-                            <Dona resumen={resumen} />
+                            <GraficoAnillo resumen={resumen} />
                         </div>
                         <ul className="mt-5 space-y-1">
                             {leyendaDona.map((fila) => (
