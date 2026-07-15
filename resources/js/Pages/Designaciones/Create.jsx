@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { Link, router, useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import FormFields from './FormFields';
 import WarningBanner from '../../Components/WarningBanner';
+import FormActions from '@/Components/FormActions';
+import { useResumenCarga } from '../../Hooks/useResumenCarga';
 
 export default function Create({ docentes, materias, grupos, gestiones, periodos, prefill, resumenCarga }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -14,20 +15,7 @@ export default function Create({ docentes, materias, grupos, gestiones, periodos
         estado: 'propuesta',
     });
 
-    useEffect(() => {
-        router.reload({
-            only: ['resumenCarga'],
-            data: {
-                Id_docente: data.Id_docente,
-                Id_materia: data.Id_materia,
-                Id_grupo: data.Id_grupo,
-                Id_gestion: data.Id_gestion,
-                Id_periodo: data.Id_periodo,
-            },
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }, [data.Id_docente, data.Id_materia, data.Id_grupo, data.Id_gestion, data.Id_periodo]);
+    useResumenCarga(data);
 
     function submit(e) {
         e.preventDefault();
@@ -60,21 +48,7 @@ export default function Create({ docentes, materias, grupos, gestiones, periodos
                         <WarningBanner mensaje="Este grupo ya tiene otra designación activa en esta gestión y periodo." />
                     )}
 
-                    <div className="flex justify-end gap-3">
-                        <Link
-                            href={route('designaciones.index')}
-                            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
-                        >
-                            Cancelar
-                        </Link>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            Guardar
-                        </button>
-                    </div>
+                    <FormActions onCancel={route('designaciones.index')} processing={processing} label="Guardar" />
                 </form>
             </div>
         </AppLayout>
