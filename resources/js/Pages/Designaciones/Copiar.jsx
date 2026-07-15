@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
 import { router, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-
-const selectClass =
-    'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm transition-colors hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+import Select from '@/Components/Select';
 
 export default function Copiar({ carreras, gestiones, periodos, docentes, filtros, filas: filasOrigen }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -58,8 +56,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
             <div className="mb-6 grid grid-cols-1 gap-4 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm sm:grid-cols-5">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Carrera</label>
-                    <select
-                        className={selectClass}
+                    <Select
                         value={filtros.carrera_id ?? ''}
                         onChange={(e) => actualizarFiltro('carrera_id', e.target.value)}
                     >
@@ -69,13 +66,12 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                                 {carrera.sigla}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Gestión origen</label>
-                    <select
-                        className={selectClass}
+                    <Select
                         value={filtros.gestion_origen_id ?? ''}
                         onChange={(e) => actualizarFiltro('gestion_origen_id', e.target.value)}
                     >
@@ -85,13 +81,12 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                                 {gestion.nombre}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Periodo origen</label>
-                    <select
-                        className={selectClass}
+                    <Select
                         value={filtros.periodo_origen_id ?? ''}
                         onChange={(e) => actualizarFiltro('periodo_origen_id', e.target.value)}
                     >
@@ -101,13 +96,12 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                                 {periodo.nombre}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Gestión destino</label>
-                    <select
-                        className={selectClass}
+                    <Select
                         value={filtros.gestion_destino_id ?? ''}
                         onChange={(e) => actualizarFiltro('gestion_destino_id', e.target.value)}
                     >
@@ -117,13 +111,12 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                                 {gestion.nombre}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Periodo destino</label>
-                    <select
-                        className={selectClass}
+                    <Select
                         value={filtros.periodo_destino_id ?? ''}
                         onChange={(e) => actualizarFiltro('periodo_destino_id', e.target.value)}
                     >
@@ -133,7 +126,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                                 {periodo.nombre}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
             </div>
 
