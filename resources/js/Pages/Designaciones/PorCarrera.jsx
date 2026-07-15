@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
@@ -8,6 +7,7 @@ import Pagination from '../../Components/Pagination';
 import StatTile from '../../Components/StatTile';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
+import { useDebouncedSearch } from '../../Hooks/useDebouncedSearch';
 
 function textoPorcentaje(cantidad, total) {
     if (!total) return '0% del total';
@@ -92,8 +92,7 @@ function Dona({ resumen }) {
 }
 
 export default function PorCarrera({ carreras, resumen, gestiones, periodos, filtros }) {
-    const [busqueda, setBusqueda] = useState(filtros.q ?? '');
-    const temporizador = useRef(null);
+    const [busqueda, buscar] = useDebouncedSearch(filtros, { only: ['carreras', 'resumen', 'filtros'] });
 
     function aplicarFiltros(cambios) {
         router.get(
@@ -114,15 +113,8 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
         );
     }
 
-    function cambiarBusqueda(valor) {
-        setBusqueda(valor);
-        clearTimeout(temporizador.current);
-        temporizador.current = setTimeout(() => aplicarFiltros({ q: valor }), 350);
-    }
-
     function limpiarFiltros() {
-        setBusqueda('');
-        clearTimeout(temporizador.current);
+        buscar('');
         router.get(
             route('designaciones.index'),
             {},
@@ -203,12 +195,12 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                 type="text"
                                 placeholder="Buscar carrera..."
                                 value={busqueda}
-                                onChange={(e) => cambiarBusqueda(e.target.value)}
+                                onChange={(e) => buscar(e.target.value)}
                                 className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-9 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                             />
                             {busqueda !== '' && (
                                 <button
-                                    onClick={() => cambiarBusqueda('')}
+                                    onClick={() => buscar('')}
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500"
                                     title="Limpiar búsqueda"
                                 >
