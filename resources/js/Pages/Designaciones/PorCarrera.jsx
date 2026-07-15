@@ -1,12 +1,11 @@
 import { useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import { Icono, IconoPuntos } from '../../Components/Icono';
+import { Icono } from '../../Components/Icono';
 import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import StatTile from '../../Components/StatTile';
-import MenuFlotante from '../../Components/MenuFlotante';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 
@@ -94,7 +93,6 @@ function Dona({ resumen }) {
 
 export default function PorCarrera({ carreras, resumen, gestiones, periodos, filtros }) {
     const [busqueda, setBusqueda] = useState(filtros.q ?? '');
-    const [menuAbierto, setMenuAbierto] = useState(null);
     const temporizador = useRef(null);
 
     function aplicarFiltros(cambios) {
@@ -142,7 +140,6 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
 
     const accionesRapidas = [
         { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
-        { etiqueta: 'Asignar por carrera', tipo: 'lote', href: route('designaciones.asignar') },
         { etiqueta: 'Copiar designaciones', tipo: 'copiar', href: route('designaciones.copiar') },
     ];
 
@@ -349,48 +346,17 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                                     >
                                                         <Icono tipo="ojo" className="h-[18px] w-[18px]" />
                                                     </Link>
-                                                    <button
-                                                        onClick={(e) =>
-                                                            setMenuAbierto(
-                                                                menuAbierto?.id === carrera.id ? null : { id: carrera.id, el: e.currentTarget }
-                                                            )
-                                                        }
+                                                    <Link
+                                                        href={route('designaciones.copiar', {
+                                                            carrera_id: carrera.id,
+                                                            gestion_destino_id: filtros.gestion_id,
+                                                            periodo_destino_id: filtros.periodo_id,
+                                                        })}
+                                                        title="Copiar de otra gestión"
                                                         className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
-                                                        title="Más acciones"
                                                     >
-                                                        <IconoPuntos className="h-[18px] w-[18px]" />
-                                                    </button>
-
-                                                    {menuAbierto?.id === carrera.id && (
-                                                        <MenuFlotante anchorEl={menuAbierto.el} onClose={() => setMenuAbierto(null)} width={224}>
-                                                            <Link
-                                                                href={route('designaciones.asignar', {
-                                                                    carrera_id: carrera.id,
-                                                                    gestion_id: filtros.gestion_id,
-                                                                    periodo_id: filtros.periodo_id,
-                                                                })}
-                                                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                            >
-                                                                <span className="text-gray-400">
-                                                                    <Icono tipo="lote" className="h-4 w-4" />
-                                                                </span>
-                                                                Asignar docentes
-                                                            </Link>
-                                                            <Link
-                                                                href={route('designaciones.copiar', {
-                                                                    carrera_id: carrera.id,
-                                                                    gestion_destino_id: filtros.gestion_id,
-                                                                    periodo_destino_id: filtros.periodo_id,
-                                                                })}
-                                                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                            >
-                                                                <span className="text-gray-400">
-                                                                    <Icono tipo="copiar" className="h-4 w-4" />
-                                                                </span>
-                                                                Copiar de otra gestión
-                                                            </Link>
-                                                        </MenuFlotante>
-                                                    )}
+                                                        <Icono tipo="copiar" className="h-[18px] w-[18px]" />
+                                                    </Link>
                                                 </div>
                                             </td>
                                         </tr>

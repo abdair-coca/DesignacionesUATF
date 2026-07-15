@@ -31,10 +31,6 @@ Route::middleware('auth')->group(function () {
         ->name('designaciones.carrera');
     Route::post('designaciones/carrera/{carrera}/guardar', [DesignacionController::class, 'guardarRoster'])
         ->name('designaciones.carrera.guardar');
-    Route::get('designaciones/asignar', [DesignacionMasivaController::class, 'asignarForm'])
-        ->name('designaciones.asignar');
-    Route::post('designaciones/asignar', [DesignacionMasivaController::class, 'asignarStore'])
-        ->name('designaciones.asignar.store');
     Route::get('designaciones/copiar', [DesignacionMasivaController::class, 'copiarForm'])
         ->name('designaciones.copiar');
     Route::post('designaciones/copiar', [DesignacionMasivaController::class, 'copiarStore'])

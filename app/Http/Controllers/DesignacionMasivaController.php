@@ -6,7 +6,6 @@ use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Gestion;
-use App\Models\Grupo;
 use App\Models\Periodo;
 use App\Support\CargaAcademicaService;
 use Illuminate\Http\RedirectResponse;
@@ -18,61 +17,6 @@ use Inertia\Response;
 class DesignacionMasivaController extends Controller
 {
     public function __construct(private CargaAcademicaService $cargaAcademica) {}
-
-    public function asignarForm(Request $request): Response
-    {
-        $filtros = $request->validate([
-            'carrera_id' => ['nullable', 'exists:carreras,id'],
-            'gestion_id' => ['nullable', 'exists:gestiones,id'],
-            'periodo_id' => ['nullable', 'exists:periodos,id'],
-        ]);
-
-        $pendientes = null;
-        $completo = ! empty($filtros['carrera_id']) && ! empty($filtros['gestion_id']) && ! empty($filtros['periodo_id']);
-
-        if ($completo) {
-            $pendientes = Grupo::with('materia')
-                ->where('estado', 'habilitado')
-                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $filtros['carrera_id']))
-                ->whereDoesntHave('designaciones', function ($q) use ($filtros) {
-                    $q->where('Id_gestion', $filtros['gestion_id'])
-                        ->where('Id_periodo', $filtros['periodo_id'])
-                        ->where('estado', '!=', 'rechazada');
-                })
-                ->orderBy('codigo')
-                ->get();
-        }
-
-        return Inertia::render('Designaciones/AsignarPorCarrera', [
-            'carreras' => Carrera::orderBy('nombre')->get(),
-            'gestiones' => Gestion::orderBy('nombre')->get(),
-            'periodos' => Periodo::orderBy('nombre')->get(),
-            'docentes' => Docente::orderBy('nombre')->get(),
-            'filtros' => $filtros,
-            'pendientes' => $pendientes,
-        ]);
-    }
-
-    public function asignarStore(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'Id_gestion' => ['required', 'exists:gestiones,id'],
-            'Id_periodo' => ['required', 'exists:periodos,id'],
-            'carrera_id' => ['required', 'exists:carreras,id'],
-            'filas' => ['required', 'array'],
-            'filas.*.Id_materia' => ['required', 'exists:materias,id'],
-            'filas.*.Id_grupo' => ['required', 'exists:grupos,id'],
-            'filas.*.Id_docente' => ['nullable', 'exists:docentes,id'],
-        ]);
-
-        $creadas = $this->crearEnLote($data, $request, fn (array $fila) => ! empty($fila['Id_docente']));
-
-        return redirect()->route('designaciones.asignar', [
-            'carrera_id' => $data['carrera_id'],
-            'gestion_id' => $data['Id_gestion'],
-            'periodo_id' => $data['Id_periodo'],
-        ])->with('status', "{$creadas} designación(es) creada(s) correctamente.");
-    }
 
     public function copiarForm(Request $request): Response
     {

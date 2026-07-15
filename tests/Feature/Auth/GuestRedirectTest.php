@@ -26,7 +26,6 @@ class GuestRedirectTest extends TestCase
             'periodos.index' => ['/periodos'],
             'designaciones.index' => ['/designaciones'],
             'designaciones.lista' => ['/designaciones/lista'],
-            'designaciones.asignar' => ['/designaciones/asignar'],
             'designaciones.copiar' => ['/designaciones/copiar'],
         ];
     }

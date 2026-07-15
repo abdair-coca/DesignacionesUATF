@@ -149,7 +149,12 @@ class DesignacionController extends Controller
             'designaciones' => $designaciones,
             'roster' => $roster,
             'historialPorGrupo' => $historialPorGrupo,
-            'docentes' => Docente::orderBy('nombre')->get(['id', 'nombre']),
+            'docentes' => Docente::with('carreraOrigen:id,sigla')->orderBy('nombre')->get(['id', 'nombre', 'carrera_origen_id'])
+                ->map(fn (Docente $d) => [
+                    'id' => $d->id,
+                    'nombre' => $d->nombre,
+                    'carreraSigla' => $d->carreraOrigen?->sigla,
+                ]),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
             'limiteHoras' => CargaAcademicaService::LIMITE_HORAS,

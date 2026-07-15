@@ -5,6 +5,7 @@ import { Icono } from '../../Components/Icono';
 import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import MenuFlotante from '../../Components/MenuFlotante';
+import ComboboxDocente from '../../Components/ComboboxDocente';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 
@@ -212,15 +213,6 @@ export default function Carrera({
     ];
 
     const accionesRapidas = [
-        {
-            etiqueta: 'Asignar por carrera',
-            tipo: 'lote',
-            href: route('designaciones.asignar', {
-                carrera_id: carrera.id,
-                gestion_id: filtros.gestion_id,
-                periodo_id: filtros.periodo_id,
-            }),
-        },
         {
             etiqueta: 'Copiar designaciones',
             tipo: 'copiar',
@@ -466,18 +458,12 @@ export default function Carrera({
                                                     <td className="px-4 py-3.5 text-gray-600">{fila.codigo}</td>
                                                     <td className="px-4 py-3.5 text-gray-600 tabular-nums">{fila.horas}h</td>
                                                     <td className="px-4 py-3.5">
-                                                        <Select
-                                                            className="max-w-56"
+                                                        <ComboboxDocente
+                                                            docentes={docentes}
                                                             value={valorDocente(fila)}
-                                                            onChange={(e) => cambiarDocente(fila, e.target.value)}
-                                                        >
-                                                            <option value="">— Sin asignar —</option>
-                                                            {docentes.map((docente) => (
-                                                                <option key={docente.id} value={docente.id}>
-                                                                    {docente.nombre}
-                                                                </option>
-                                                            ))}
-                                                        </Select>
+                                                            onChange={(valor) => cambiarDocente(fila, valor)}
+                                                            carreraSigla={carrera.sigla}
+                                                        />
                                                         {!esDirty && fila.aviso?.excedeLimite && (
                                                             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-700">
                                                                 <Icono tipo="alerta" className="h-3 w-3 shrink-0" />

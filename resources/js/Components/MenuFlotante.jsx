@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function MenuFlotante({ anchorEl, onClose, width = 224, children }) {
+export default function MenuFlotante({ anchorEl, onClose, width = 224, align = 'right', children }) {
     const [coords, setCoords] = useState(null);
 
     useLayoutEffect(() => {
@@ -9,7 +9,8 @@ export default function MenuFlotante({ anchorEl, onClose, width = 224, children 
 
         function actualizarPosicion() {
             const rect = anchorEl.getBoundingClientRect();
-            setCoords({ top: rect.bottom + 6, left: rect.right - width });
+            const left = align === 'left' ? rect.left : rect.right - width;
+            setCoords({ top: rect.bottom + 6, left });
         }
 
         actualizarPosicion();
@@ -19,7 +20,7 @@ export default function MenuFlotante({ anchorEl, onClose, width = 224, children 
             window.removeEventListener('scroll', actualizarPosicion, true);
             window.removeEventListener('resize', actualizarPosicion);
         };
-    }, [anchorEl, width]);
+    }, [anchorEl, width, align]);
 
     if (!anchorEl || !coords) return null;
 
