@@ -6,67 +6,69 @@ use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Gestion;
 use App\Models\Grupo;
-use App\Models\Materia;
 use App\Models\Periodo;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DesignacionSeeder extends Seeder
 {
+    /**
+     * Qué tan cubierta está cada combinación gestión/periodo y qué tan probable es cada
+     * estado, para que el dashboard y "Designaciones por carrera" tengan de todo: grupos
+     * sin cubrir, pendientes, aprobados y rechazados.
+     */
+    private const ESCENARIOS = [
+        ['gestion' => '2025', 'periodo' => '1', 'cobertura' => 0.9, 'estados' => ['aprobada' => 85, 'rechazada' => 15]],
+        ['gestion' => '2025', 'periodo' => '2', 'cobertura' => 0.85, 'estados' => ['aprobada' => 80, 'rechazada' => 20]],
+        ['gestion' => '2026', 'periodo' => '1', 'cobertura' => 0.75, 'estados' => ['aprobada' => 55, 'propuesta' => 30, 'rechazada' => 15]],
+        ['gestion' => '2026', 'periodo' => '2', 'cobertura' => 0.35, 'estados' => ['propuesta' => 70, 'aprobada' => 20, 'rechazada' => 10]],
+    ];
+
     public function run(): void
     {
-        $docentes = Docente::pluck('id', 'ci');
-        $materias = Materia::pluck('id', 'sigla');
-        $gestion2026 = Gestion::where('nombre', '2026')->value('id');
-        $periodoI = Periodo::where('nombre', '1')->value('id');
-        $periodoII = Periodo::where('nombre', '2')->value('id');
+        $grupos = Grupo::with('materia')->where('estado', 'habilitado')->get();
+        $docentesPorCarrera = Docente::all()->groupBy('carrera_origen_id');
+        $usuarioIds = User::pluck('id')->all();
 
-        $grupoA = fn (string $sigla) => Grupo::where('materia_id', $materias[$sigla])->where('codigo', 'A')->value('id');
+        foreach (self::ESCENARIOS as $escenario) {
+            $gestionId = Gestion::where('nombre', $escenario['gestion'])->value('id');
+            $periodoId = Periodo::where('nombre', $escenario['periodo'])->value('id');
 
-        $designaciones = [
-            [
-                'Id_docente' => $docentes['4521367'],
-                'Id_materia' => $materias['INF-101'],
-                'Id_grupo' => $grupoA('INF-101'),
-                'Id_gestion' => $gestion2026,
-                'Id_periodo' => $periodoI,
-                'estado' => 'aprobada',
-            ],
-            [
-                'Id_docente' => $docentes['3987456'],
-                'Id_materia' => $materias['INF-520'],
-                'Id_grupo' => $grupoA('INF-520'),
-                'Id_gestion' => $gestion2026,
-                'Id_periodo' => $periodoI,
-                'estado' => 'aprobada',
-            ],
-            [
-                'Id_docente' => $docentes['5102834'],
-                'Id_materia' => $materias['MAT-110'],
-                'Id_grupo' => $grupoA('MAT-110'),
-                'Id_gestion' => $gestion2026,
-                'Id_periodo' => $periodoI,
-                'estado' => 'propuesta',
-            ],
-            [
-                'Id_docente' => $docentes['6234871'],
-                'Id_materia' => $materias['MED-101'],
-                'Id_grupo' => $grupoA('MED-101'),
-                'Id_gestion' => $gestion2026,
-                'Id_periodo' => $periodoII,
-                'estado' => 'propuesta',
-            ],
-            [
-                'Id_docente' => $docentes['5678123'],
-                'Id_materia' => $materias['CIV-150'],
-                'Id_grupo' => $grupoA('CIV-150'),
-                'Id_gestion' => $gestion2026,
-                'Id_periodo' => $periodoII,
-                'estado' => 'rechazada',
-            ],
-        ];
+            foreach ($grupos as $grupo) {
+                if (!fake()->boolean((int) round($escenario['cobertura'] * 100))) {
+                    continue;
+                }
 
-        foreach ($designaciones as $designacion) {
-            Designacion::create($designacion);
+                $candidatos = $docentesPorCarrera->get($grupo->materia->carrera_id);
+                if (!$candidatos || $candidatos->isEmpty()) {
+                    continue;
+                }
+
+                Designacion::create([
+                    'Id_docente' => $candidatos->random()->id,
+                    'Id_materia' => $grupo->materia_id,
+                    'Id_grupo' => $grupo->id,
+                    'Id_gestion' => $gestionId,
+                    'Id_periodo' => $periodoId,
+                    'estado' => fake()->randomElement(self::expandirEstados($escenario['estados'])),
+                    'creado_por' => fake()->randomElement($usuarioIds),
+                    'aprobado_por' => null,
+                ]);
+            }
         }
+    }
+
+    /**
+     * Convierte ['aprobada' => 55, 'propuesta' => 30] en una lista con cada estado repetido
+     * según su peso, para poder elegir uno al azar con distribución proporcional.
+     */
+    private static function expandirEstados(array $pesos): array
+    {
+        $lista = [];
+        foreach ($pesos as $estado => $peso) {
+            $lista = [...$lista, ...array_fill(0, $peso, $estado)];
+        }
+
+        return $lista;
     }
 }

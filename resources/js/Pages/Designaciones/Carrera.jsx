@@ -4,6 +4,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import { Icono, IconoPuntos } from '../../Components/Icono';
 import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
+import MenuFlotante from '../../Components/MenuFlotante';
 import paletaIcono from '../../Components/paletaIcono';
 
 const badgesMateria = {
@@ -427,7 +428,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                                     <BadgeMateria estado={materia.estado} />
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    <div className="relative flex items-center gap-1.5">
+                                                    <div className="flex items-center gap-1.5">
                                                         {materia.estado === 'asignada' ? (
                                                             <Link
                                                                 href={route('designaciones.lista', {
@@ -455,44 +456,45 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                                             </Link>
                                                         )}
                                                         <button
-                                                            onClick={() => setMenuAbierto(menuAbierto === materia.id ? null : materia.id)}
+                                                            onClick={(e) =>
+                                                                setMenuAbierto(
+                                                                    menuAbierto?.id === materia.id ? null : { id: materia.id, el: e.currentTarget }
+                                                                )
+                                                            }
                                                             className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
                                                             title="Más acciones"
                                                         >
                                                             <IconoPuntos className="h-[18px] w-[18px]" />
                                                         </button>
 
-                                                        {menuAbierto === materia.id && (
-                                                            <>
-                                                                <div className="fixed inset-0 z-10" onClick={() => setMenuAbierto(null)} />
-                                                                <div className="menu-pop absolute right-0 top-9 z-20 w-56 rounded-lg border border-gray-200/80 bg-white py-1 shadow-lg shadow-gray-200/60">
-                                                                    <Link
-                                                                        href={route('designaciones.create', {
-                                                                            Id_materia: materia.id,
-                                                                            Id_gestion: filtros.gestion_id,
-                                                                            Id_periodo: filtros.periodo_id,
-                                                                        })}
-                                                                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                                    >
-                                                                        <span className="text-gray-400">
-                                                                            <Icono tipo="mas" className="h-4 w-4" />
-                                                                        </span>
-                                                                        Nueva designación
-                                                                    </Link>
-                                                                    <Link
-                                                                        href={route('designaciones.lista', {
-                                                                            carrera_id: carrera.id,
-                                                                            materia_id: materia.id,
-                                                                        })}
-                                                                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                                    >
-                                                                        <span className="text-gray-400">
-                                                                            <Icono tipo="ojo" className="h-4 w-4" />
-                                                                        </span>
-                                                                        Ver designaciones
-                                                                    </Link>
-                                                                </div>
-                                                            </>
+                                                        {menuAbierto?.id === materia.id && (
+                                                            <MenuFlotante anchorEl={menuAbierto.el} onClose={() => setMenuAbierto(null)} width={224}>
+                                                                <Link
+                                                                    href={route('designaciones.create', {
+                                                                        Id_materia: materia.id,
+                                                                        Id_gestion: filtros.gestion_id,
+                                                                        Id_periodo: filtros.periodo_id,
+                                                                    })}
+                                                                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                                                >
+                                                                    <span className="text-gray-400">
+                                                                        <Icono tipo="mas" className="h-4 w-4" />
+                                                                    </span>
+                                                                    Nueva designación
+                                                                </Link>
+                                                                <Link
+                                                                    href={route('designaciones.lista', {
+                                                                        carrera_id: carrera.id,
+                                                                        materia_id: materia.id,
+                                                                    })}
+                                                                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                                                >
+                                                                    <span className="text-gray-400">
+                                                                        <Icono tipo="ojo" className="h-4 w-4" />
+                                                                    </span>
+                                                                    Ver designaciones
+                                                                </Link>
+                                                            </MenuFlotante>
                                                         )}
                                                     </div>
                                                 </td>

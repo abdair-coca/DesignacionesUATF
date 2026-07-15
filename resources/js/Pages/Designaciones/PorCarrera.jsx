@@ -6,6 +6,7 @@ import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import StatTile from '../../Components/StatTile';
+import MenuFlotante from '../../Components/MenuFlotante';
 import paletaIcono from '../../Components/paletaIcono';
 
 function textoPorcentaje(cantidad, total) {
@@ -341,7 +342,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                                 )}
                                             </td>
                                             <td className="px-4 py-3.5">
-                                                <div className="relative flex items-center gap-0.5">
+                                                <div className="flex items-center gap-0.5">
                                                     <Link
                                                         href={route('designaciones.carrera', {
                                                             carrera: carrera.id,
@@ -354,45 +355,46 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                                         <Icono tipo="ojo" className="h-[18px] w-[18px]" />
                                                     </Link>
                                                     <button
-                                                        onClick={() => setMenuAbierto(menuAbierto === carrera.id ? null : carrera.id)}
+                                                        onClick={(e) =>
+                                                            setMenuAbierto(
+                                                                menuAbierto?.id === carrera.id ? null : { id: carrera.id, el: e.currentTarget }
+                                                            )
+                                                        }
                                                         className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                                                         title="Más acciones"
                                                     >
                                                         <IconoPuntos className="h-[18px] w-[18px]" />
                                                     </button>
 
-                                                    {menuAbierto === carrera.id && (
-                                                        <>
-                                                            <div className="fixed inset-0 z-10" onClick={() => setMenuAbierto(null)} />
-                                                            <div className="menu-pop absolute right-0 top-9 z-20 w-56 rounded-lg border border-gray-200/80 bg-white py-1 shadow-lg shadow-gray-200/60">
-                                                                <Link
-                                                                    href={route('designaciones.asignar', {
-                                                                        carrera_id: carrera.id,
-                                                                        gestion_id: filtros.gestion_id,
-                                                                        periodo_id: filtros.periodo_id,
-                                                                    })}
-                                                                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                                >
-                                                                    <span className="text-gray-400">
-                                                                        <Icono tipo="lote" className="h-4 w-4" />
-                                                                    </span>
-                                                                    Asignar docentes
-                                                                </Link>
-                                                                <Link
-                                                                    href={route('designaciones.copiar', {
-                                                                        carrera_id: carrera.id,
-                                                                        gestion_destino_id: filtros.gestion_id,
-                                                                        periodo_destino_id: filtros.periodo_id,
-                                                                    })}
-                                                                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                                >
-                                                                    <span className="text-gray-400">
-                                                                        <Icono tipo="copiar" className="h-4 w-4" />
-                                                                    </span>
-                                                                    Copiar de otra gestión
-                                                                </Link>
-                                                            </div>
-                                                        </>
+                                                    {menuAbierto?.id === carrera.id && (
+                                                        <MenuFlotante anchorEl={menuAbierto.el} onClose={() => setMenuAbierto(null)} width={224}>
+                                                            <Link
+                                                                href={route('designaciones.asignar', {
+                                                                    carrera_id: carrera.id,
+                                                                    gestion_id: filtros.gestion_id,
+                                                                    periodo_id: filtros.periodo_id,
+                                                                })}
+                                                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                                            >
+                                                                <span className="text-gray-400">
+                                                                    <Icono tipo="lote" className="h-4 w-4" />
+                                                                </span>
+                                                                Asignar docentes
+                                                            </Link>
+                                                            <Link
+                                                                href={route('designaciones.copiar', {
+                                                                    carrera_id: carrera.id,
+                                                                    gestion_destino_id: filtros.gestion_id,
+                                                                    periodo_destino_id: filtros.periodo_id,
+                                                                })}
+                                                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                                            >
+                                                                <span className="text-gray-400">
+                                                                    <Icono tipo="copiar" className="h-4 w-4" />
+                                                                </span>
+                                                                Copiar de otra gestión
+                                                            </Link>
+                                                        </MenuFlotante>
                                                     )}
                                                 </div>
                                             </td>

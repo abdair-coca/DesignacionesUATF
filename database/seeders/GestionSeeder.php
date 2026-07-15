@@ -10,6 +10,7 @@ class GestionSeeder extends Seeder
     public function run(): void
     {
         Gestion::insert([
+            ['nombre' => '2024'],
             ['nombre' => '2025'],
             ['nombre' => '2026'],
         ]);

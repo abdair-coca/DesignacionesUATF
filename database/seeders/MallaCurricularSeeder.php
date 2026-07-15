@@ -11,27 +11,24 @@ class MallaCurricularSeeder extends Seeder
 {
     public function run(): void
     {
-        $carreras = Carrera::pluck('id', 'sigla');
-        $materias = Materia::pluck('id', 'sigla');
-
-        // Cada materia aparece en la malla de su propia carrera.
-        foreach ($materias as $sigla => $materiaId) {
-            $carreraSigla = explode('-', $sigla)[0];
+        // Cada materia aparece, como mínimo, en la malla de su propia carrera.
+        foreach (Materia::all() as $materia) {
             MallaCurricular::create([
-                'carrera_id' => $carreras[$carreraSigla],
-                'materia_id' => $materiaId,
+                'carrera_id' => $materia->carrera_id,
+                'materia_id' => $materia->id,
             ]);
         }
 
-        // MAT-110 (Cálculo I) es materia de servicio: también aparece en la malla
-        // de INF y CIV, además de la suya propia.
-        MallaCurricular::create([
-            'carrera_id' => $carreras['INF'],
-            'materia_id' => $materias['MAT-110'],
-        ]);
-        MallaCurricular::create([
-            'carrera_id' => $carreras['CIV'],
-            'materia_id' => $materias['MAT-110'],
-        ]);
+        // Cálculo I y II (Matemáticas) son materias de servicio: también las cursan
+        // varias ingenierías, aunque las dicte la carrera de Matemáticas.
+        $calculoI = Materia::where('sigla', 'MAT-050')->value('id');
+        $calculoII = Materia::where('sigla', 'MAT-060')->value('id');
+
+        $ingenierias = Carrera::whereIn('sigla', ['CIV', 'INF', 'IND', 'ELE', 'ELT', 'MEC', 'QUI', 'MIN'])->pluck('id');
+
+        foreach ($ingenierias as $carreraId) {
+            MallaCurricular::create(['carrera_id' => $carreraId, 'materia_id' => $calculoI]);
+            MallaCurricular::create(['carrera_id' => $carreraId, 'materia_id' => $calculoII]);
+        }
     }
 }

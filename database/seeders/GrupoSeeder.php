@@ -10,17 +10,18 @@ class GrupoSeeder extends Seeder
 {
     public function run(): void
     {
-        $materias = Materia::pluck('id', 'sigla');
+        foreach (Materia::all() as $materia) {
+            Grupo::create(['materia_id' => $materia->id, 'codigo' => 'A', 'estado' => 'habilitado']);
 
-        foreach ($materias as $materiaId) {
-            Grupo::create(['materia_id' => $materiaId, 'codigo' => 'A', 'estado' => 'habilitado']);
+            // Las materias de alta demanda tienen un segundo grupo.
+            if (fake()->boolean(35)) {
+                Grupo::create(['materia_id' => $materia->id, 'codigo' => 'B', 'estado' => 'habilitado']);
+            }
         }
 
-        // Algunas materias con alta demanda tienen un segundo grupo.
-        Grupo::create(['materia_id' => $materias['INF-101'], 'codigo' => 'B', 'estado' => 'habilitado']);
-        Grupo::create(['materia_id' => $materias['MAT-110'], 'codigo' => 'B', 'estado' => 'habilitado']);
-
-        // Un grupo deshabilitado manualmente, para probar ese estado en el listado.
-        Grupo::create(['materia_id' => $materias['MED-330'], 'codigo' => 'B', 'estado' => 'deshabilitado']);
+        // Un puñado de grupos deshabilitados manualmente, para probar ese estado en el listado.
+        Grupo::inRandomOrder()->limit(8)->get()->each(
+            fn (Grupo $grupo) => $grupo->update(['estado' => 'deshabilitado'])
+        );
     }
 }
