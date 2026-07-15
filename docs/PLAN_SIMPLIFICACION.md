@@ -5,6 +5,18 @@
 > hecho solo porque está en este archivo** — revisá la sección "Estado" al final y,
 > si hace falta, confirmá con el dueño del proyecto en qué paso quedaron.
 
+> **⚠️ Actualización 2026-07-15 — el plan de 7 pasos de abajo quedó descartado en su
+> forma original.** Después de ver el mockup del Paso 1, el dueño solo quiso quedarse
+> con UNA pieza — la tabla editable con selector de "docente del pasado" — y pidió
+> implementarla **directo en `Carrera.jsx`**, sin tocar ni borrar `PorCarrera.jsx`,
+> `Lista.jsx`, `Create.jsx`, `Edit.jsx` ni `AsignarPorCarrera.jsx`. Esa pieza ya está
+> implementada (ver "Qué se implementó realmente" al final). El resto del documento
+> (concepto de "roster reemplaza todo", los 7 pasos, sacar Gestiones/Periodos del
+> sidebar, fusionar controllers) queda como **referencia histórica de cómo se llegó
+> hasta acá** — no es un plan activo. Si en el futuro se retoma alguna idea de acá
+> (por ejemplo, sacar Gestiones/Periodos del menú principal), hay que confirmarlo de
+> nuevo con el dueño, no asumir que sigue en pie.
+
 ## Origen y objetivo
 
 Aprobado el 2026-07-15, después de cerrar el roadmap de 6 semanas (Fases 1-6, ver
@@ -136,4 +148,38 @@ arquitectura nueva, ampliar tests automatizados para el flujo roster, bitácora 
 - [ ] Paso 6 — Catálogos fuera del menú principal
 - [ ] Paso 7 — Limpieza final y documentación
 
-**Último avance:** plan recién aprobado (2026-07-15), todavía no arrancó el Paso 1.
+**Último avance:** ver nota de actualización arriba — el plan de 7 pasos no se siguió
+ejecutando como tal.
+
+## Qué se implementó realmente (2026-07-15)
+
+En vez del "roster reemplaza todo", se agregó **una tabla de asignación editable dentro
+de `Carrera.jsx`** (pestaña "Asignación de docentes", ahora la primera y por defecto),
+sin tocar ninguna otra pantalla de designaciones:
+
+- Una fila por **grupo** (no por materia) — cubre a la vez materias por asignar y ya
+  asignadas, como pidió el dueño.
+- Docente editable en el momento (`Components/Select.jsx`), sin navegar a otra pantalla.
+- Botón de historial por fila (ícono de reloj, deshabilitado si el grupo nunca tuvo
+  designación) — abre `MenuFlotante` con los docentes que dictaron ese grupo en otras
+  gestiones/periodos, más reciente primero; un clic ahí propone ese docente en la fila.
+- Aviso de horas (>límite) y choque de horario en cada fila (oculto mientras la fila
+  tiene un cambio sin guardar, para no mostrar un aviso desactualizado).
+- Guardado en bloque: barra inferior con "Descartar"/"Guardar cambios", solo visible si
+  hay cambios pendientes. Un solo POST a `designaciones.carrera.guardar` que hace
+  upsert por fila (reasigna, crea, o borra si se deja "— Sin asignar —"); si la fila
+  estaba `rechazada` y se reasigna, vuelve a `propuesta` en la misma fila (sin crear una
+  designación nueva) — así es como se resuelve "reintentar" en el sitio.
+- "Resumen de designaciones" (la otra pestaña, antes una de tres) sigue igual, sin
+  tocar — sigue siendo la vista de solo lectura de todas las designaciones del periodo.
+
+Archivos tocados: `app/Http/Controllers/DesignacionController.php` (acción `carrera()`
+ahora arma `roster` + `historialPorGrupo`; nueva acción `guardarRoster()`),
+`routes/web.php` (ruta `designaciones.carrera.guardar`),
+`resources/js/Pages/Designaciones/Carrera.jsx` (reescrito). Probado en vivo en el
+navegador: carga, edición, guardado y selector de historial funcionando contra datos
+reales.
+
+De paso, en la misma sesión se estandarizó el componente de badges de estado en toda la
+web (`Components/Badge.jsx`, estilo outline + ícono en vez de relleno + punto) y se
+actualizó `design.md` con el patrón nuevo — ver `design.md` sección "Badges de estado".

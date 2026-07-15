@@ -1,33 +1,19 @@
 import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import { Icono, IconoPuntos } from '../../Components/Icono';
+import { Icono } from '../../Components/Icono';
 import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import MenuFlotante from '../../Components/MenuFlotante';
+import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 
-const badgesMateria = {
-    por_asignar: ['bg-blue-50 text-blue-700 ring-blue-600/20', 'bg-blue-500', 'Por asignar'],
-    asignada: ['bg-green-50 text-green-700 ring-green-600/20', 'bg-green-500', 'Asignada'],
-    sin_grupos: ['bg-gray-50 text-gray-500 ring-gray-400/30', 'bg-gray-400', 'Sin grupos'],
-};
-
 const badgesDesignacion = {
-    aprobada: 'bg-green-50 text-green-700 ring-green-600/20',
-    rechazada: 'bg-red-50 text-red-600 ring-red-600/20',
-    propuesta: 'bg-gray-50 text-gray-600 ring-gray-400/30',
+    aprobada: { tono: 'verde', icono: 'check', etiqueta: 'Aprobada' },
+    rechazada: { tono: 'rojo', icono: 'equis', etiqueta: 'Rechazada' },
+    propuesta: { tono: 'ambar', icono: 'reloj', etiqueta: 'Propuesta' },
+    sin_asignar: { tono: 'gris', icono: 'vacio', etiqueta: 'Sin asignar' },
 };
-
-function BadgeMateria({ estado }) {
-    const [clases, punto, etiqueta] = badgesMateria[estado];
-    return (
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${clases}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${punto}`} />
-            {etiqueta}
-        </span>
-    );
-}
 
 function AnilloProgreso({ asignadas, porAsignar, sinGrupos }) {
     const total = asignadas + porAsignar + sinGrupos;
@@ -80,12 +66,25 @@ function AnilloProgreso({ asignadas, porAsignar, sinGrupos }) {
     );
 }
 
-export default function Carrera({ carrera, materias, designaciones, gestiones, periodos, filtros }) {
-    const [tab, setTab] = useState('por_asignar');
+export default function Carrera({
+    carrera,
+    materias,
+    designaciones,
+    roster,
+    historialPorGrupo,
+    docentes,
+    gestiones,
+    periodos,
+    limiteHoras,
+    filtros,
+}) {
+    const [tab, setTab] = useState('roster');
     const [busqueda, setBusqueda] = useState('');
     const [pagina, setPagina] = useState(1);
-    const [menuAbierto, setMenuAbierto] = useState(null);
     const [selectorPeriodo, setSelectorPeriodo] = useState(false);
+    const [cambios, setCambios] = useState({});
+    const [histoAbierto, setHistoAbierto] = useState(null);
+    const [guardando, setGuardando] = useState(false);
     const porPagina = 10;
 
     const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
@@ -104,7 +103,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['materias', 'designaciones', 'filtros'],
+                only: ['materias', 'designaciones', 'roster', 'historialPorGrupo', 'filtros'],
             }
         );
     }
@@ -112,7 +111,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
     function cambiarTab(nuevoTab) {
         setTab(nuevoTab);
         setPagina(1);
-        setMenuAbierto(null);
+        setHistoAbierto(null);
     }
 
     function cambiarBusqueda(valor) {
@@ -120,15 +119,60 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
         setPagina(1);
     }
 
+    function valorDocente(fila) {
+        if (fila.id in cambios) return cambios[fila.id];
+        return fila.designacion ? String(fila.designacion.docente.id) : '';
+    }
+
+    function cambiarDocente(fila, valor) {
+        const original = fila.designacion ? String(fila.designacion.docente.id) : '';
+        setCambios((actual) => {
+            const copia = { ...actual };
+            if (valor === original) {
+                delete copia[fila.id];
+            } else {
+                copia[fila.id] = valor;
+            }
+            return copia;
+        });
+        setHistoAbierto(null);
+    }
+
+    function descartarCambios() {
+        setCambios({});
+    }
+
+    function guardarCambios() {
+        const entradas = Object.entries(cambios);
+        if (entradas.length === 0) return;
+
+        setGuardando(true);
+        router.post(
+            route('designaciones.carrera.guardar', carrera.id),
+            {
+                Id_gestion: filtros.gestion_id,
+                Id_periodo: filtros.periodo_id,
+                cambios: entradas.map(([grupoId, docenteId]) => {
+                    const fila = roster.find((f) => String(f.id) === grupoId);
+                    return { Id_grupo: fila.id, Id_materia: fila.materia.id, Id_docente: docenteId === '' ? null : docenteId };
+                }),
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => setCambios({}),
+                onFinish: () => setGuardando(false),
+            }
+        );
+    }
+
     const terminoBusqueda = busqueda.trim().toLowerCase();
 
-    const filasMaterias = materias.filter((materia) => {
-        if (tab === 'por_asignar' && materia.estado === 'asignada') return false;
-        if (tab === 'asignadas' && materia.estado !== 'asignada') return false;
+    const filasRoster = roster.filter((fila) => {
         if (terminoBusqueda === '') return true;
         return (
-            materia.nombre.toLowerCase().includes(terminoBusqueda) ||
-            materia.sigla.toLowerCase().includes(terminoBusqueda)
+            fila.materia.nombre.toLowerCase().includes(terminoBusqueda) ||
+            fila.materia.sigla.toLowerCase().includes(terminoBusqueda) ||
+            (fila.designacion?.docente.nombre.toLowerCase().includes(terminoBusqueda) ?? false)
         );
     });
 
@@ -141,7 +185,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
         );
     });
 
-    const filas = tab === 'resumen' ? filasDesignaciones : filasMaterias;
+    const filas = tab === 'resumen' ? filasDesignaciones : filasRoster;
     const totalFilas = filas.length;
     const totalPaginas = Math.max(Math.ceil(totalFilas / porPagina), 1);
     const paginaActual = Math.min(pagina, totalPaginas);
@@ -150,8 +194,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
     const hasta = Math.min(paginaActual * porPagina, totalFilas);
 
     const tabs = [
-        { clave: 'por_asignar', etiqueta: 'Materias por asignar' },
-        { clave: 'asignadas', etiqueta: 'Materias asignadas' },
+        { clave: 'roster', etiqueta: 'Asignación de docentes' },
         { clave: 'resumen', etiqueta: 'Resumen de designaciones' },
     ];
 
@@ -195,6 +238,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
     ];
 
     const pctTotal = (cantidad) => (materias.length ? Math.round((cantidad / materias.length) * 100) : 0);
+    const cantidadCambios = Object.keys(cambios).length;
 
     return (
         <AppLayout>
@@ -220,15 +264,13 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                     <div className="mb-1 flex flex-wrap items-center gap-3">
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Designar en: {carrera.nombre}</h1>
                         {asignadas + porAsignar > 0 && designaciones.some((d) => d.estado !== 'rechazada') ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                            <Badge tono="verde" icono="check">
                                 Activa
-                            </span>
+                            </Badge>
                         ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 ring-1 ring-inset ring-red-600/20">
-                                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                            <Badge tono="rojo" icono="equis">
                                 Sin designaciones
-                            </span>
+                            </Badge>
                         )}
                     </div>
                     <p className="mb-6 text-sm text-gray-500">
@@ -343,7 +385,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                             </span>
                             <input
                                 type="text"
-                                placeholder={tab === 'resumen' ? 'Buscar docente o materia...' : 'Buscar materia...'}
+                                placeholder={tab === 'resumen' ? 'Buscar docente o materia...' : 'Buscar materia o docente...'}
                                 value={busqueda}
                                 onChange={(e) => cambiarBusqueda(e.target.value)}
                                 className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-9 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -372,11 +414,11 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
 
                     <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
                         <div className="overflow-x-auto">
-                            {tab !== 'resumen' ? (
+                            {tab === 'roster' ? (
                                 <table className="min-w-full divide-y divide-gray-200 text-sm">
                                     <thead className="bg-gray-50/80">
                                         <tr>
-                                            {['Materia', 'Grupos', 'Asignados', 'Estado', 'Acciones'].map((encabezado) => (
+                                            {['Materia', 'Grupo', 'Horas', 'Docente', 'Estado', 'Historial'].map((encabezado) => (
                                                 <th
                                                     key={encabezado}
                                                     className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
@@ -389,117 +431,124 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                     <tbody className="divide-y divide-gray-100">
                                         {visibles.length === 0 && (
                                             <tr>
-                                                <td colSpan={5}>
+                                                <td colSpan={6}>
                                                     <EmptyState
                                                         titulo="Sin resultados"
-                                                        subtitulo={
-                                                            tab === 'asignadas'
-                                                                ? 'Todavía no hay materias completamente asignadas en este periodo.'
-                                                                : 'Ninguna materia coincide con la búsqueda.'
-                                                        }
+                                                        subtitulo="Ningún grupo coincide con la búsqueda."
                                                     />
                                                 </td>
                                             </tr>
                                         )}
-                                        {visibles.map((materia, indice) => (
-                                            <tr
-                                                key={materia.id}
-                                                className="fila-entra group transition-colors hover:bg-gray-50/60"
-                                                style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
-                                            >
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-3">
-                                                        <span
-                                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[materia.id % paletaIcono.length]}`}
-                                                        >
-                                                            {materia.sigla.charAt(0)}
-                                                        </span>
-                                                        <div>
-                                                            <p className="font-medium text-gray-900">{materia.nombre}</p>
-                                                            <p className="mt-0.5 text-xs text-gray-400">{materia.sigla}</p>
+                                        {visibles.map((fila, indice) => {
+                                            const historial = historialPorGrupo[fila.id] ?? [];
+                                            const esDirty = fila.id in cambios;
+                                            const estadoBadge = badgesDesignacion[fila.designacion?.estado ?? 'sin_asignar'];
+
+                                            return (
+                                                <tr
+                                                    key={fila.id}
+                                                    className={`fila-entra transition-colors hover:bg-gray-50/60 ${esDirty ? 'bg-blue-50/40' : ''}`}
+                                                    style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+                                                >
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <span
+                                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[fila.materia.id % paletaIcono.length]}`}
+                                                            >
+                                                                {fila.materia.sigla.charAt(0)}
+                                                            </span>
+                                                            <div>
+                                                                <p className="font-medium text-gray-900">{fila.materia.nombre}</p>
+                                                                <p className="mt-0.5 text-xs text-gray-400">{fila.materia.sigla}</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3.5 text-gray-600 tabular-nums">{materia.grupos_total}</td>
-                                                <td className="px-4 py-3.5 text-gray-600 tabular-nums">
-                                                    {materia.grupos_asignados} de {materia.grupos_total}
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <BadgeMateria estado={materia.estado} />
-                                                </td>
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-1.5">
-                                                        {materia.estado === 'asignada' ? (
-                                                            <Link
-                                                                href={route('designaciones.lista', {
-                                                                    carrera_id: carrera.id,
-                                                                    materia_id: materia.id,
-                                                                })}
-                                                                className="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
-                                                            >
-                                                                Ver
-                                                            </Link>
-                                                        ) : (
-                                                            <Link
-                                                                href={route('designaciones.create', {
-                                                                    Id_materia: materia.id,
-                                                                    Id_gestion: filtros.gestion_id,
-                                                                    Id_periodo: filtros.periodo_id,
-                                                                })}
-                                                                className={`rounded-lg px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition-colors ${
-                                                                    materia.estado === 'sin_grupos'
-                                                                        ? 'pointer-events-none bg-gray-300'
-                                                                        : 'bg-blue-900 hover:bg-blue-800 active:scale-[0.98]'
-                                                                }`}
-                                                            >
-                                                                Designar
-                                                            </Link>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-gray-600">{fila.codigo}</td>
+                                                    <td className="px-4 py-3.5 text-gray-600 tabular-nums">{fila.horas}h</td>
+                                                    <td className="px-4 py-3.5">
+                                                        <Select
+                                                            className="max-w-56"
+                                                            value={valorDocente(fila)}
+                                                            onChange={(e) => cambiarDocente(fila, e.target.value)}
+                                                        >
+                                                            <option value="">— Sin asignar —</option>
+                                                            {docentes.map((docente) => (
+                                                                <option key={docente.id} value={docente.id}>
+                                                                    {docente.nombre}
+                                                                </option>
+                                                            ))}
+                                                        </Select>
+                                                        {!esDirty && fila.aviso?.excedeLimite && (
+                                                            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-700">
+                                                                <Icono tipo="alerta" className="h-3 w-3 shrink-0" />
+                                                                {fila.aviso.horasProyectadas}h en esta gestión — supera el límite de{' '}
+                                                                {limiteHoras}h
+                                                            </p>
                                                         )}
+                                                        {!esDirty && fila.aviso?.hayChoque && (
+                                                            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-700">
+                                                                <Icono tipo="alerta" className="h-3 w-3 shrink-0" />
+                                                                Este docente ya dicta otro grupo en este periodo
+                                                            </p>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <Badge tono={estadoBadge.tono} icono={estadoBadge.icono}>
+                                                            {estadoBadge.etiqueta}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
                                                         <button
                                                             onClick={(e) =>
-                                                                setMenuAbierto(
-                                                                    menuAbierto?.id === materia.id ? null : { id: materia.id, el: e.currentTarget }
+                                                                setHistoAbierto(
+                                                                    histoAbierto?.grupoId === fila.id
+                                                                        ? null
+                                                                        : { grupoId: fila.id, el: e.currentTarget }
                                                                 )
                                                             }
-                                                            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                                            title="Más acciones"
+                                                            disabled={historial.length === 0}
+                                                            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                                            title={historial.length === 0 ? 'Todavía no tiene historial' : 'Ver historial de docentes'}
                                                         >
-                                                            <IconoPuntos className="h-[18px] w-[18px]" />
+                                                            <Icono tipo="reloj" className="h-[18px] w-[18px]" />
                                                         </button>
 
-                                                        {menuAbierto?.id === materia.id && (
-                                                            <MenuFlotante anchorEl={menuAbierto.el} onClose={() => setMenuAbierto(null)} width={224}>
-                                                                <Link
-                                                                    href={route('designaciones.create', {
-                                                                        Id_materia: materia.id,
-                                                                        Id_gestion: filtros.gestion_id,
-                                                                        Id_periodo: filtros.periodo_id,
-                                                                    })}
-                                                                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                                >
-                                                                    <span className="text-gray-400">
-                                                                        <Icono tipo="mas" className="h-4 w-4" />
-                                                                    </span>
-                                                                    Nueva designación
-                                                                </Link>
-                                                                <Link
-                                                                    href={route('designaciones.lista', {
-                                                                        carrera_id: carrera.id,
-                                                                        materia_id: materia.id,
-                                                                    })}
-                                                                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                                >
-                                                                    <span className="text-gray-400">
-                                                                        <Icono tipo="ojo" className="h-4 w-4" />
-                                                                    </span>
-                                                                    Ver designaciones
-                                                                </Link>
+                                                        {histoAbierto?.grupoId === fila.id && (
+                                                            <MenuFlotante anchorEl={histoAbierto.el} onClose={() => setHistoAbierto(null)} width={320}>
+                                                                <div className="border-b border-gray-100 px-4 py-2.5">
+                                                                    <p className="text-xs font-semibold text-gray-900">
+                                                                        {fila.materia.nombre} · Grupo {fila.codigo}
+                                                                    </p>
+                                                                    <p className="mt-0.5 text-[11px] text-gray-400">
+                                                                        Más reciente primero · clic para proponer
+                                                                    </p>
+                                                                </div>
+                                                                <div className="max-h-72 overflow-y-auto p-1.5">
+                                                                    {historial.map((h, i) => (
+                                                                        <button
+                                                                            key={i}
+                                                                            type="button"
+                                                                            onClick={() => cambiarDocente(fila, String(h.docente.id))}
+                                                                            className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-blue-50"
+                                                                        >
+                                                                            <span className="shrink-0 rounded-md bg-gray-50 px-2 py-1 text-[10px] font-semibold tabular-nums text-gray-500 ring-1 ring-inset ring-gray-200">
+                                                                                {h.gestion}-{h.periodo}
+                                                                            </span>
+                                                                            <span className="min-w-0 flex-1 truncate text-xs font-medium text-gray-900">
+                                                                                {h.docente.nombre}
+                                                                            </span>
+                                                                            <span className="shrink-0 text-[10px] font-semibold text-blue-700 opacity-0 transition-opacity group-hover:opacity-100">
+                                                                                Proponer →
+                                                                            </span>
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
                                                             </MenuFlotante>
                                                         )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             ) : (
@@ -539,11 +588,12 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                                 </td>
                                                 <td className="px-4 py-3.5 text-gray-600">{designacion.grupo.codigo}</td>
                                                 <td className="px-4 py-3.5">
-                                                    <span
-                                                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${badgesDesignacion[designacion.estado]}`}
+                                                    <Badge
+                                                        tono={badgesDesignacion[designacion.estado].tono}
+                                                        icono={badgesDesignacion[designacion.estado].icono}
                                                     >
-                                                        {designacion.estado.charAt(0).toUpperCase() + designacion.estado.slice(1)}
-                                                    </span>
+                                                        {badgesDesignacion[designacion.estado].etiqueta}
+                                                    </Badge>
                                                 </td>
                                             </tr>
                                         ))}
@@ -557,7 +607,7 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                                 Mostrando <span className="font-medium text-gray-600">{desde}</span> a{' '}
                                 <span className="font-medium text-gray-600">{hasta}</span> de{' '}
                                 <span className="font-medium text-gray-600">{totalFilas}</span>{' '}
-                                {tab === 'resumen' ? 'designaciones' : 'materias'}
+                                {tab === 'resumen' ? 'designaciones' : 'grupos'}
                             </p>
                             {totalPaginas > 1 && (
                                 <div className="flex gap-1">
@@ -592,6 +642,31 @@ export default function Carrera({ carrera, materias, designaciones, gestiones, p
                             )}
                         </div>
                     </div>
+
+                    {tab === 'roster' && cantidadCambios > 0 && (
+                        <div className="sticky bottom-4 mt-4 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-lg shadow-gray-200/60">
+                            <p className="text-sm text-gray-600">
+                                <span className="font-semibold text-gray-900 tabular-nums">{cantidadCambios}</span>{' '}
+                                {cantidadCambios === 1 ? 'cambio sin guardar' : 'cambios sin guardar'}
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={descartarCambios}
+                                    disabled={guardando}
+                                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    Descartar
+                                </button>
+                                <button
+                                    onClick={guardarCambios}
+                                    disabled={guardando}
+                                    className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    {guardando ? 'Guardando…' : 'Guardar cambios'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <aside className="w-full shrink-0 space-y-5 xl:w-80">

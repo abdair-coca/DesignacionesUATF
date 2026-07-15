@@ -27,11 +27,11 @@ y `resources/js/Pages/Designaciones/Carrera.jsx` son la implementación canónic
 | Rol | Clase |
 |---|---|
 | Primario (botones sólidos, links activos, paginación activa) | `bg-blue-900`, hover `bg-blue-800`, texto links `text-blue-700` |
-| Éxito / asignado / activa | `green-500` (punto/barra), `bg-green-50 text-green-700 ring-green-600/20` (badge) |
-| Advertencia / pendiente | `amber-400` (barra), `bg-amber-50 text-amber-700` (badge), icono `text-amber-600` |
-| Peligro / sin datos / rechazada | `red-500` (punto/barra), `bg-red-50 text-red-600 ring-red-600/20` (badge) |
-| Informativo / por asignar | `blue-500` (punto), `bg-blue-50 text-blue-700 ring-blue-600/20` (badge) |
-| Neutro / deshabilitado | `bg-gray-50 text-gray-500 ring-gray-400/30` |
+| Éxito / asignado / activa | `green-500` (punto/barra), tono `verde` (badge — ver sección Badges) |
+| Advertencia / pendiente | `amber-400` (barra), tono `ambar` (badge), icono `text-amber-600` |
+| Peligro / sin datos / rechazada | `red-500` (punto/barra), tono `rojo` (badge) |
+| Informativo / por asignar | `blue-500` (punto), tono `azul` (badge) |
+| Neutro / deshabilitado | tono `gris` (badge), `bg-gray-50 text-gray-500 ring-gray-400/30` en otros usos (tiles, tracks) |
 | Fondo de página | `bg-gray-50` (lo da `AppLayout`) |
 | Superficies (cards, tablas) | `bg-white` con `border border-gray-200/80` y `shadow-sm` |
 | Texto principal / secundario / terciario | `text-gray-900` / `text-gray-500` / `text-gray-400` |
@@ -70,9 +70,27 @@ Colores para tiles de entidades (iconos de carrera/materia): paleta rotativa por
 
 ### Badges de estado
 
-Patrón: `inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium
-ring-1 ring-inset` + punto `h-1.5 w-1.5 rounded-full` del color pleno. Colores según tabla
-de tokens.
+Componente `Components/Badge.jsx`. Patrón: `inline-flex items-center gap-1 rounded-full
+border bg-white px-2.5 py-1 text-xs font-medium` + ícono de 14×14 (`h-3.5 w-3.5`) a la
+izquierda en vez de punto — fondo blanco, borde e ícono/texto del mismo tono (nunca relleno
+sólido ni `ring`). Reemplaza el patrón anterior (`bg-{color}-50 ring-1 ring-inset` + punto)
+en toda la web — no queden badges hechos a mano por pantalla.
+
+Uso: `<Badge tono="verde" icono="check">Aprobada</Badge>`. Cada pantalla mapea su propio
+estado de dominio (`aprobada`, `habilitado`, `asignada`, etc.) a un `tono` + `icono` con un
+objeto local — el componente no conoce esos nombres, solo tonos.
+
+| Tono | Clases | Ícono | Uso típico |
+|---|---|---|---|
+| `verde` | `border-green-200 text-green-700` | `check` | Éxito / activa / asignada / habilitada / aprobada |
+| `ambar` | `border-amber-200 text-amber-700` | `reloj` | Advertencia / pendiente / propuesta |
+| `rojo` | `border-red-200 text-red-600` | `equis` | Peligro / rechazada |
+| `azul` | `border-blue-200 text-blue-700` | `reloj` | Informativo / por asignar |
+| `gris` | `border-gray-300 text-gray-500` | `vacio` | Neutro / deshabilitada / sin asignar / sin grupos |
+
+Nota: `propuesta` pasa de gris a **ámbar** — es "pendiente de decisión", que ya es un rol
+de color definido arriba; antes usaba gris por inconsistencia entre pantallas, no por
+decisión de diseño.
 
 ### Tablas
 

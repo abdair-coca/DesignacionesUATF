@@ -11,6 +11,7 @@ use App\Models\Materia;
 use App\Models\Periodo;
 use App\Support\CargaAcademicaService;
 use App\Support\DesignacionReportService;
+use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -130,17 +131,141 @@ class DesignacionController extends Controller
             ->orderBy('Id_materia')
             ->get();
 
+        $grupos = Grupo::with('materia')
+            ->where('estado', 'habilitado')
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->orderBy('materia_id')
+            ->orderBy('codigo')
+            ->get();
+
+        $roster = $this->construirRoster($grupos, $designaciones, $gestionId, $periodoId);
+        $historialPorGrupo = $this->historialPorGrupo($grupos->pluck('id'));
+
         return Inertia::render('Designaciones/Carrera', [
             'carrera' => $carrera,
             'materias' => $materias,
             'designaciones' => $designaciones,
+            'roster' => $roster,
+            'historialPorGrupo' => $historialPorGrupo,
+            'docentes' => Docente::orderBy('nombre')->get(['id', 'nombre']),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
+            'limiteHoras' => CargaAcademicaService::LIMITE_HORAS,
             'filtros' => [
                 'gestion_id' => (string) $gestionId,
                 'periodo_id' => (string) $periodoId,
             ],
         ]);
+    }
+
+    public function guardarRoster(Request $request, Carrera $carrera): RedirectResponse
+    {
+        $data = $request->validate([
+            'Id_gestion' => ['required', 'exists:gestiones,id'],
+            'Id_periodo' => ['required', 'exists:periodos,id'],
+            'cambios' => ['required', 'array', 'min:1'],
+            'cambios.*.Id_grupo' => ['required', 'exists:grupos,id'],
+            'cambios.*.Id_materia' => ['required', 'exists:materias,id'],
+            'cambios.*.Id_docente' => ['nullable', 'exists:docentes,id'],
+        ]);
+
+        foreach ($data['cambios'] as $cambio) {
+            $existente = Designacion::where('Id_grupo', $cambio['Id_grupo'])
+                ->where('Id_gestion', $data['Id_gestion'])
+                ->where('Id_periodo', $data['Id_periodo'])
+                ->first();
+
+            if ($cambio['Id_docente'] === null) {
+                $existente?->delete();
+
+                continue;
+            }
+
+            if ($existente) {
+                $existente->update([
+                    'Id_docente' => $cambio['Id_docente'],
+                    'estado' => $existente->estado === 'rechazada' ? 'propuesta' : $existente->estado,
+                ]);
+            } else {
+                Designacion::create([
+                    'Id_docente' => $cambio['Id_docente'],
+                    'Id_materia' => $cambio['Id_materia'],
+                    'Id_grupo' => $cambio['Id_grupo'],
+                    'Id_gestion' => $data['Id_gestion'],
+                    'Id_periodo' => $data['Id_periodo'],
+                    'estado' => 'propuesta',
+                    'creado_por' => $request->user()->id,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('status', 'Cambios guardados.');
+    }
+
+    /**
+     * Arma una fila por grupo habilitado (tenga o no designación en esta gestión/periodo),
+     * para la tabla de asignación rápida de Designaciones/Carrera.
+     */
+    private function construirRoster(Collection $grupos, Collection $designaciones, int $gestionId, int $periodoId): Collection
+    {
+        return $grupos->map(function (Grupo $grupo) use ($designaciones, $gestionId, $periodoId) {
+            $actual = $designaciones->firstWhere('Id_grupo', $grupo->id);
+
+            $aviso = null;
+            if ($actual && $actual->estado !== 'rechazada') {
+                $horasProyectadas = $this->cargaAcademica->horasAsignadas($actual->Id_docente, $gestionId, $periodoId, $actual->id)
+                    + $grupo->materia->horas;
+
+                $aviso = [
+                    'excedeLimite' => $horasProyectadas > CargaAcademicaService::LIMITE_HORAS,
+                    'horasProyectadas' => $horasProyectadas,
+                    'hayChoque' => $this->cargaAcademica->hayChoque($grupo->id, $gestionId, $periodoId, $actual->id),
+                ];
+            }
+
+            return [
+                'id' => $grupo->id,
+                'codigo' => $grupo->codigo,
+                'horas' => $grupo->materia->horas,
+                'materia' => [
+                    'id' => $grupo->materia->id,
+                    'sigla' => $grupo->materia->sigla,
+                    'nombre' => $grupo->materia->nombre,
+                ],
+                'designacion' => $actual ? [
+                    'id' => $actual->id,
+                    'estado' => $actual->estado,
+                    'docente' => ['id' => $actual->docente->id, 'nombre' => $actual->docente->nombre],
+                ] : null,
+                'aviso' => $aviso,
+            ];
+        })->values();
+    }
+
+    /**
+     * Docentes que dictaron cada grupo en otras gestiones/periodos, más reciente primero,
+     * para el selector "elegir un docente del pasado" del roster.
+     */
+    private function historialPorGrupo(Collection $grupoIds): Collection
+    {
+        return Designacion::with(['docente', 'gestion', 'periodo'])
+            ->whereIn('Id_grupo', $grupoIds)
+            ->get()
+            ->groupBy('Id_grupo')
+            ->map(fn (Collection $items) => $items
+                ->sortBy([
+                    fn (Designacion $a, Designacion $b) => (int) $b->gestion->nombre <=> (int) $a->gestion->nombre,
+                    fn (Designacion $a, Designacion $b) => $b->Id_periodo <=> $a->Id_periodo,
+                ])
+                ->take(8)
+                ->map(fn (Designacion $d) => [
+                    'docente' => ['id' => $d->docente->id, 'nombre' => $d->docente->nombre],
+                    'gestion' => $d->gestion->nombre,
+                    'periodo' => $d->periodo->nombre,
+                    'estado' => $d->estado,
+                ])
+                ->values()
+            );
     }
 
     public function create(Request $request): Response

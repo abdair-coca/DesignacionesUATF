@@ -7,6 +7,7 @@ import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import StatTile from '../../Components/StatTile';
 import MenuFlotante from '../../Components/MenuFlotante';
+import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 
 function textoPorcentaje(cantidad, total) {
@@ -330,15 +331,9 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                             </td>
                                             <td className="px-4 py-3.5">
                                                 {carrera.activas > 0 ? (
-                                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                                                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                                                        Activa
-                                                    </span>
+                                                    <Badge tono="verde" icono="check">Activa</Badge>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 ring-1 ring-inset ring-red-600/20">
-                                                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                                                        Sin designaciones
-                                                    </span>
+                                                    <Badge tono="rojo" icono="equis">Sin designaciones</Badge>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3.5">

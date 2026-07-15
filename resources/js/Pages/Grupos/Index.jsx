@@ -5,11 +5,12 @@ import Select from '../../Components/Select';
 import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
+import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 
 const badgeEstado = {
-    habilitado: 'bg-green-50 text-green-700 ring-green-600/20',
-    deshabilitado: 'bg-gray-50 text-gray-500 ring-gray-400/30',
+    habilitado: { tono: 'verde', icono: 'check', etiqueta: 'Habilitado' },
+    deshabilitado: { tono: 'gris', icono: 'vacio', etiqueta: 'Deshabilitado' },
 };
 
 export default function Index({ grupos, materias, filtros }) {
@@ -122,10 +123,9 @@ export default function Index({ grupos, materias, filtros }) {
                                         {grupo.materia.sigla} — {grupo.materia.nombre}
                                     </td>
                                     <td className="px-4 py-3.5">
-                                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${badgeEstado[grupo.estado]}`}>
-                                            <span className={`h-1.5 w-1.5 rounded-full ${grupo.estado === 'habilitado' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                                            {grupo.estado === 'habilitado' ? 'Habilitado' : 'Deshabilitado'}
-                                        </span>
+                                        <Badge tono={badgeEstado[grupo.estado].tono} icono={badgeEstado[grupo.estado].icono}>
+                                            {badgeEstado[grupo.estado].etiqueta}
+                                        </Badge>
                                     </td>
                                     <td className="px-4 py-3.5 text-gray-600 tabular-nums">{grupo.designaciones_count}</td>
                                     <td className="px-4 py-3.5">

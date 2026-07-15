@@ -29,6 +29,8 @@ Route::middleware('auth')->group(function () {
         ->name('designaciones.lista');
     Route::get('designaciones/carrera/{carrera}', [DesignacionController::class, 'carrera'])
         ->name('designaciones.carrera');
+    Route::post('designaciones/carrera/{carrera}/guardar', [DesignacionController::class, 'guardarRoster'])
+        ->name('designaciones.carrera.guardar');
     Route::get('designaciones/asignar', [DesignacionMasivaController::class, 'asignarForm'])
         ->name('designaciones.asignar');
     Route::post('designaciones/asignar', [DesignacionMasivaController::class, 'asignarStore'])

@@ -5,17 +5,12 @@ import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import FilterBar from '../../Components/FilterBar';
 import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
+import Badge from '../../Components/Badge';
 
 const badgeEstado = {
-    aprobada: 'bg-green-50 text-green-700 ring-green-600/20',
-    rechazada: 'bg-red-50 text-red-600 ring-red-600/20',
-    propuesta: 'bg-gray-50 text-gray-600 ring-gray-400/30',
-};
-
-const puntoEstado = {
-    aprobada: 'bg-green-500',
-    rechazada: 'bg-red-500',
-    propuesta: 'bg-gray-400',
+    aprobada: { tono: 'verde', icono: 'check' },
+    rechazada: { tono: 'rojo', icono: 'equis' },
+    propuesta: { tono: 'ambar', icono: 'reloj' },
 };
 
 export default function Lista({ designaciones, carreras, gestiones, periodos, filtros }) {
@@ -143,12 +138,9 @@ export default function Lista({ designaciones, carreras, gestiones, periodos, fi
                                     <td className="px-4 py-3.5 text-gray-600">{designacion.gestion.nombre}</td>
                                     <td className="px-4 py-3.5 text-gray-600">{designacion.periodo.nombre}</td>
                                     <td className="px-4 py-3.5">
-                                        <span
-                                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${badgeEstado[designacion.estado]}`}
-                                        >
-                                            <span className={`h-1.5 w-1.5 rounded-full ${puntoEstado[designacion.estado]}`} />
+                                        <Badge tono={badgeEstado[designacion.estado].tono} icono={badgeEstado[designacion.estado].icono}>
                                             {designacion.estado.charAt(0).toUpperCase() + designacion.estado.slice(1)}
-                                        </span>
+                                        </Badge>
                                     </td>
                                     <td className="px-4 py-3.5">
                                         <div className="flex items-center gap-0.5">

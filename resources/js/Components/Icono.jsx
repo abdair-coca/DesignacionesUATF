@@ -97,6 +97,12 @@ const trazos = {
         </>
     ),
     flechaIzq: <path d="M15 6l-6 6 6 6" />,
+    vacio: (
+        <>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M8.5 12h7" />
+        </>
+    ),
     salir: (
         <>
             <path d="M9 4H6.5A2.5 2.5 0 004 6.5v11A2.5 2.5 0 006.5 20H9" />
