@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDesignacionRequest;
+use App\Http\Requests\UpdateDesignacionRequest;
 use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
@@ -11,10 +13,10 @@ use App\Models\Materia;
 use App\Models\Periodo;
 use App\Support\CargaAcademicaService;
 use App\Support\DesignacionReportService;
-use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -276,9 +278,9 @@ class DesignacionController extends Controller
         ]));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreDesignacionRequest $request): RedirectResponse
     {
-        $data = $this->validarDatos($request);
+        $data = $request->validated();
         $data['creado_por'] = $request->user()->id;
 
         Designacion::create($data);
@@ -298,11 +300,9 @@ class DesignacionController extends Controller
         ));
     }
 
-    public function update(Request $request, Designacion $designacion): RedirectResponse
+    public function update(UpdateDesignacionRequest $request, Designacion $designacion): RedirectResponse
     {
-        $data = $this->validarDatos($request, $designacion->id);
-
-        $designacion->update($data);
+        $designacion->update($request->validated());
 
         return redirect()->route('designaciones.index')
             ->with('status', 'Designación actualizada correctamente.');
@@ -322,30 +322,6 @@ class DesignacionController extends Controller
         $historial = $designacion->historial()->orderByDesc('fecha')->get();
 
         return Inertia::render('Designaciones/Historial', compact('designacion', 'historial'));
-    }
-
-    private function validarDatos(Request $request, ?int $excludeId = null): array
-    {
-        return $request->validate([
-            'Id_docente' => ['required', 'exists:docentes,id', function ($attribute, $value, $fail) use ($request, $excludeId) {
-                $existe = Designacion::where('Id_docente', $value)
-                    ->where('Id_materia', $request->input('Id_materia'))
-                    ->where('Id_grupo', $request->input('Id_grupo'))
-                    ->where('Id_gestion', $request->input('Id_gestion'))
-                    ->where('Id_periodo', $request->input('Id_periodo'))
-                    ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
-                    ->exists();
-
-                if ($existe) {
-                    $fail('Esta designación ya existe.');
-                }
-            }],
-            'Id_materia' => ['required', 'exists:materias,id'],
-            'Id_grupo' => ['required', 'exists:grupos,id'],
-            'Id_gestion' => ['required', 'exists:gestiones,id'],
-            'Id_periodo' => ['required', 'exists:periodos,id'],
-            'estado' => ['required', 'in:propuesta,aprobada,rechazada'],
-        ]);
     }
 
     private function catalogos(): array
