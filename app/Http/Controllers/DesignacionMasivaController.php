@@ -65,31 +65,7 @@ class DesignacionMasivaController extends Controller
             'filas.*.Id_docente' => ['nullable', 'exists:docentes,id'],
         ]);
 
-        $creadas = 0;
-
-        DB::transaction(function () use ($data, $request, &$creadas) {
-            foreach ($data['filas'] as $fila) {
-                if (empty($fila['Id_docente'])) {
-                    continue;
-                }
-
-                if ($this->cargaAcademica->hayChoque($fila['Id_grupo'], $data['Id_gestion'], $data['Id_periodo'])) {
-                    continue;
-                }
-
-                Designacion::create([
-                    'Id_docente' => $fila['Id_docente'],
-                    'Id_materia' => $fila['Id_materia'],
-                    'Id_grupo' => $fila['Id_grupo'],
-                    'Id_gestion' => $data['Id_gestion'],
-                    'Id_periodo' => $data['Id_periodo'],
-                    'estado' => 'propuesta',
-                    'creado_por' => $request->user()->id,
-                ]);
-
-                $creadas++;
-            }
-        });
+        $creadas = $this->crearEnLote($data, $request, fn (array $fila) => ! empty($fila['Id_docente']));
 
         return redirect()->route('designaciones.asignar', [
             'carrera_id' => $data['carrera_id'],
@@ -154,11 +130,24 @@ class DesignacionMasivaController extends Controller
             'filas.*.Id_docente' => ['required', 'exists:docentes,id'],
         ]);
 
+        $creadas = $this->crearEnLote($data, $request, fn (array $fila) => $fila['incluir']);
+
+        return redirect()->route('designaciones.copiar', [
+            'carrera_id' => $data['carrera_id'],
+            'gestion_origen_id' => $data['gestion_origen_id'],
+            'periodo_origen_id' => $data['periodo_origen_id'],
+            'gestion_destino_id' => $data['Id_gestion'],
+            'periodo_destino_id' => $data['Id_periodo'],
+        ])->with('status', "{$creadas} designación(es) copiada(s) correctamente.");
+    }
+
+    private function crearEnLote(array $data, Request $request, \Closure $debeIncluir): int
+    {
         $creadas = 0;
 
-        DB::transaction(function () use ($data, $request, &$creadas) {
+        DB::transaction(function () use ($data, $request, $debeIncluir, &$creadas) {
             foreach ($data['filas'] as $fila) {
-                if (! $fila['incluir']) {
+                if (! $debeIncluir($fila)) {
                     continue;
                 }
 
@@ -180,12 +169,6 @@ class DesignacionMasivaController extends Controller
             }
         });
 
-        return redirect()->route('designaciones.copiar', [
-            'carrera_id' => $data['carrera_id'],
-            'gestion_origen_id' => $data['gestion_origen_id'],
-            'periodo_origen_id' => $data['periodo_origen_id'],
-            'gestion_destino_id' => $data['Id_gestion'],
-            'periodo_destino_id' => $data['Id_periodo'],
-        ])->with('status', "{$creadas} designación(es) copiada(s) correctamente.");
+        return $creadas;
     }
 }
