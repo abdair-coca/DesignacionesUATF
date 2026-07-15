@@ -11,6 +11,7 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 use App\Support\CargaAcademicaService;
+use App\Support\DesignacionReportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -28,7 +29,10 @@ class DesignacionController extends Controller
         'estado',
     ];
 
-    public function __construct(private CargaAcademicaService $cargaAcademica) {}
+    public function __construct(
+        private CargaAcademicaService $cargaAcademica,
+        private DesignacionReportService $reportes,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -42,45 +46,7 @@ class DesignacionController extends Controller
         $gestionId = (int) ($filtros['gestion_id'] ?? Gestion::max('id') ?? 0);
         $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::min('id') ?? 0);
 
-        $materiasPorCarrera = Materia::selectRaw('carrera_id, count(*) as total')
-            ->groupBy('carrera_id')
-            ->pluck('total', 'carrera_id');
-
-        $gruposPorCarrera = Grupo::where('grupos.estado', 'habilitado')
-            ->join('materias', 'materias.id', '=', 'grupos.materia_id')
-            ->selectRaw('materias.carrera_id, count(*) as total')
-            ->groupBy('materias.carrera_id')
-            ->pluck('total', 'carrera_id');
-
-        $asignadosPorCarrera = Designacion::where('Id_gestion', $gestionId)
-            ->where('Id_periodo', $periodoId)
-            ->where('designaciones.estado', '!=', 'rechazada')
-            ->join('materias', 'materias.id', '=', 'designaciones.Id_materia')
-            ->join('grupos', function ($join) {
-                $join->on('grupos.id', '=', 'designaciones.Id_grupo')
-                    ->where('grupos.estado', 'habilitado');
-            })
-            ->selectRaw('materias.carrera_id, count(distinct designaciones."Id_grupo") as total')
-            ->groupBy('materias.carrera_id')
-            ->pluck('total', 'carrera_id');
-
-        $todas = Carrera::orderBy('nombre')->get()->map(function (Carrera $carrera) use ($materiasPorCarrera, $gruposPorCarrera, $asignadosPorCarrera) {
-            $grupos = (int) ($gruposPorCarrera[$carrera->id] ?? 0);
-            $activas = min((int) ($asignadosPorCarrera[$carrera->id] ?? 0), $grupos);
-            $pendientes = $grupos - $activas;
-            $situacion = $activas === 0 ? 'sin' : ($pendientes > 0 ? 'pendientes' : 'activas');
-
-            return [
-                'id' => $carrera->id,
-                'sigla' => $carrera->sigla,
-                'nombre' => $carrera->nombre,
-                'materias' => (int) ($materiasPorCarrera[$carrera->id] ?? 0),
-                'grupos' => $grupos,
-                'activas' => $activas,
-                'pendientes' => $pendientes,
-                'situacion' => $situacion,
-            ];
-        });
+        $todas = $this->reportes->resumenPorCarrera($gestionId, $periodoId);
 
         $resumen = [
             'total' => $todas->count(),
@@ -165,41 +131,7 @@ class DesignacionController extends Controller
         $gestionId = (int) ($filtros['gestion_id'] ?? Gestion::max('id') ?? 0);
         $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::min('id') ?? 0);
 
-        $gruposPorMateria = Grupo::where('estado', 'habilitado')
-            ->whereIn('materia_id', $carrera->materias()->select('id'))
-            ->selectRaw('materia_id, count(*) as total')
-            ->groupBy('materia_id')
-            ->pluck('total', 'materia_id');
-
-        $asignadosPorMateria = Designacion::where('Id_gestion', $gestionId)
-            ->where('Id_periodo', $periodoId)
-            ->where('designaciones.estado', '!=', 'rechazada')
-            ->join('grupos', function ($join) {
-                $join->on('grupos.id', '=', 'designaciones.Id_grupo')
-                    ->where('grupos.estado', 'habilitado');
-            })
-            ->join('materias', 'materias.id', '=', 'designaciones.Id_materia')
-            ->where('materias.carrera_id', $carrera->id)
-            ->selectRaw('designaciones."Id_materia" as materia_id, count(distinct designaciones."Id_grupo") as total')
-            ->groupBy('designaciones.Id_materia')
-            ->pluck('total', 'materia_id');
-
-        $materias = $carrera->materias()->orderBy('sigla')->get()
-            ->map(function (Materia $materia) use ($gruposPorMateria, $asignadosPorMateria) {
-                $total = (int) ($gruposPorMateria[$materia->id] ?? 0);
-                $asignados = min((int) ($asignadosPorMateria[$materia->id] ?? 0), $total);
-                $estado = $total === 0 ? 'sin_grupos' : ($asignados >= $total ? 'asignada' : 'por_asignar');
-
-                return [
-                    'id' => $materia->id,
-                    'sigla' => $materia->sigla,
-                    'nombre' => $materia->nombre,
-                    'grupos_total' => $total,
-                    'grupos_asignados' => $asignados,
-                    'estado' => $estado,
-                ];
-            })
-            ->values();
+        $materias = $this->reportes->resumenPorMateria($carrera, $gestionId, $periodoId);
 
         $designaciones = Designacion::with(['docente', 'materia', 'grupo'])
             ->where('Id_gestion', $gestionId)
