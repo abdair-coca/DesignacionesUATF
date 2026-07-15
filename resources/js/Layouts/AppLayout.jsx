@@ -1,4 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { Icono } from '../Components/Icono';
+import paletaIcono from '../Components/paletaIcono';
 
 const navGroups = [
     {
@@ -72,13 +74,21 @@ export default function AppLayout({ title, children }) {
                     {title ? <h2 className="text-2xl font-semibold">{title}</h2> : <div />}
 
                     {auth?.user && (
-                        <div className="flex items-center gap-3 text-sm">
-                            <span className="text-gray-600">{auth.user.name}</span>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2.5 rounded-full border border-gray-200/80 bg-white py-1 pl-1 pr-3.5 shadow-sm">
+                                <span
+                                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ring-1 ring-inset ${paletaIcono[auth.user.id % paletaIcono.length]}`}
+                                >
+                                    {auth.user.name.charAt(0).toUpperCase()}
+                                </span>
+                                <span className="text-sm font-medium text-gray-700">{auth.user.name}</span>
+                            </div>
                             <button
                                 onClick={logout}
-                                className="rounded-md border border-gray-300 px-3 py-1.5 text-gray-700 hover:bg-gray-100"
+                                title="Cerrar sesión"
+                                className="rounded-lg border border-gray-200 bg-white p-2 text-gray-500 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
                             >
-                                Cerrar sesión
+                                <Icono tipo="salir" className="h-4 w-4" />
                             </button>
                         </div>
                     )}
