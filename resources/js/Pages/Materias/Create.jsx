@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import FormFields from './FormFields';
+import FormActions from '@/Components/FormActions';
 
 export default function Create({ carreras }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -23,21 +24,7 @@ export default function Create({ carreras }) {
                 <form onSubmit={enviar} className="space-y-6 rounded-xl border border-gray-200/80 bg-white p-6 shadow-sm">
                     <FormFields data={data} setData={setData} errors={errors} carreras={carreras} />
 
-                    <div className="flex justify-end gap-3">
-                        <a
-                            href={route('materias.index')}
-                            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
-                        >
-                            Cancelar
-                        </a>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            Guardar materia
-                        </button>
-                    </div>
+                    <FormActions onCancel={route('materias.index')} processing={processing} label="Guardar materia" />
                 </form>
             </div>
         </AppLayout>

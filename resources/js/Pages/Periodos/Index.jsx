@@ -2,7 +2,8 @@ import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
-import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
+import DataTable from '@/Components/DataTable';
+import FilaAcciones from '@/Components/FilaAcciones';
 
 export default function Index({ periodos }) {
     return (
@@ -21,58 +22,40 @@ export default function Index({ periodos }) {
                 </Link>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50/80">
-                            <tr>
-                                {['Periodo', 'Designaciones', 'Acciones'].map((encabezado) => (
-                                    <th
-                                        key={encabezado}
-                                        className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
-                                    >
-                                        {encabezado}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {periodos.length === 0 && (
-                                <tr>
-                                    <td colSpan={3}>
-                                        <EmptyState titulo="Sin periodos" subtitulo="Todavía no hay periodos registrados." />
-                                    </td>
-                                </tr>
-                            )}
-                            {periodos.map((periodo, indice) => (
-                                <tr
-                                    key={periodo.id}
-                                    className="fila-entra transition-colors hover:bg-gray-50/60"
-                                    style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
-                                >
-                                    <td className="px-4 py-3.5 font-medium text-gray-900">{periodo.nombre}</td>
-                                    <td className="px-4 py-3.5 text-gray-600 tabular-nums">{periodo.designaciones_count}</td>
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-0.5">
-                                            <Link
-                                                href={route('periodos.edit', periodo.id)}
-                                                title="Editar"
-                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                            >
-                                                <Icono tipo="lapiz" className="h-[18px] w-[18px]" />
-                                            </Link>
-                                            <ConfirmDeleteButton
-                                                deleteUrl={route('periodos.destroy', periodo.id)}
-                                                mensaje={`¿Eliminar el periodo ${periodo.nombre}?`}
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <DataTable>
+                <thead className="bg-gray-50/80">
+                    <tr>
+                        {['Periodo', 'Designaciones', 'Acciones'].map((encabezado) => (
+                            <th
+                                key={encabezado}
+                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                            >
+                                {encabezado}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {periodos.length === 0 && (
+                        <tr>
+                            <td colSpan={3}>
+                                <EmptyState titulo="Sin periodos" subtitulo="Todavía no hay periodos registrados." />
+                            </td>
+                        </tr>
+                    )}
+                    {periodos.map((periodo, indice) => (
+                        <tr
+                            key={periodo.id}
+                            className="fila-entra transition-colors hover:bg-gray-50/60"
+                            style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+                        >
+                            <td className="px-4 py-3.5 font-medium text-gray-900">{periodo.nombre}</td>
+                            <td className="px-4 py-3.5 text-gray-600 tabular-nums">{periodo.designaciones_count}</td>
+                            <FilaAcciones editRoute={route('periodos.edit', periodo.id)} deleteRoute={route('periodos.destroy', periodo.id)} />
+                        </tr>
+                    ))}
+                </tbody>
+            </DataTable>
         </AppLayout>
     );
 }

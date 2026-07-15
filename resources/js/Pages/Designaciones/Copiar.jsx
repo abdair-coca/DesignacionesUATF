@@ -3,7 +3,7 @@ import { router, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 
 const selectClass =
-    'w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500';
+    'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm transition-colors hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
 export default function Copiar({ carreras, gestiones, periodos, docentes, filtros, filas: filasOrigen }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -55,9 +55,9 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
 
     return (
         <AppLayout title="Copiar designaciones de otra gestión">
-            <div className="mb-6 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-5">
+            <div className="mb-6 grid grid-cols-1 gap-4 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm sm:grid-cols-5">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Carrera</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Carrera</label>
                     <select
                         className={selectClass}
                         value={filtros.carrera_id ?? ''}
@@ -73,7 +73,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Gestión origen</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Gestión origen</label>
                     <select
                         className={selectClass}
                         value={filtros.gestion_origen_id ?? ''}
@@ -89,7 +89,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Periodo origen</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Periodo origen</label>
                     <select
                         className={selectClass}
                         value={filtros.periodo_origen_id ?? ''}
@@ -105,7 +105,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Gestión destino</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Gestión destino</label>
                     <select
                         className={selectClass}
                         value={filtros.gestion_destino_id ?? ''}
@@ -121,7 +121,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Periodo destino</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Periodo destino</label>
                     <select
                         className={selectClass}
                         value={filtros.periodo_destino_id ?? ''}
@@ -138,69 +138,77 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
             </div>
 
             {!seleccionCompleta && (
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-sm">
                     Elegí carrera, gestión/periodo de origen y gestión/periodo de destino para ver qué se puede copiar.
                 </p>
             )}
 
             {seleccionCompleta && filasOrigen !== null && filasOrigen.length === 0 && (
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-sm">
                     No hay designaciones de origen para copiar (o todos los grupos ya tienen designación en el destino).
                 </p>
             )}
 
-            {seleccionCompleta && filasOrigen !== null && filasOrigen.length > 0 && (
-                <form onSubmit={submit}>
-                    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-                        <table className="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    {['', 'Materia', 'Grupo', 'Docente original', 'Docente a asignar'].map((h) => (
-                                        <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">
-                                            {h}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {data.filas.map((fila, index) => (
-                                    <tr key={fila.Id_grupo} className={fila.incluir ? '' : 'opacity-50'}>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={fila.incluir}
-                                                onChange={(e) => actualizarFila(index, { incluir: e.target.checked })}
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">{fila._materiaLabel}</td>
-                                        <td className="px-4 py-3">{fila._grupoLabel}</td>
-                                        <td className="px-4 py-3 text-gray-500">{fila._docenteOriginal}</td>
-                                        <td className="px-4 py-3">
-                                            <select
-                                                className={selectClass}
-                                                value={fila.Id_docente}
-                                                disabled={!fila.incluir}
-                                                onChange={(e) => actualizarFila(index, { Id_docente: e.target.value })}
-                                            >
-                                                {docentes.map((docente) => (
-                                                    <option key={docente.id} value={docente.id}>
-                                                        {docente.ci} — {docente.nombre}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            {seleccionCompleta && filasOrigen !== null && data.filas.length > 0 && (
+                <form onSubmit={submit} className="space-y-6">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {data.filas.map((fila, index) => {
+                            const seleccionado = fila.incluir;
+                            return (
+                                <div
+                                    key={fila.Id_grupo}
+                                    onClick={() => actualizarFila(index, { incluir: !seleccionado })}
+                                    className={`relative flex flex-col justify-between rounded-xl border p-4 shadow-sm cursor-pointer transition-all hover:border-blue-500/30 hover:bg-blue-50/10 ${
+                                        seleccionado ? 'border-blue-500 bg-blue-50/5 ring-1 ring-blue-500' : 'border-gray-200/80 bg-white'
+                                    }`}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="font-semibold text-gray-900 text-sm leading-tight">{fila._materiaLabel}</p>
+                                            <p className="mt-1 text-xs text-gray-400">Grupo {fila._grupoLabel}</p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={seleccionado}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                actualizarFila(index, { incluir: e.target.checked });
+                                            }}
+                                            className="h-5 w-5 rounded-full border-gray-300 text-blue-900 focus:ring-blue-500/20 cursor-pointer"
+                                        />
+                                    </div>
+
+                                    <div className="mt-3 border-t border-gray-100 pt-3">
+                                        <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-400">Docente original</label>
+                                        <p className="mt-0.5 text-sm font-medium text-gray-700">{fila._docenteOriginal}</p>
+                                    </div>
+
+                                    <div className="mt-4" onClick={(e) => e.stopPropagation()}>
+                                        <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-1">Docente a asignar</label>
+                                        <select
+                                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm transition-colors hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                            value={fila.Id_docente}
+                                            disabled={!seleccionado}
+                                            onChange={(e) => actualizarFila(index, { Id_docente: e.target.value })}
+                                        >
+                                            {docentes.map((docente) => (
+                                                <option key={docente.id} value={docente.id}>
+                                                    {docente.ci} — {docente.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    {errors.filas && <p className="mt-2 text-sm text-red-600">{errors.filas}</p>}
+                    {errors.filas && <p className="text-sm text-red-600">{errors.filas}</p>}
 
                     <button
                         type="submit"
                         disabled={processing}
-                        className="mt-4 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Copiar designaciones seleccionadas
                     </button>

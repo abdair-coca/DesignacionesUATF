@@ -2,7 +2,8 @@ import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
-import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
+import DataTable from '@/Components/DataTable';
+import FilaAcciones from '@/Components/FilaAcciones';
 
 export default function Index({ gestiones }) {
     return (
@@ -21,58 +22,40 @@ export default function Index({ gestiones }) {
                 </Link>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50/80">
-                            <tr>
-                                {['Gestión', 'Designaciones', 'Acciones'].map((encabezado) => (
-                                    <th
-                                        key={encabezado}
-                                        className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
-                                    >
-                                        {encabezado}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {gestiones.length === 0 && (
-                                <tr>
-                                    <td colSpan={3}>
-                                        <EmptyState titulo="Sin gestiones" subtitulo="Todavía no hay gestiones registradas." />
-                                    </td>
-                                </tr>
-                            )}
-                            {gestiones.map((gestion, indice) => (
-                                <tr
-                                    key={gestion.id}
-                                    className="fila-entra transition-colors hover:bg-gray-50/60"
-                                    style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
-                                >
-                                    <td className="px-4 py-3.5 font-medium text-gray-900 tabular-nums">{gestion.nombre}</td>
-                                    <td className="px-4 py-3.5 text-gray-600 tabular-nums">{gestion.designaciones_count}</td>
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-0.5">
-                                            <Link
-                                                href={route('gestiones.edit', gestion.id)}
-                                                title="Editar"
-                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                            >
-                                                <Icono tipo="lapiz" className="h-[18px] w-[18px]" />
-                                            </Link>
-                                            <ConfirmDeleteButton
-                                                deleteUrl={route('gestiones.destroy', gestion.id)}
-                                                mensaje={`¿Eliminar la gestión ${gestion.nombre}?`}
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <DataTable>
+                <thead className="bg-gray-50/80">
+                    <tr>
+                        {['Gestión', 'Designaciones', 'Acciones'].map((encabezado) => (
+                            <th
+                                key={encabezado}
+                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                            >
+                                {encabezado}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {gestiones.length === 0 && (
+                        <tr>
+                            <td colSpan={3}>
+                                <EmptyState titulo="Sin gestiones" subtitulo="Todavía no hay gestiones registradas." />
+                            </td>
+                        </tr>
+                    )}
+                    {gestiones.map((gestion, indice) => (
+                        <tr
+                            key={gestion.id}
+                            className="fila-entra transition-colors hover:bg-gray-50/60"
+                            style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+                        >
+                            <td className="px-4 py-3.5 font-medium text-gray-900 tabular-nums">{gestion.nombre}</td>
+                            <td className="px-4 py-3.5 text-gray-600 tabular-nums">{gestion.designaciones_count}</td>
+                            <FilaAcciones editRoute={route('gestiones.edit', gestion.id)} deleteRoute={route('gestiones.destroy', gestion.id)} />
+                        </tr>
+                    ))}
+                </tbody>
+            </DataTable>
         </AppLayout>
     );
 }

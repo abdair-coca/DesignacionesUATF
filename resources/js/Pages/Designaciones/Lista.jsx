@@ -4,8 +4,9 @@ import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import FilterBar from '../../Components/FilterBar';
-import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
 import Badge from '../../Components/Badge';
+import DataTable from '@/Components/DataTable';
+import FilaAcciones from '@/Components/FilaAcciones';
 
 const badgeEstado = {
     aprobada: { tono: 'verde', icono: 'check' },
@@ -97,81 +98,64 @@ export default function Lista({ designaciones, carreras, gestiones, periodos, fi
                 hayFiltrosActivos={hayFiltrosActivos}
             />
 
-            <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50/80">
-                            <tr>
-                                {['Docente', 'Materia', 'Grupo', 'Gestión', 'Periodo', 'Estado', 'Acciones'].map((encabezado) => (
-                                    <th
-                                        key={encabezado}
-                                        className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
-                                    >
-                                        {encabezado}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {designaciones.data.length === 0 && (
-                                <tr>
-                                    <td colSpan={7}>
-                                        <EmptyState
-                                            titulo="Sin resultados"
-                                            subtitulo="Ninguna designación coincide con los filtros actuales."
-                                            accion={hayFiltrosActivos ? { label: 'Limpiar filtros', onClick: limpiarFiltros } : undefined}
-                                        />
-                                    </td>
-                                </tr>
-                            )}
-                            {designaciones.data.map((designacion, indice) => (
-                                <tr
-                                    key={designacion.id}
-                                    className="fila-entra transition-colors hover:bg-gray-50/60"
-                                    style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+            <DataTable>
+                <thead className="bg-gray-50/80">
+                    <tr>
+                        {['Docente', 'Materia', 'Grupo', 'Gestión', 'Periodo', 'Estado', 'Acciones'].map((encabezado) => (
+                            <th
+                                key={encabezado}
+                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                            >
+                                {encabezado}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {designaciones.data.length === 0 && (
+                        <tr>
+                            <td colSpan={7}>
+                                <EmptyState
+                                    titulo="Sin resultados"
+                                    subtitulo="Ninguna designación coincide con los filtros actuales."
+                                    accion={hayFiltrosActivos ? { label: 'Limpiar filtros', onClick: limpiarFiltros } : undefined}
+                                />
+                            </td>
+                        </tr>
+                    )}
+                    {designaciones.data.map((designacion, indice) => (
+                        <tr
+                            key={designacion.id}
+                            className="fila-entra transition-colors hover:bg-gray-50/60"
+                            style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+                        >
+                            <td className="px-4 py-3.5 font-medium text-gray-900">{designacion.docente.nombre}</td>
+                            <td className="px-4 py-3.5 text-gray-600">
+                                {designacion.materia.sigla} — {designacion.materia.nombre}
+                            </td>
+                            <td className="px-4 py-3.5 text-gray-600">{designacion.grupo.codigo}</td>
+                            <td className="px-4 py-3.5 text-gray-600">{designacion.gestion.nombre}</td>
+                            <td className="px-4 py-3.5 text-gray-600">{designacion.periodo.nombre}</td>
+                            <td className="px-4 py-3.5">
+                                <Badge tono={badgeEstado[designacion.estado].tono} icono={badgeEstado[designacion.estado].icono}>
+                                    {designacion.estado.charAt(0).toUpperCase() + designacion.estado.slice(1)}
+                                </Badge>
+                            </td>
+                            <FilaAcciones editRoute={route('designaciones.edit', designacion.id)} deleteRoute={route('designaciones.destroy', designacion.id)}>
+                                <Link
+                                    href={route('designaciones.historial', designacion.id)}
+                                    title="Historial"
+                                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
                                 >
-                                    <td className="px-4 py-3.5 font-medium text-gray-900">{designacion.docente.nombre}</td>
-                                    <td className="px-4 py-3.5 text-gray-600">
-                                        {designacion.materia.sigla} — {designacion.materia.nombre}
-                                    </td>
-                                    <td className="px-4 py-3.5 text-gray-600">{designacion.grupo.codigo}</td>
-                                    <td className="px-4 py-3.5 text-gray-600">{designacion.gestion.nombre}</td>
-                                    <td className="px-4 py-3.5 text-gray-600">{designacion.periodo.nombre}</td>
-                                    <td className="px-4 py-3.5">
-                                        <Badge tono={badgeEstado[designacion.estado].tono} icono={badgeEstado[designacion.estado].icono}>
-                                            {designacion.estado.charAt(0).toUpperCase() + designacion.estado.slice(1)}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-0.5">
-                                            <Link
-                                                href={route('designaciones.edit', designacion.id)}
-                                                title="Editar"
-                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                            >
-                                                <Icono tipo="lapiz" className="h-[18px] w-[18px]" />
-                                            </Link>
-                                            <Link
-                                                href={route('designaciones.historial', designacion.id)}
-                                                title="Historial"
-                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                            >
-                                                <Icono tipo="reloj" className="h-[18px] w-[18px]" />
-                                            </Link>
-                                            <ConfirmDeleteButton
-                                                deleteUrl={route('designaciones.destroy', designacion.id)}
-                                                mensaje="¿Eliminar esta designación?"
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                    <Icono tipo="reloj" className="h-[18px] w-[18px]" />
+                                </Link>
+                            </FilaAcciones>
+                        </tr>
+                    ))}
+                </tbody>
+            </DataTable>
 
-                <Pagination paginador={designaciones} etiqueta="designaciones" />
-            </div>
+            <Pagination paginador={designaciones} etiqueta="designaciones" />
         </AppLayout>
     );
 }

@@ -2,8 +2,9 @@ import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
-import ConfirmDeleteButton from '../../Components/ConfirmDeleteButton';
 import paletaIcono from '../../Components/paletaIcono';
+import DataTable from '@/Components/DataTable';
+import FilaAcciones from '@/Components/FilaAcciones';
 
 export default function Index({ carreras }) {
     return (
@@ -22,70 +23,52 @@ export default function Index({ carreras }) {
                 </Link>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50/80">
-                            <tr>
-                                {['Carrera', 'Materias', 'Acciones'].map((encabezado) => (
-                                    <th
-                                        key={encabezado}
-                                        className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+            <DataTable>
+                <thead className="bg-gray-50/80">
+                    <tr>
+                        {['Carrera', 'Materias', 'Acciones'].map((encabezado) => (
+                            <th
+                                key={encabezado}
+                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                            >
+                                {encabezado}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {carreras.length === 0 && (
+                        <tr>
+                            <td colSpan={3}>
+                                <EmptyState titulo="Sin carreras" subtitulo="Todavía no hay carreras registradas." />
+                            </td>
+                        </tr>
+                    )}
+                    {carreras.map((carrera, indice) => (
+                        <tr
+                            key={carrera.id}
+                            className="fila-entra transition-colors hover:bg-gray-50/60"
+                            style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
+                        >
+                            <td className="px-4 py-3.5">
+                                <div className="flex items-center gap-3">
+                                    <span
+                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[carrera.id % paletaIcono.length]}`}
                                     >
-                                        {encabezado}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {carreras.length === 0 && (
-                                <tr>
-                                    <td colSpan={3}>
-                                        <EmptyState titulo="Sin carreras" subtitulo="Todavía no hay carreras registradas." />
-                                    </td>
-                                </tr>
-                            )}
-                            {carreras.map((carrera, indice) => (
-                                <tr
-                                    key={carrera.id}
-                                    className="fila-entra transition-colors hover:bg-gray-50/60"
-                                    style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
-                                >
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-3">
-                                            <span
-                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[carrera.id % paletaIcono.length]}`}
-                                            >
-                                                {carrera.sigla.charAt(0)}
-                                            </span>
-                                            <div>
-                                                <p className="font-medium text-gray-900">{carrera.nombre}</p>
-                                                <p className="mt-0.5 text-xs text-gray-400">{carrera.sigla}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3.5 text-gray-600 tabular-nums">{carrera.materias_count}</td>
-                                    <td className="px-4 py-3.5">
-                                        <div className="flex items-center gap-0.5">
-                                            <Link
-                                                href={route('carreras.edit', carrera.id)}
-                                                title="Editar"
-                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                            >
-                                                <Icono tipo="lapiz" className="h-[18px] w-[18px]" />
-                                            </Link>
-                                            <ConfirmDeleteButton
-                                                deleteUrl={route('carreras.destroy', carrera.id)}
-                                                mensaje={`¿Eliminar la carrera ${carrera.nombre}?`}
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                        {carrera.sigla.charAt(0)}
+                                    </span>
+                                    <div>
+                                        <p className="font-medium text-gray-900">{carrera.nombre}</p>
+                                        <p className="mt-0.5 text-xs text-gray-400">{carrera.sigla}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="px-4 py-3.5 text-gray-600 tabular-nums">{carrera.materias_count}</td>
+                            <FilaAcciones editRoute={route('carreras.edit', carrera.id)} deleteRoute={route('carreras.destroy', carrera.id)} />
+                        </tr>
+                    ))}
+                </tbody>
+            </DataTable>
         </AppLayout>
     );
 }
