@@ -250,19 +250,18 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             Estado de designaciones para la gestión y periodo seleccionados.
                         </p>
                     </div>
-
-                    <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-7">
+                    <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3 2xl:grid-cols-7">
                         {/* Progreso General Card */}
-                        <div className="flex flex-col justify-between rounded-2xl bg-[#0b1329] p-5 text-white shadow-md lg:col-span-2">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Progreso General</span>
-                                <span className="rounded-lg bg-slate-800/60 px-3 py-1 text-xs text-slate-300">
-                                    Gestión {gestionSeleccionada} - Periodo {periodoSeleccionado}
+                        <div className="flex flex-col justify-between rounded-2xl bg-[#0b1329] p-4 text-white shadow-md xl:col-span-1 2xl:col-span-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Progreso General</span>
+                                <span className="rounded-lg bg-slate-800/60 px-2 py-0.5 text-[10px] text-slate-300">
+                                    G. {gestionSeleccionada} - P. {periodoSeleccionado}
                                 </span>
                             </div>
 
-                            <div className="my-5 flex items-center gap-6">
-                                <div className="relative h-28 w-28 shrink-0">
+                            <div className="my-4 flex items-center gap-5">
+                                <div className="relative h-20 w-20 shrink-0">
                                     <svg viewBox="0 0 100 100" className="h-full w-full">
                                         <circle cx="50" cy="50" r={radio} fill="none" stroke="#233554" strokeWidth="10" />
                                         {arcos.map((arco, i) => arco.cantidad > 0 && (
@@ -283,17 +282,17 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                         ))}
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                                        <span className="text-2xl font-bold tracking-tight">{porcentajeCompletado}%</span>
-                                        <span className="text-[10px] font-medium uppercase text-slate-400">completado</span>
+                                        <span className="text-lg font-bold tracking-tight">{porcentajeCompletado}%</span>
+                                        <span className="text-[8px] font-medium uppercase text-slate-400">hecho</span>
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-4xl font-extrabold tracking-tight text-white tabular-nums">{totalDesignaciones}</p>
-                                    <p className="text-xs text-slate-400 mt-1">Designaciones totales</p>
+                                    <p className="text-3xl font-extrabold tracking-tight text-white tabular-nums">{totalDesignaciones}</p>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">Designaciones totales</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4 border-t border-slate-800/80 pt-4 text-xs">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-slate-800/80 pt-3 text-[11px]">
                                 <div className="flex items-center gap-1.5">
                                     <span className="h-2 w-2 rounded-full bg-green-500" />
                                     <span className="font-semibold">{conteoEstado.aprobada}</span>
@@ -311,15 +310,15 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 </div>
                             </div>
 
-                            <div className="mt-4">
-                                <span className="inline-block rounded-full bg-slate-800/50 px-3 py-1 text-[11px] font-medium text-slate-300">
-                                    Quedan {pendientesDeCompletar} designaciones por completar
+                            <div className="mt-3">
+                                <span className="inline-block rounded-full bg-slate-800/50 px-2.5 py-0.5 text-[10px] font-medium text-slate-300">
+                                    Quedan {pendientesDeCompletar} por completar
                                 </span>
                             </div>
                         </div>
 
                         {/* StatTiles Container */}
-                        <div className="lg:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5">
+                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-2 2xl:grid-cols-5 [&>*:last-child]:xl:col-span-2 [&>*:last-child]:2xl:col-span-1">
                             <DashboardStatTile
                                 tipo="capas"
                                 tono="rojo"
@@ -432,31 +431,37 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                     const pct = carrera.grupos > 0 ? Math.round((carrera.activas / carrera.grupos) * 100) : 0;
                                     const barColor = pct >= 60 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500';
                                     return (
-                                        <div key={carrera.id} className="flex items-center gap-3">
-                                            <div className="w-36 shrink-0">
+                                        <div key={carrera.id} className="grid grid-cols-12 items-center gap-3">
+                                            <div className="col-span-4 min-w-0">
                                                 <p className="text-xs font-semibold text-gray-900 truncate" title={carrera.nombre}>
                                                     {carrera.nombre}
                                                 </p>
                                                 <p className="text-[10px] text-gray-400 mt-0.5">{carrera.sigla}</p>
                                             </div>
-                                            <div className="relative h-2 w-full rounded-full bg-gray-100 ring-1 ring-inset ring-gray-200/40 overflow-hidden">
-                                                <div
-                                                    className={`absolute left-0 top-0 h-full rounded-full ${barColor} transition-[width] duration-500`}
-                                                    style={{ width: `${pct}%` }}
-                                                />
+                                            <div className="col-span-7">
+                                                <div className="relative h-2 w-full rounded-full bg-gray-100 ring-1 ring-inset ring-gray-200/40 overflow-hidden">
+                                                    <div
+                                                        className={`absolute left-0 top-0 h-full rounded-full ${barColor} transition-[width] duration-500`}
+                                                        style={{ width: `${pct}%` }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <span className="w-10 shrink-0 text-right text-xs font-bold text-gray-900 tabular-nums">{pct}%</span>
+                                            <span className="col-span-1 text-right text-xs font-bold text-gray-900 tabular-nums">{pct}%</span>
                                         </div>
                                     );
                                 })}
                             </div>
                             
-                            <div className="mt-5 flex justify-between px-[152px] text-[10px] font-semibold text-gray-400 border-t border-gray-100 pt-3.5">
-                                <span>0%</span>
-                                <span>25%</span>
-                                <span>50%</span>
-                                <span>75%</span>
-                                <span>100%</span>
+                            <div className="mt-5 grid grid-cols-12 text-[10px] font-semibold text-gray-400 border-t border-gray-100 pt-3.5">
+                                <div className="col-span-4" />
+                                <div className="col-span-7 flex justify-between">
+                                    <span>0%</span>
+                                    <span>25%</span>
+                                    <span>50%</span>
+                                    <span>75%</span>
+                                    <span>100%</span>
+                                </div>
+                                <div className="col-span-1" />
                             </div>
                         </div>
 
@@ -473,7 +478,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             </div>
                             <div className="flex flex-col sm:flex-row items-center gap-6 my-auto justify-center">
                                 <div className="shrink-0">
-                                    <GraficoAnillo resumen={resumenDashboard} etiqueta="designaciones" />
+                                    <GraficoAnillo resumen={resumenDashboard} etiqueta="total" />
                                 </div>
                                 <ul className="flex-1 space-y-1.5 w-full">
                                     {leyendaDona.map((fila) => (
@@ -538,11 +543,14 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                     ))}
                                 </svg>
                                 <div className="absolute left-0 bottom-0 w-full flex justify-between px-[50px] text-[10px] font-semibold text-gray-400">
-                                    {puntosChart.map((pt, i) => (
-                                        <span key={i} className="w-12 text-center truncate">
-                                            {pt.label}
-                                        </span>
-                                    ))}
+                                    {puntosChart.map((pt, i) => {
+                                        const esPrimeroDeMes = pt.label.startsWith('01') || pt.label.startsWith('30');
+                                        return (
+                                            <span key={i} className={`w-12 text-center truncate transition-opacity duration-150 ${esPrimeroDeMes ? 'opacity-100' : 'opacity-0 sm:opacity-50'}`}>
+                                                {pt.label}
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -731,7 +739,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                     <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
                         <h3 className="font-semibold tracking-tight text-gray-900">Resumen de designaciones</h3>
                         <div className="mt-4 flex justify-center">
-                            <GraficoAnillo resumen={resumenDashboard} etiqueta="designaciones" />
+                            <GraficoAnillo resumen={resumenDashboard} etiqueta="total" />
                         </div>
                         <ul className="mt-5 space-y-1">
                             {leyendaDona.map((fila) => (
