@@ -184,9 +184,9 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             Estado de designaciones para la gestión y periodo seleccionados.
                         </p>
                     </div>
-                    <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3 2xl:grid-cols-7 items-start">
+                    <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3 2xl:grid-cols-7">
                         {/* Progreso General Card */}
-                        <div className="flex flex-col justify-between rounded-2xl bg-[#0b1329] p-4 text-white shadow-md xl:col-span-1 2xl:col-span-2">
+                        <div className="flex flex-col justify-between rounded-2xl bg-[#0b1329] p-4 text-white shadow-md xl:col-span-1 2xl:col-span-2 h-full">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Progreso General</span>
                                 <span className="rounded-lg bg-slate-800/60 px-2 py-0.5 text-[10px] text-slate-300">
@@ -252,7 +252,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
 
                         {/* StatTiles Container */}
-                        <div className="xl:col-span-2 2xl:col-span-5 flex flex-col gap-4">
+                        <div className="xl:col-span-2 2xl:col-span-5 flex flex-col xl:justify-between xl:h-full gap-4 xl:gap-0">
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5 items-start">
                                 <DashboardStatTile
                                     tipo="capas"
@@ -597,7 +597,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                     </div>
                 </div>
 
-                <aside className="w-full shrink-0 space-y-5 xl:w-80">
+                <aside className="w-full shrink-0 space-y-5 xl:w-80 xl:pt-[76px]">
                     {/* Resumen de designaciones */}
                     <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
                         <h3 className="font-semibold tracking-tight text-gray-900">Resumen de designaciones</h3>
@@ -631,37 +631,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
 
 
 
-                    {/* Acciones Rápidas */}
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
-                        <div className="flex flex-col gap-2">
-                            <Link
-                                href={route('designaciones.create')}
-                                className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/50 px-4 py-3 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-100 hover:border-gray-200"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-blue-600">
-                                        <Icono tipo="mas" className="h-3.5 w-3.5" />
-                                    </span>
-                                    Nueva designación
-                                </span>
-                                <Icono tipo="chevronDerecha" className="h-3 w-3 text-gray-400" />
-                            </Link>
 
-                            <Link
-                                href={route('designaciones.copiar')}
-                                className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/50 px-4 py-3 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-100 hover:border-gray-200"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
-                                        <Icono tipo="copiar" className="h-3.5 w-3.5" />
-                                    </span>
-                                    Copiar designaciones
-                                </span>
-                                <Icono tipo="chevronDerecha" className="h-3 w-3 text-gray-400" />
-                            </Link>
-                        </div>
-                    </div>
                 </aside>
             </div>
         </AppLayout>
