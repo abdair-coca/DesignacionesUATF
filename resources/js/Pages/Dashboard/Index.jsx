@@ -333,11 +333,11 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                     </div>
 
                     {/* Custom Filter Bar */}
-                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                        <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2">
+                    <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-gray-200/80 bg-white p-3 shadow-sm overflow-x-auto scrollbar-none">
+                        <div className="flex items-center gap-4 shrink-0">
+                            <div className="flex items-center gap-1.5 shrink-0">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Gestión</label>
-                                <div className="w-36">
+                                <div className="w-24">
                                     <Select
                                         value={filtros.gestion_id}
                                         onChange={(e) => aplicarFiltros({ gestion_id: e.target.value })}
@@ -350,9 +350,9 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 shrink-0">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Periodo</label>
-                                <div className="w-36">
+                                <div className="w-24">
                                     <Select
                                         value={filtros.periodo_id}
                                         onChange={(e) => aplicarFiltros({ periodo_id: e.target.value })}
@@ -365,9 +365,9 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 shrink-0">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Ordenar carreras</label>
-                                <div className="w-44">
+                                <div className="w-36">
                                     <Select
                                         value={carreraOrden}
                                         onChange={(e) => setCarreraOrden(e.target.value)}
@@ -384,14 +384,14 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             <button
                                 onClick={usarValoresPorDefecto}
                                 disabled={!filtros.gestion_id && !filtros.periodo_id}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
                             >
                                 <Icono tipo="embudo" className="h-3.5 w-3.5" />
                                 Filtros
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0 ml-4">
                             <span>Actualizado hace 5 min</span>
                             <button onClick={() => aplicarFiltros({})} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <Icono tipo="reloj" className="h-3.5 w-3.5" />
