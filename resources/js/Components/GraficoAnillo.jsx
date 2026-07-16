@@ -1,4 +1,4 @@
-export default function GraficoAnillo({ resumen }) {
+export default function GraficoAnillo({ resumen, etiqueta = 'carreras' }) {
     const radio = 40
     const circunferencia = 2 * Math.PI * radio
     const total = resumen.total || 1
@@ -43,7 +43,7 @@ export default function GraficoAnillo({ resumen }) {
             </svg>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-semibold tracking-tight text-gray-900 tabular-nums">{resumen.total}</span>
-                <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">carreras</span>
+                <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{etiqueta}</span>
             </div>
         </div>
     )
