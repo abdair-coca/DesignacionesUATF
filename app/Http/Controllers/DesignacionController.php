@@ -292,13 +292,11 @@ class DesignacionController extends Controller
     {
         return Designacion::with(['docente', 'gestion', 'periodo'])
             ->whereIn('Id_grupo', $grupoIds)
+            ->orderByDesc('Id_gestion')
+            ->orderByDesc('Id_periodo')
             ->get()
             ->groupBy('Id_grupo')
             ->map(fn (Collection $items) => $items
-                ->sortBy([
-                    fn (Designacion $a, Designacion $b) => (int) $b->gestion->nombre <=> (int) $a->gestion->nombre,
-                    fn (Designacion $a, Designacion $b) => $b->Id_periodo <=> $a->Id_periodo,
-                ])
                 ->take(8)
                 ->map(fn (Designacion $d) => [
                     'docente' => ['id' => $d->docente->id, 'nombre' => $d->docente->nombre],
