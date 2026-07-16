@@ -11,6 +11,7 @@ use App\Support\CargaAcademicaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,13 +21,15 @@ class DesignacionMasivaController extends Controller
 
     public function copiarForm(Request $request): Response
     {
-        $filtros = $request->validate([
+        $input = array_map(fn ($v) => $v === '' ? null : $v, $request->all());
+
+        $filtros = Validator::make($input, [
             'carrera_id' => ['nullable', 'exists:carreras,id'],
             'gestion_origen_id' => ['nullable', 'exists:gestiones,id'],
             'periodo_origen_id' => ['nullable', 'exists:periodos,id'],
             'gestion_destino_id' => ['nullable', 'exists:gestiones,id'],
             'periodo_destino_id' => ['nullable', 'exists:periodos,id'],
-        ]);
+        ])->validate();
 
         $filas = null;
 
@@ -68,7 +71,9 @@ class DesignacionMasivaController extends Controller
 
     public function copiarStore(Request $request): RedirectResponse
     {
-        $data = $request->validate([
+        $input = array_map(fn ($v) => $v === '' ? null : $v, $request->all());
+
+        $data = Validator::make($input, [
             'Id_gestion' => ['required', 'exists:gestiones,id'],
             'Id_periodo' => ['required', 'exists:periodos,id'],
             'gestion_origen_id' => ['required', 'exists:gestiones,id'],
@@ -79,7 +84,7 @@ class DesignacionMasivaController extends Controller
             'filas.*.Id_materia' => ['required', 'exists:materias,id'],
             'filas.*.Id_grupo' => ['required', 'exists:grupos,id'],
             'filas.*.Id_docente' => ['required', 'exists:docentes,id'],
-        ]);
+        ])->validate();
 
         if (! empty($data['filas'])) {
             // Copiar selección individual
