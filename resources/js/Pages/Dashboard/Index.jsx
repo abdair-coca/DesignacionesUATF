@@ -68,19 +68,17 @@ const DBOARD_TONOS = {
 
 function DashboardStatTile({ tipo, tono, titulo, valor, subtitulo }) {
     return (
-        <div className="group flex flex-col justify-between rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md h-full">
-            <div className="flex items-start gap-3">
+        <div className="group rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="flex items-center gap-2">
                 <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${DBOARD_TONOS[tono]}`}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${DBOARD_TONOS[tono]}`}
                 >
-                    <Icono tipo={tipo} className="h-5 w-5" />
+                    <Icono tipo={tipo} className="h-4 w-4" />
                 </span>
-                <div className="min-w-0 flex-1">
-                    <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 leading-tight" title={titulo}>{titulo}</span>
-                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900 leading-none tabular-nums">{valor}</p>
-                    {subtitulo && <p className="mt-1.5 text-[10px] text-gray-400 leading-tight" title={subtitulo}>{subtitulo}</p>}
-                </div>
+                <span className="text-xs font-semibold text-gray-500 leading-tight" title={titulo}>{titulo}</span>
             </div>
+            <p className="mt-3 text-2xl font-extrabold tracking-tight text-gray-900 leading-none tabular-nums">{valor}</p>
+            {subtitulo && <p className="mt-1.5 text-[10px] text-gray-400 leading-tight" title={subtitulo}>{subtitulo}</p>}
         </div>
     );
 }
@@ -184,7 +182,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             Estado de designaciones para la gestión y periodo seleccionados.
                         </p>
                     </div>
-                    <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3 2xl:grid-cols-7">
+                    <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3 2xl:grid-cols-7 items-start">
                         {/* Progreso General Card */}
                         <div className="flex flex-col justify-between rounded-2xl bg-[#0b1329] p-4 text-white shadow-md xl:col-span-1 2xl:col-span-2">
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -252,7 +250,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
 
                         {/* StatTiles Container */}
-                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-5 [&>*:last-child]:xl:col-span-2 [&>*:last-child]:2xl:col-span-1">
+                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5 items-start">
                             <DashboardStatTile
                                 tipo="capas"
                                 tono="rojo"
