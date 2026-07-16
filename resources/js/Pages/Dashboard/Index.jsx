@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import StatTile from '../../Components/StatTile';
-import FilterBar from '../../Components/FilterBar';
 import EmptyState from '../../Components/EmptyState';
 import DataTable from '@/Components/DataTable';
 import GraficoAnillo from '@/Components/GraficoAnillo';
 import { Icono } from '../../Components/Icono';
+import Select from '@/Components/Select';
 
 function PaginadorCliente({ paginaActual, totalItems, itemsPorPagina, onPaginaChange }) {
     const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
@@ -59,7 +59,7 @@ function PaginadorCliente({ paginaActual, totalItems, itemsPorPagina, onPaginaCh
     );
 }
 
-export default function Index({ gestiones, periodos, filtros, gruposSinDesignar, conteoEstado, docentesBajoLimite, limiteHoras }) {
+export default function Index({ gestiones, periodos, filtros, gruposSinDesignar, conteoEstado, docentesBajoLimite, limiteHoras, resumenCarreras, evolucion }) {
     const [tabActiva, setTabActiva] = useState('grupos');
     const [paginaGrupos, setPaginaGrupos] = useState(1);
     const [paginaDocentes, setPaginaDocentes] = useState(1);
@@ -79,23 +79,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
     function usarValoresPorDefecto() {
         aplicarFiltros({ gestion_id: '', periodo_id: '' });
     }
-
-    const campos = [
-        {
-            key: 'gestion_id',
-            label: 'Gestión',
-            valor: filtros.gestion_id,
-            todos: 'Más reciente',
-            opciones: gestiones.map((g) => ({ value: g.id, label: g.nombre })),
-        },
-        {
-            key: 'periodo_id',
-            label: 'Periodo',
-            valor: filtros.periodo_id,
-            todos: 'Primero disponible',
-            opciones: periodos.map((p) => ({ value: p.id, label: p.nombre })),
-        },
-    ];
 
     const totalDesignaciones = conteoEstado.propuesta + conteoEstado.aprobada + conteoEstado.rechazada;
 
@@ -120,6 +103,30 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
     const gruposPaginados = gruposSinDesignar.slice((paginaGrupos - 1) * itemsPorPagina, paginaGrupos * itemsPorPagina);
     const docentesPaginados = docentesBajoLimite.slice((paginaDocentes - 1) * itemsPorPagina, paginaDocentes * itemsPorPagina);
 
+    // Progreso general calculations
+    const porcentajeCompletado = totalDesignaciones > 0 ? Math.round((conteoEstado.aprobada / totalDesignaciones) * 100) : 0;
+    const pendientesDeCompletar = conteoEstado.propuesta + conteoEstado.rechazada;
+
+    const radio = 36;
+    const circunferencia = 2 * Math.PI * radio;
+    const segmentos = [
+        { cantidad: conteoEstado.aprobada, color: '#22c55e' },
+        { cantidad: conteoEstado.propuesta, color: '#f59e0b' },
+        { cantidad: conteoEstado.rechazada, color: '#ef4444' }
+    ];
+    const visibles = segmentos.filter((s) => s.cantidad > 0).length;
+    const separacion = visibles > 1 ? 1.8 : 0;
+
+    let acumulado = 0;
+    const arcos = segmentos.map((segmento) => {
+        const inicio = acumulado;
+        acumulado += segmento.cantidad;
+        return { ...segmento, inicio };
+    });
+
+    const gestionSeleccionada = filtros.gestion_id ? gestiones.find(g => String(g.id) === filtros.gestion_id)?.nombre : '2026';
+    const periodoSeleccionado = filtros.periodo_id ? periodos.find(p => String(p.id) === filtros.periodo_id)?.nombre : '1';
+
     return (
         <AppLayout>
             <div className="flex flex-col gap-6 xl:flex-row">
@@ -131,32 +138,145 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </p>
                     </div>
 
-                    <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                        <StatTile
-                            tipo="capas"
-                            tono="rojo"
-                            titulo="Grupos sin cubrir"
-                            valor={gruposSinDesignar.length}
-                            subtitulo="habilitados, sin designación"
-                        />
-                        <StatTile tipo="reloj" tono="ambar" titulo="Propuestas" valor={conteoEstado.propuesta} subtitulo={`de ${totalDesignaciones} designaciones`} />
-                        <StatTile tipo="check" tono="verde" titulo="Aprobadas" valor={conteoEstado.aprobada} subtitulo={`de ${totalDesignaciones} designaciones`} />
-                        <StatTile tipo="equis" tono="rojo" titulo="Rechazadas" valor={conteoEstado.rechazada} subtitulo={`de ${totalDesignaciones} designaciones`} />
-                        <StatTile
-                            tipo="alerta"
-                            tono="ambar"
-                            titulo={`Docentes bajo ${limiteHoras}h`}
-                            valor={docentesBajoLimite.length}
-                            subtitulo="carga académica incompleta"
-                        />
+                    <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-7">
+                        {/* Progreso General Card */}
+                        <div className="flex flex-col justify-between rounded-2xl bg-[#0b1329] p-5 text-white shadow-md lg:col-span-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Progreso General</span>
+                                <span className="rounded-lg bg-slate-800/60 px-3 py-1 text-xs text-slate-300">
+                                    Gestión {gestionSeleccionada} - Periodo {periodoSeleccionado}
+                                </span>
+                            </div>
+
+                            <div className="my-5 flex items-center gap-6">
+                                <div className="relative h-28 w-28 shrink-0">
+                                    <svg viewBox="0 0 100 100" className="h-full w-full">
+                                        <circle cx="50" cy="50" r={radio} fill="none" stroke="#233554" strokeWidth="10" />
+                                        {arcos.map((arco, i) => arco.cantidad > 0 && (
+                                            <circle
+                                                key={i}
+                                                cx="50"
+                                                cy="50"
+                                                r={radio}
+                                                fill="none"
+                                                stroke={arco.color}
+                                                strokeWidth="10"
+                                                strokeLinecap={visibles > 1 ? 'round' : 'butt'}
+                                                strokeDasharray={`${Math.max((arco.cantidad / (totalDesignaciones || 1)) * circunferencia - separacion, 0.6)} ${circunferencia}`}
+                                                strokeDashoffset={-(arco.inicio / (totalDesignaciones || 1)) * circunferencia - separacion / 2}
+                                                transform="rotate(-90 50 50)"
+                                                className="transition-all duration-500 ease-out"
+                                            />
+                                        ))}
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                                        <span className="text-2xl font-bold tracking-tight">{porcentajeCompletado}%</span>
+                                        <span className="text-[10px] font-medium uppercase text-slate-400">completado</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-4xl font-extrabold tracking-tight text-white tabular-nums">{totalDesignaciones}</p>
+                                    <p className="text-xs text-slate-400 mt-1">Designaciones totales</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 border-t border-slate-800/80 pt-4 text-xs">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                                    <span className="font-semibold">{conteoEstado.aprobada}</span>
+                                    <span className="text-slate-400">Aprobadas</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                                    <span className="font-semibold">{conteoEstado.propuesta}</span>
+                                    <span className="text-slate-400">Propuestas</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                                    <span className="font-semibold">{conteoEstado.rechazada}</span>
+                                    <span className="text-slate-400">Rechazadas</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-4">
+                                <span className="inline-block rounded-full bg-slate-800/50 px-3 py-1 text-[11px] font-medium text-slate-300">
+                                    Quedan {pendientesDeCompletar} designaciones por completar
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* StatTiles Container */}
+                        <div className="lg:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                            <StatTile
+                                tipo="capas"
+                                tono="rojo"
+                                titulo="Grupos sin cubrir"
+                                valor={gruposSinDesignar.length}
+                                subtitulo="habilitados, sin designación"
+                            />
+                            <StatTile tipo="reloj" tono="ambar" titulo="Propuestas" valor={conteoEstado.propuesta} subtitulo={`de ${totalDesignaciones} designaciones`} />
+                            <StatTile tipo="check" tono="verde" titulo="Aprobadas" valor={conteoEstado.aprobada} subtitulo={`de ${totalDesignaciones} designaciones`} />
+                            <StatTile tipo="equis" tono="rojo" titulo="Rechazadas" valor={conteoEstado.rechazada} subtitulo={`de ${totalDesignaciones} designaciones`} />
+                            <StatTile
+                                tipo="alerta"
+                                tono="ambar"
+                                titulo={`Docentes bajo ${limiteHoras}h`}
+                                valor={docentesBajoLimite.length}
+                                subtitulo="carga académica incompleta"
+                            />
+                        </div>
                     </div>
 
-                    <FilterBar
-                        campos={campos}
-                        onChange={(key, valor) => aplicarFiltros({ [key]: valor })}
-                        onLimpiar={usarValoresPorDefecto}
-                        hayFiltrosActivos
-                    />
+                    {/* Custom Filter Bar */}
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <div className="flex flex-wrap items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Gestión</label>
+                                <div className="w-36">
+                                    <Select
+                                        value={filtros.gestion_id}
+                                        onChange={(e) => aplicarFiltros({ gestion_id: e.target.value })}
+                                    >
+                                        <option value="">Más reciente</option>
+                                        {gestiones.map((g) => (
+                                            <option key={g.id} value={g.id}>{g.nombre}</option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Periodo</label>
+                                <div className="w-36">
+                                    <Select
+                                        value={filtros.periodo_id}
+                                        onChange={(e) => aplicarFiltros({ periodo_id: e.target.value })}
+                                    >
+                                        <option value="">Primero disponible</option>
+                                        {periodos.map((p) => (
+                                            <option key={p.id} value={p.id}>{p.nombre}</option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={usarValoresPorDefecto}
+                                disabled={!filtros.gestion_id && !filtros.periodo_id}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                <Icono tipo="embudo" className="h-3.5 w-3.5" />
+                                Filtros
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <span>Actualizado hace 5 min</span>
+                            <button onClick={() => aplicarFiltros({})} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <Icono tipo="reloj" className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </div>
 
                     <div className="mb-4 border-b border-gray-200">
                         <nav className="-mb-px flex gap-6" aria-label="Tabs">
