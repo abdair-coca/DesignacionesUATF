@@ -76,10 +76,10 @@ function DashboardStatTile({ tipo, tono, titulo, valor, subtitulo, sparklinePoin
                     >
                         <Icono tipo={tipo} className="h-4 w-4" />
                     </span>
-                    <span className="text-[12px] font-medium text-gray-500 line-clamp-1 truncate" title={titulo}>{titulo}</span>
+                    <span className="text-xs font-semibold text-gray-500 leading-tight" title={titulo}>{titulo}</span>
                 </div>
-                <p className="mt-2.5 text-[24px] font-semibold leading-7 tracking-tight text-gray-900 tabular-nums">{valor}</p>
-                {subtitulo && <p className="mt-0.5 text-[10px] text-gray-400 line-clamp-1 truncate tabular-nums" title={subtitulo}>{subtitulo}</p>}
+                <p className="mt-2 text-[22px] font-semibold leading-7 tracking-tight text-gray-900 tabular-nums">{valor}</p>
+                {subtitulo && <p className="mt-0.5 text-[10px] text-gray-400 leading-normal tabular-nums" title={subtitulo}>{subtitulo}</p>}
             </div>
 
             {sparklinePoints && (
@@ -267,7 +267,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
 
                         {/* StatTiles Container */}
-                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-2 2xl:grid-cols-5 [&>*:last-child]:xl:col-span-2 [&>*:last-child]:2xl:col-span-1">
+                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5">
                             <DashboardStatTile
                                 tipo="capas"
                                 tono="rojo"
