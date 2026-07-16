@@ -55,7 +55,8 @@ class GrupoController extends Controller
                 ->when($materiaId, fn ($q, $id) => $q->where('materia_id', $id))
                 ->when($estado, fn ($q, $e) => $q->where('estado', $e))
                 ->orderBy('codigo')
-                ->get(),
+                ->paginate(15)
+                ->withQueryString(),
             'materias' => Materia::orderBy('sigla')->get(),
             'filtros' => [
                 'materia_id' => $materiaId ?? '',

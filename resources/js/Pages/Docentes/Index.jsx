@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
+import Pagination from '../../Components/Pagination';
 import paletaIcono from '../../Components/paletaIcono';
 import { useDebouncedSearch } from '../../Hooks/useDebouncedSearch';
 import DataTable from '@/Components/DataTable';
@@ -25,6 +26,7 @@ export default function Index({ docentes, carreras, filtros }) {
     }
 
     const hayFiltros = busqueda !== '' || filtros.carrera_origen_id !== '';
+    const filas = docentes.data;
 
     return (
         <AppLayout>
@@ -74,7 +76,7 @@ export default function Index({ docentes, carreras, filtros }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {docentes.length === 0 && (
+                    {filas.length === 0 && (
                         <tr>
                             <td colSpan={4}>
                                 <EmptyState
@@ -85,7 +87,7 @@ export default function Index({ docentes, carreras, filtros }) {
                             </td>
                         </tr>
                     )}
-                    {docentes.map((docente, indice) => (
+                    {filas.map((docente, indice) => (
                         <tr
                             key={docente.id}
                             className="fila-entra transition-colors hover:bg-gray-50/60"
@@ -113,6 +115,8 @@ export default function Index({ docentes, carreras, filtros }) {
                     ))}
                 </tbody>
             </DataTable>
+
+            <Pagination paginador={docentes} etiqueta="docentes" />
         </AppLayout>
     );
 }

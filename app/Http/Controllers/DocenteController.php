@@ -55,7 +55,8 @@ class DocenteController extends Controller
                 ->with('carreraOrigen')
                 ->withCount('designaciones')
                 ->orderBy('nombre')
-                ->get(),
+                ->paginate(15)
+                ->withQueryString(),
             'carreras' => Carrera::orderBy('sigla')->get(),
             'filtros' => [
                 'q' => $busqueda ?? '',

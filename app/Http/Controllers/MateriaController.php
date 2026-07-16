@@ -65,7 +65,8 @@ class MateriaController extends Controller
                 ->withCount('grupos')
                 ->when($carreraId, fn ($q, $id) => $q->where('carrera_id', $id))
                 ->orderBy('sigla')
-                ->get(),
+                ->paginate(15)
+                ->withQueryString(),
             'carreras' => Carrera::orderBy('sigla')->get(),
             'filtros' => [
                 'carrera_id' => $carreraId ?? '',
