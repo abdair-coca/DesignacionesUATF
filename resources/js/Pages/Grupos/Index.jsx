@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
+import Pagination from '../../Components/Pagination';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 import DataTable from '@/Components/DataTable';
@@ -23,6 +24,7 @@ export default function Index({ grupos, materias, filtros }) {
     }
 
     const hayFiltros = filtros.materia_id !== '' || filtros.estado !== '';
+    const filas = grupos.data;
 
     return (
         <AppLayout>
@@ -79,7 +81,7 @@ export default function Index({ grupos, materias, filtros }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {grupos.length === 0 && (
+                    {filas.length === 0 && (
                         <tr>
                             <td colSpan={5}>
                                 <EmptyState
@@ -90,7 +92,7 @@ export default function Index({ grupos, materias, filtros }) {
                             </td>
                         </tr>
                     )}
-                    {grupos.map((grupo, indice) => (
+                    {filas.map((grupo, indice) => (
                         <tr
                             key={grupo.id}
                             className="fila-entra transition-colors hover:bg-gray-50/60"
@@ -123,6 +125,8 @@ export default function Index({ grupos, materias, filtros }) {
                     ))}
                 </tbody>
             </DataTable>
+
+            <Pagination paginador={grupos} etiqueta="grupos" />
         </AppLayout>
     );
 }
