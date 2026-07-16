@@ -113,7 +113,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
         router.get(
             route('dashboard'),
             { gestion_id: filtros.gestion_id, periodo_id: filtros.periodo_id, ...cambios },
-            { preserveState: true, preserveScroll: true, replace: true, only: ['gruposSinDesignar', 'conteoEstado', 'docentesBajoLimite', 'filtros'] }
+            { preserveState: true, preserveScroll: true, replace: true, only: ['gruposSinDesignar', 'conteoEstado', 'docentesBajoLimite', 'filtros', 'resumenCarreras', 'evolucion'] }
         );
     }
 
