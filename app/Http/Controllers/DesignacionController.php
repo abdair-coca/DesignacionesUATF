@@ -391,11 +391,11 @@ class DesignacionController extends Controller
         }
 
         // Enriquecer docentes: materias que dictó antes (para ordenamiento inteligente)
-        $historialRows = Designacion::select('Id_docente', DB::raw('distinct "Id_materia" as materia_id'))
+        $historialRows = Designacion::select('Id_docente', 'Id_materia')
             ->distinct()
             ->get()
             ->groupBy('Id_docente')
-            ->map(fn ($rows) => $rows->pluck('materia_id')->values()->all());
+            ->map(fn ($rows) => $rows->pluck('Id_materia')->values()->all());
 
         $docentes = $docentes->map(function (Docente $docente) use ($historialRows) {
             $docente->historial_materias = $historialRows[$docente->id] ?? [];
