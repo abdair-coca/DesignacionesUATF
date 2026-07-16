@@ -375,12 +375,12 @@ class DesignacionController extends Controller
 
     private function catalogos(int $gestionId = 0, int $periodoId = 0): array
     {
-        // Materias que tienen al menos un grupo habilitado
+        // Materias que tienen al menos un grupo habilitado, con carrera para filtrado client-side
         $materiasConGrupos = Materia::whereIn('id', function ($q) {
             $q->select('materia_id')->from('grupos')->where('estado', 'habilitado');
         })->orderBy('sigla')->get();
 
-        // Docentes con horas disponibles (< límite) en gestión/periodo actual
+        // Docentes con horas disponibles, enriquecidos con historial de materias
         $docentes = Docente::orderBy('nombre')->get();
 
         if ($gestionId && $periodoId) {
@@ -390,7 +390,20 @@ class DesignacionController extends Controller
             })->values();
         }
 
+        // Enriquecer docentes: materias que dictó antes (para ordenamiento inteligente)
+        $historialRows = Designacion::select('Id_docente', DB::raw('distinct "Id_materia" as materia_id'))
+            ->distinct()
+            ->get()
+            ->groupBy('Id_docente')
+            ->map(fn ($rows) => $rows->pluck('materia_id')->values()->all());
+
+        $docentes = $docentes->map(function (Docente $docente) use ($historialRows) {
+            $docente->historial_materias = $historialRows[$docente->id] ?? [];
+            return $docente;
+        });
+
         return [
+            'carreras' => Carrera::orderBy('nombre')->get(),
             'docentes' => $docentes,
             'materias' => $materiasConGrupos,
             'grupos' => Grupo::with('materia')->where('estado', 'habilitado')->get(),

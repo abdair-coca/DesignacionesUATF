@@ -5,8 +5,9 @@ import WarningBanner from '../../Components/WarningBanner';
 import FormActions from '@/Components/FormActions';
 import { useResumenCarga } from '../../Hooks/useResumenCarga';
 
-export default function Create({ docentes, materias, grupos, gestiones, periodos, gestionActual, periodoActual, prefill, resumenCarga }) {
+export default function Create({ carreras, docentes, materias, grupos, gestiones, periodos, gestionActual, periodoActual, prefill, resumenCarga }) {
     const { data, setData, post, processing, errors } = useForm({
+        Id_carrera: prefill?.Id_carrera ?? '',
         Id_docente: prefill?.Id_docente ?? '',
         Id_materia: prefill?.Id_materia ?? '',
         Id_grupo: prefill?.Id_grupo ?? '',
@@ -31,11 +32,13 @@ export default function Create({ docentes, materias, grupos, gestiones, periodos
                         data={data}
                         setData={setData}
                         errors={errors}
+                        carreras={carreras}
                         docentes={docentes}
                         materias={materias}
                         grupos={grupos}
                         gestiones={gestiones}
                         periodos={periodos}
+                        cascading
                     />
 
                     {resumenCarga?.excedeLimite && (
