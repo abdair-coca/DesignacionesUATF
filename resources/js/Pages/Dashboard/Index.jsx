@@ -252,60 +252,62 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
 
                         {/* StatTiles Container */}
-                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5 items-start">
-                            <DashboardStatTile
-                                tipo="capas"
-                                tono="rojo"
-                                titulo="Grupos sin cubrir"
-                                valor={gruposSinDesignar.length}
-                                subtitulo="habilitados, sin designación"
-                            />
-                            <DashboardStatTile
-                                tipo="reloj"
-                                tono="ambar"
-                                titulo="Propuestas"
-                                valor={conteoEstado.propuesta}
-                                subtitulo={`de ${totalDesignaciones} designaciones`}
-                            />
-                            <DashboardStatTile
-                                tipo="check"
-                                tono="verde"
-                                titulo="Aprobadas"
-                                valor={conteoEstado.aprobada}
-                                subtitulo={`de ${totalDesignaciones} designaciones`}
-                            />
-                            <DashboardStatTile
-                                tipo="equis"
-                                tono="rojo"
-                                titulo="Rechazadas"
-                                valor={conteoEstado.rechazada}
-                                subtitulo={`de ${totalDesignaciones} designaciones`}
-                            />
-                            <DashboardStatTile
-                                tipo="alerta"
-                                tono="ambar"
-                                titulo={`Docentes bajo ${limiteHoras}h`}
-                                valor={docentesBajoLimite.length}
-                                subtitulo="carga académica incompleta"
-                            />
-                        </div>
-                    </div>
+                        <div className="xl:col-span-2 2xl:col-span-5 flex flex-col gap-4">
+                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5 items-start">
+                                <DashboardStatTile
+                                    tipo="capas"
+                                    tono="rojo"
+                                    titulo="Grupos sin cubrir"
+                                    valor={gruposSinDesignar.length}
+                                    subtitulo="habilitados, sin designación"
+                                />
+                                <DashboardStatTile
+                                    tipo="reloj"
+                                    tono="ambar"
+                                    titulo="Propuestas"
+                                    valor={conteoEstado.propuesta}
+                                    subtitulo={`de ${totalDesignaciones} designaciones`}
+                                />
+                                <DashboardStatTile
+                                    tipo="check"
+                                    tono="verde"
+                                    titulo="Aprobadas"
+                                    valor={conteoEstado.aprobada}
+                                    subtitulo={`de ${totalDesignaciones} designaciones`}
+                                />
+                                <DashboardStatTile
+                                    tipo="equis"
+                                    tono="rojo"
+                                    titulo="Rechazadas"
+                                    valor={conteoEstado.rechazada}
+                                    subtitulo={`de ${totalDesignaciones} designaciones`}
+                                />
+                                <DashboardStatTile
+                                    tipo="alerta"
+                                    tono="ambar"
+                                    titulo={`Docentes bajo ${limiteHoras}h`}
+                                    valor={docentesBajoLimite.length}
+                                    subtitulo="carga académica incompleta"
+                                />
+                            </div>
 
-                    {/* Resumen de Pendientes y Meta Estimada */}
-                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
-                            <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-slate-400" />
-                                <span className="text-xs font-semibold text-gray-500">Designaciones pendientes de completar</span>
+                            {/* Resumen de Pendientes y Meta Estimada */}
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-slate-400" />
+                                        <span className="text-xs font-semibold text-gray-500">Designaciones pendientes de completar</span>
+                                    </div>
+                                    <span className="text-base font-bold text-slate-600 tabular-nums">{pendientesDeCompletar}</span>
+                                </div>
+                                <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-blue-600" />
+                                        <span className="text-xs font-semibold text-gray-500">Meta estimada (Total + Pendientes)</span>
+                                    </div>
+                                    <span className="text-base font-bold text-blue-950 tabular-nums">{totalDesignaciones + pendientesDeCompletar}</span>
+                                </div>
                             </div>
-                            <span className="text-base font-bold text-slate-600 tabular-nums">{pendientesDeCompletar}</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
-                            <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-blue-600" />
-                                <span className="text-xs font-semibold text-gray-500">Meta estimada (Total + Pendientes)</span>
-                            </div>
-                            <span className="text-base font-bold text-blue-950 tabular-nums">{totalDesignaciones + pendientesDeCompletar}</span>
                         </div>
                     </div>
 
