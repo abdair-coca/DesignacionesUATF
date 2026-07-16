@@ -89,6 +89,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
     const [tabActiva, setTabActiva] = useState('grupos');
     const [paginaGrupos, setPaginaGrupos] = useState(1);
     const [paginaDocentes, setPaginaDocentes] = useState(1);
+    const [carreraOrden, setCarreraOrden] = useState('activas-desc');
 
     const itemsPorPagina = 10;
 
@@ -171,8 +172,28 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
     const dArea = puntosChart.length > 0
         ? `${dPath} L ${puntosChart[puntosChart.length - 1].x} 220 L ${puntosChart[0].x} 220 Z`
         : '';
-
-
+    const resumenCarrerasOrdenado = [...resumenCarreras].sort((a, b) => {
+        if (carreraOrden === 'activas-desc') {
+            return b.activas - a.activas;
+        }
+        if (carreraOrden === 'activas-asc') {
+            return a.activas - b.activas;
+        }
+        if (carreraOrden === 'nombre') {
+            return a.nombre.localeCompare(b.nombre);
+        }
+        if (carreraOrden === 'avance-desc') {
+            const pctA = a.grupos > 0 ? (a.activas / a.grupos) : 0;
+            const pctB = b.grupos > 0 ? (b.activas / b.grupos) : 0;
+            return pctB - pctA;
+        }
+        if (carreraOrden === 'avance-asc') {
+            const pctA = a.grupos > 0 ? (a.activas / a.grupos) : 0;
+            const pctB = b.grupos > 0 ? (b.activas / b.grupos) : 0;
+            return pctA - pctB;
+        }
+        return 0;
+    });
 
     return (
         <AppLayout>
@@ -344,6 +365,22 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 </div>
                             </div>
 
+                            <div className="flex items-center gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Ordenar carreras</label>
+                                <div className="w-44">
+                                    <Select
+                                        value={carreraOrden}
+                                        onChange={(e) => setCarreraOrden(e.target.value)}
+                                    >
+                                        <option value="activas-desc">Más designaciones</option>
+                                        <option value="activas-asc">Menos designaciones</option>
+                                        <option value="nombre">Por nombre</option>
+                                        <option value="avance-desc">Mayor cobertura (%)</option>
+                                        <option value="avance-asc">Menor cobertura (%)</option>
+                                    </Select>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={usarValoresPorDefecto}
                                 disabled={!filtros.gestion_id && !filtros.periodo_id}
@@ -415,7 +452,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 </Link>
                             </div>
                             <div className="space-y-4">
-                                {resumenCarreras.slice(0, 5).map((carrera) => {
+                                {resumenCarrerasOrdenado.slice(0, 5).map((carrera) => {
                                     const pct = carrera.grupos > 0 ? Math.round((carrera.activas / carrera.grupos) * 100) : 0;
                                     const barColor = pct >= 60 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500';
                                     return (
