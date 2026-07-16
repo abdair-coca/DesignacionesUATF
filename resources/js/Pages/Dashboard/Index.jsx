@@ -66,36 +66,21 @@ const DBOARD_TONOS = {
     rojo: 'bg-red-50 text-red-600 ring-red-200/50',
 };
 
-function DashboardStatTile({ tipo, tono, titulo, valor, subtitulo, sparklinePoints }) {
+function DashboardStatTile({ tipo, tono, titulo, valor, subtitulo }) {
     return (
-        <div className="group flex flex-col justify-between rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-            <div>
-                <div className="flex items-center gap-2">
-                    <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${DBOARD_TONOS[tono]}`}
-                    >
-                        <Icono tipo={tipo} className="h-4 w-4" />
-                    </span>
-                    <span className="text-xs font-semibold text-gray-500 leading-tight" title={titulo}>{titulo}</span>
+        <div className="group flex flex-col justify-between rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md h-full">
+            <div className="flex items-start gap-3">
+                <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${DBOARD_TONOS[tono]}`}
+                >
+                    <Icono tipo={tipo} className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 leading-tight" title={titulo}>{titulo}</span>
+                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900 leading-none tabular-nums">{valor}</p>
+                    {subtitulo && <p className="mt-1.5 text-[10px] text-gray-400 leading-tight" title={subtitulo}>{subtitulo}</p>}
                 </div>
-                <p className="mt-2 text-[22px] font-semibold leading-7 tracking-tight text-gray-900 tabular-nums">{valor}</p>
-                {subtitulo && <p className="mt-0.5 text-[10px] text-gray-400 leading-normal tabular-nums" title={subtitulo}>{subtitulo}</p>}
             </div>
-
-            {sparklinePoints && (
-                <div className="mt-3 h-6 w-full opacity-80 group-hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 100 25" className="h-full w-full" preserveAspectRatio="none">
-                        <path
-                            d={sparklinePoints}
-                            fill="none"
-                            stroke={tono === 'verde' ? '#22c55e' : tono === 'ambar' ? '#f59e0b' : '#ef4444'}
-                            strokeWidth="2.2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                </div>
-            )}
         </div>
     );
 }
@@ -267,14 +252,13 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
 
                         {/* StatTiles Container */}
-                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-5">
+                        <div className="xl:col-span-2 2xl:col-span-5 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-5 [&>*:last-child]:xl:col-span-2 [&>*:last-child]:2xl:col-span-1">
                             <DashboardStatTile
                                 tipo="capas"
                                 tono="rojo"
                                 titulo="Grupos sin cubrir"
                                 valor={gruposSinDesignar.length}
                                 subtitulo="habilitados, sin designación"
-                                sparklinePoints="M 0 5 C 20 15, 40 22, 60 10 C 80 18, 90 8, 100 20"
                             />
                             <DashboardStatTile
                                 tipo="reloj"
@@ -282,7 +266,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 titulo="Propuestas"
                                 valor={conteoEstado.propuesta}
                                 subtitulo={`de ${totalDesignaciones} designaciones`}
-                                sparklinePoints="M 0 22 C 20 20, 30 5, 50 12 C 70 18, 80 8, 100 18"
                             />
                             <DashboardStatTile
                                 tipo="check"
@@ -290,7 +273,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 titulo="Aprobadas"
                                 valor={conteoEstado.aprobada}
                                 subtitulo={`de ${totalDesignaciones} designaciones`}
-                                sparklinePoints="M 0 22 C 20 18, 40 20, 60 8 C 80 5, 90 12, 100 4"
                             />
                             <DashboardStatTile
                                 tipo="equis"
@@ -298,7 +280,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 titulo="Rechazadas"
                                 valor={conteoEstado.rechazada}
                                 subtitulo={`de ${totalDesignaciones} designaciones`}
-                                sparklinePoints="M 0 10 C 20 15, 40 2, 60 18 C 80 22, 90 15, 100 20"
                             />
                             <DashboardStatTile
                                 tipo="alerta"
@@ -306,7 +287,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 titulo={`Docentes bajo ${limiteHoras}h`}
                                 valor={docentesBajoLimite.length}
                                 subtitulo="carga académica incompleta"
-                                sparklinePoints="M 0 18 C 20 8, 40 12, 60 2 C 80 15, 90 10, 100 16"
                             />
                         </div>
                     </div>
