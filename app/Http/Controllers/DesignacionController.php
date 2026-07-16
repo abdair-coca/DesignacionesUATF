@@ -150,7 +150,10 @@ class DesignacionController extends Controller
             'designaciones' => $designaciones,
             'roster' => $roster,
             'historialPorGrupo' => $historialPorGrupo,
-            'docentes' => Docente::with('carreraOrigen:id,sigla')->orderBy('nombre')->get(['id', 'nombre', 'carrera_origen_id'])
+            'docentes' => Docente::with('carreraOrigen:id,sigla')
+                ->where('carrera_origen_id', $carrera->id)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'carrera_origen_id'])
                 ->map(fn (Docente $d) => [
                     'id' => $d->id,
                     'nombre' => $d->nombre,
@@ -177,39 +180,68 @@ class DesignacionController extends Controller
             'cambios.*.Id_docente' => ['nullable', 'exists:docentes,id'],
         ]);
 
-        DB::transaction(function () use ($data, $request) {
-            foreach ($data['cambios'] as $cambio) {
-                $existente = Designacion::where('Id_grupo', $cambio['Id_grupo'])
-                    ->where('Id_gestion', $data['Id_gestion'])
-                    ->where('Id_periodo', $data['Id_periodo'])
-                    ->first();
+        $saltados = 0;
 
+        DB::transaction(function () use ($data, $request, &$saltados) {
+            foreach ($data['cambios'] as $cambio) {
                 if ($cambio['Id_docente'] === null) {
-                    $existente?->delete();
+                    Designacion::where('Id_grupo', $cambio['Id_grupo'])
+                        ->where('Id_gestion', $data['Id_gestion'])
+                        ->where('Id_periodo', $data['Id_periodo'])
+                        ->delete();
 
                     continue;
                 }
+
+                $grupo = Grupo::with('materia')->find($cambio['Id_grupo']);
+                $horasGrupo = $grupo->materia->horas;
+
+                // Choque: ya hay designación activa para este grupo en gestión/periodo
+                $existente = Designacion::activas()
+                    ->forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
+                    ->where('Id_grupo', $cambio['Id_grupo'])
+                    ->first();
 
                 if ($existente) {
                     $existente->update([
                         'Id_docente' => $cambio['Id_docente'],
                         'estado' => $existente->estado === 'rechazada' ? 'propuesta' : $existente->estado,
                     ]);
-                } else {
-                    Designacion::create([
-                        'Id_docente' => $cambio['Id_docente'],
-                        'Id_materia' => $cambio['Id_materia'],
-                        'Id_grupo' => $cambio['Id_grupo'],
-                        'Id_gestion' => $data['Id_gestion'],
-                        'Id_periodo' => $data['Id_periodo'],
-                        'estado' => 'propuesta',
-                        'creado_por' => $request->user()->id,
-                    ]);
+
+                    continue;
                 }
+
+                // Límite de horas: verificar antes de crear
+                $horasActuales = $this->cargaAcademica->horasAsignadas(
+                    $cambio['Id_docente'],
+                    $data['Id_gestion'],
+                    $data['Id_periodo']
+                );
+
+                if ($horasActuales + $horasGrupo > CargaAcademicaService::LIMITE_HORAS) {
+                    $saltados++;
+
+                    continue;
+                }
+
+                Designacion::create([
+                    'Id_docente' => $cambio['Id_docente'],
+                    'Id_materia' => $cambio['Id_materia'],
+                    'Id_grupo' => $cambio['Id_grupo'],
+                    'Id_gestion' => $data['Id_gestion'],
+                    'Id_periodo' => $data['Id_periodo'],
+                    'estado' => 'propuesta',
+                    'creado_por' => $request->user()->id,
+                ]);
             }
         });
 
-        return redirect()->back()->with('status', 'Cambios guardados.');
+        $mensaje = 'Cambios guardados.';
+        if ($saltados > 0) {
+            $mensaje .= " {$saltados} grupo(s) omitido(s) por exceder límite de horas del docente.";
+        }
+
+        return redirect()->back()->with('status', $mensaje);
     }
 
     /**
@@ -341,7 +373,7 @@ class DesignacionController extends Controller
         return [
             'docentes' => Docente::orderBy('nombre')->get(),
             'materias' => Materia::orderBy('sigla')->get(),
-            'grupos' => Grupo::with('materia')->get(),
+            'grupos' => Grupo::with('materia')->where('estado', 'habilitado')->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
         ];
