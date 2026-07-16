@@ -8,10 +8,67 @@ import DataTable from '@/Components/DataTable';
 import GraficoAnillo from '@/Components/GraficoAnillo';
 import { Icono } from '../../Components/Icono';
 
+function PaginadorCliente({ paginaActual, totalItems, itemsPorPagina, onPaginaChange }) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    if (totalPaginas <= 1) return null;
+
+    const from = (paginaActual - 1) * itemsPorPagina + 1;
+    const to = Math.min(paginaActual * itemsPorPagina, totalItems);
+
+    return (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+            <p className="text-[13px] text-gray-400 tabular-nums">
+                Mostrando <span className="font-medium text-gray-600">{from}</span> a{' '}
+                <span className="font-medium text-gray-600">{to}</span> de{' '}
+                <span className="font-medium text-gray-600">{totalItems}</span> registros
+            </p>
+            <div className="flex gap-1">
+                <button
+                    onClick={() => onPaginaChange(paginaActual - 1)}
+                    disabled={paginaActual === 1}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-sm transition-colors ${
+                        paginaActual === 1 ? 'cursor-not-allowed text-gray-300' : 'text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                    ‹
+                </button>
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((pag) => (
+                    <button
+                        key={pag}
+                        onClick={() => onPaginaChange(pag)}
+                        className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm transition-colors tabular-nums ${
+                            paginaActual === pag
+                                ? 'bg-blue-900 font-medium text-white shadow-sm'
+                                : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                    >
+                        {pag}
+                    </button>
+                ))}
+                <button
+                    onClick={() => onPaginaChange(paginaActual + 1)}
+                    disabled={paginaActual === totalPaginas}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-sm transition-colors ${
+                        paginaActual === totalPaginas ? 'cursor-not-allowed text-gray-300' : 'text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                    ›
+                </button>
+            </div>
+        </div>
+    );
+}
+
 export default function Index({ gestiones, periodos, filtros, gruposSinDesignar, conteoEstado, docentesBajoLimite, limiteHoras }) {
     const [tabActiva, setTabActiva] = useState('grupos');
+    const [paginaGrupos, setPaginaGrupos] = useState(1);
+    const [paginaDocentes, setPaginaDocentes] = useState(1);
+
+    const itemsPorPagina = 10;
 
     function aplicarFiltros(cambios) {
+        setPaginaGrupos(1);
+        setPaginaDocentes(1);
         router.get(
             route('dashboard'),
             { gestion_id: filtros.gestion_id, periodo_id: filtros.periodo_id, ...cambios },
@@ -59,6 +116,9 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
         { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
         { etiqueta: 'Copiar designaciones', tipo: 'copiar', href: route('designaciones.copiar') }
     ];
+
+    const gruposPaginados = gruposSinDesignar.slice((paginaGrupos - 1) * itemsPorPagina, paginaGrupos * itemsPorPagina);
+    const docentesPaginados = docentesBajoLimite.slice((paginaDocentes - 1) * itemsPorPagina, paginaDocentes * itemsPorPagina);
 
     return (
         <AppLayout>
@@ -125,97 +185,113 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
 
                     <div className="mt-4">
                         {tabActiva === 'grupos' && (
-                            <DataTable>
-                                <thead className="bg-gray-50/80">
-                                    <tr>
-                                        {['Materia', 'Carrera', 'Grupo', 'Acciones'].map((encabezado) => (
-                                            <th
-                                                key={encabezado}
-                                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
-                                            >
-                                                {encabezado}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {gruposSinDesignar.length === 0 && (
+                            <>
+                                <DataTable>
+                                    <thead className="bg-gray-50/80">
                                         <tr>
-                                            <td colSpan={4}>
-                                                <EmptyState
-                                                    icono="check"
-                                                    titulo="Todo cubierto"
-                                                    subtitulo="No hay grupos habilitados sin designación en este periodo."
-                                                />
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {gruposSinDesignar.map((grupo) => (
-                                        <tr key={grupo.id} className="transition-colors hover:bg-gray-50/60">
-                                            <td className="px-4 py-3.5">
-                                                <p className="font-medium text-gray-900">{grupo.materia.nombre}</p>
-                                                <p className="text-xs text-gray-400">{grupo.materia.sigla}</p>
-                                            </td>
-                                            <td className="px-4 py-3.5 text-gray-600">{grupo.carrera.sigla}</td>
-                                            <td className="px-4 py-3.5 text-gray-600">{grupo.codigo}</td>
-                                            <td className="px-4 py-3.5 text-right">
-                                                <Link
-                                                    href={route('designaciones.create', {
-                                                        Id_materia: grupo.materia.id,
-                                                        Id_grupo: grupo.id,
-                                                        Id_gestion: filtros.gestion_id,
-                                                        Id_periodo: filtros.periodo_id,
-                                                    })}
-                                                    className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
+                                            {['Materia', 'Carrera', 'Grupo', 'Acciones'].map((encabezado) => (
+                                                <th
+                                                    key={encabezado}
+                                                    className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
                                                 >
-                                                    Designar
-                                                </Link>
-                                            </td>
+                                                    {encabezado}
+                                                </th>
+                                            ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </DataTable>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {gruposSinDesignar.length === 0 && (
+                                            <tr>
+                                                <td colSpan={4}>
+                                                    <EmptyState
+                                                        icono="check"
+                                                        titulo="Todo cubierto"
+                                                        subtitulo="No hay grupos habilitados sin designación en este periodo."
+                                                    />
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {gruposPaginados.map((grupo) => (
+                                            <tr key={grupo.id} className="transition-colors hover:bg-gray-50/60">
+                                                <td className="px-4 py-3.5">
+                                                    <p className="font-medium text-gray-900">{grupo.materia.nombre}</p>
+                                                    <p className="text-xs text-gray-400">{grupo.materia.sigla}</p>
+                                                </td>
+                                                <td className="px-4 py-3.5 text-gray-600">{grupo.carrera.sigla}</td>
+                                                <td className="px-4 py-3.5 text-gray-600">{grupo.codigo}</td>
+                                                <td className="px-4 py-3.5 text-right">
+                                                    <Link
+                                                        href={route('designaciones.create', {
+                                                            Id_materia: grupo.materia.id,
+                                                            Id_grupo: grupo.id,
+                                                            Id_gestion: filtros.gestion_id,
+                                                            Id_periodo: filtros.periodo_id,
+                                                        })}
+                                                        className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
+                                                    >
+                                                        Designar
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </DataTable>
+                                <PaginadorCliente
+                                    paginaActual={paginaGrupos}
+                                    totalItems={gruposSinDesignar.length}
+                                    itemsPorPagina={itemsPorPagina}
+                                    onPaginaChange={setPaginaGrupos}
+                                />
+                            </>
                         )}
 
                         {tabActiva === 'docentes' && (
-                            <DataTable>
-                                <thead className="bg-gray-50/80">
-                                    <tr>
-                                        {['Docente', 'Horas asignadas'].map((encabezado) => (
-                                            <th
-                                                key={encabezado}
-                                                className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
-                                            >
-                                                {encabezado}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {docentesBajoLimite.length === 0 && (
+                            <>
+                                <DataTable>
+                                    <thead className="bg-gray-50/80">
                                         <tr>
-                                            <td colSpan={2}>
-                                                <EmptyState
-                                                    icono="check"
-                                                    titulo="Todo cubierto"
-                                                    subtitulo={`Ningún docente está por debajo de ${limiteHoras}h en este periodo.`}
-                                                />
-                                            </td>
+                                            {['Docente', 'Horas asignadas'].map((encabezado) => (
+                                                <th
+                                                    key={encabezado}
+                                                    className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+                                                >
+                                                    {encabezado}
+                                                </th>
+                                            ))}
                                         </tr>
-                                    )}
-                                    {docentesBajoLimite.map((docente) => (
-                                        <tr key={docente.id} className="transition-colors hover:bg-gray-50/60">
-                                            <td className="px-4 py-3.5 font-medium text-gray-900">{docente.nombre}</td>
-                                            <td className="px-4 py-3.5 tabular-nums">
-                                                <span className={docente.horas === 0 ? 'text-gray-400' : 'text-amber-700'}>
-                                                    {docente.horas}h
-                                                </span>{' '}
-                                                <span className="text-xs text-gray-400">de {limiteHoras}h</span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </DataTable>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {docentesBajoLimite.length === 0 && (
+                                            <tr>
+                                                <td colSpan={2}>
+                                                    <EmptyState
+                                                        icono="check"
+                                                        titulo="Todo cubierto"
+                                                        subtitulo={`Ningún docente está por debajo de ${limiteHoras}h en este periodo.`}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {docentesPaginados.map((docente) => (
+                                            <tr key={docente.id} className="transition-colors hover:bg-gray-50/60">
+                                                <td className="px-4 py-3.5 font-medium text-gray-900">{docente.nombre}</td>
+                                                <td className="px-4 py-3.5 tabular-nums">
+                                                    <span className={docente.horas === 0 ? 'text-gray-400' : 'text-amber-700'}>
+                                                        {docente.horas}h
+                                                    </span>{' '}
+                                                    <span className="text-xs text-gray-400">de {limiteHoras}h</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </DataTable>
+                                <PaginadorCliente
+                                    paginaActual={paginaDocentes}
+                                    totalItems={docentesBajoLimite.length}
+                                    itemsPorPagina={itemsPorPagina}
+                                    onPaginaChange={setPaginaDocentes}
+                                />
+                            </>
                         )}
                     </div>
                 </div>
