@@ -187,58 +187,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
         ? `${dPath} L ${puntosChart[puntosChart.length - 1].x} 220 L ${puntosChart[0].x} 220 Z`
         : '';
 
-    const prioridades = [
-        {
-            etiqueta: 'Alta prioridad',
-            valor: `${gruposSinDesignar.length} Grupos sin docente`,
-            bg: 'bg-red-50/70 hover:bg-red-100/50',
-            border: 'border-red-100',
-            texto: 'text-red-700',
-            circulo: 'bg-red-500',
-            icono: 'equis',
-        },
-        {
-            etiqueta: 'Media prioridad',
-            valor: `${conteoEstado.propuesta} Propuestas pendientes`,
-            bg: 'bg-amber-50/70 hover:bg-amber-100/50',
-            border: 'border-amber-100',
-            texto: 'text-amber-700',
-            circulo: 'bg-amber-500',
-            icono: 'reloj',
-        },
-        {
-            etiqueta: 'Baja prioridad',
-            valor: `${docentesBajoLimite.length} Docentes bajo 6h`,
-            bg: 'bg-yellow-50/70 hover:bg-yellow-100/50',
-            border: 'border-yellow-100',
-            texto: 'text-yellow-800',
-            circulo: 'bg-yellow-500',
-            icono: 'alerta',
-        },
-        {
-            etiqueta: 'Información',
-            valor: `${conteoEstado.rechazada} Revisar rechazadas`,
-            bg: 'bg-blue-50/70 hover:bg-blue-100/50',
-            border: 'border-blue-100',
-            texto: 'text-blue-700',
-            circulo: 'bg-blue-500',
-            icono: 'capas',
-        }
-    ];
 
-    function manejarClickPrioridad(icono) {
-        if (icono === 'equis') {
-            setTabActiva('grupos');
-        } else if (icono === 'alerta') {
-            setTabActiva('docentes');
-        }
-    }
-
-    const carreraBaja = resumenCarreras && resumenCarreras.length > 0
-        ? [...resumenCarreras]
-            .map(c => ({ ...c, pct: c.grupos > 0 ? Math.round((c.activas / c.grupos) * 100) : 0 }))
-            .sort((a, b) => a.pct - b.pct)[0]
-        : null;
 
     return (
         <AppLayout>
@@ -571,30 +520,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
                     </div>
 
-                    {/* Prioridad de Atención */}
-                    <div className="mb-6">
-                        <h3 className="font-semibold tracking-tight text-gray-900 mb-3">Prioridad de atención</h3>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            {prioridades.map((pr) => (
-                                <div
-                                    key={pr.etiqueta}
-                                    onClick={() => manejarClickPrioridad(pr.icono)}
-                                    className={`cursor-pointer flex items-center justify-between rounded-xl border p-4 transition-all duration-200 ${pr.bg} ${pr.border}`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className={`h-2 w-2 rounded-full ${pr.circulo}`} />
-                                        <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{pr.etiqueta}</p>
-                                            <p className={`text-xs font-semibold ${pr.texto} mt-0.5`}>{pr.valor}</p>
-                                        </div>
-                                    </div>
-                                    <span className="rounded-lg bg-white p-1 text-gray-400 border border-gray-100 shadow-sm transition-transform duration-200 hover:scale-105">
-                                        <Icono tipo="chevronDerecha" className="h-3 w-3" />
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+
 
                     <div className="mb-4 border-b border-gray-200">
                         <nav className="-mb-px flex gap-6" aria-label="Tabs">
@@ -766,33 +692,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
                     </div>
 
-                    {/* Insights de Asignación */}
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="font-semibold tracking-tight text-gray-900 mb-3 flex items-center gap-2">
-                            <Icono tipo="alerta" className="h-4 w-4 text-amber-500" />
-                            Insights de Asignación
-                        </h3>
-                        <div className="space-y-3 text-xs">
-                            {gruposSinDesignar.length > 0 && (
-                                <div className="rounded-lg bg-red-50/50 p-2.5 border border-red-100/50 text-red-800">
-                                    <span className="font-bold block mb-0.5">Grupos sin cubrir</span>
-                                    Hay {gruposSinDesignar.length} grupos habilitados sin docente. Priorizar su designación para evitar retrasos en el inicio de clases.
-                                </div>
-                            )}
-                            {carreraBaja && carreraBaja.pct < 100 && (
-                                <div className="rounded-lg bg-amber-50/50 p-2.5 border border-amber-100/50 text-amber-800">
-                                    <span className="font-bold block mb-0.5">Alerta de Carrera</span>
-                                    La carrera de <span className="font-semibold">{carreraBaja.nombre}</span> registra el menor avance con solo un <span className="font-bold">{carreraBaja.pct}%</span> de grupos cubiertos.
-                                </div>
-                            )}
-                            {docentesBajoLimite.length > 0 && (
-                                <div className="rounded-lg bg-blue-50/50 p-2.5 border border-blue-100/50 text-blue-800">
-                                    <span className="font-bold block mb-0.5">Carga Académica</span>
-                                    Hay {docentesBajoLimite.length} docentes que están asignados por debajo de las {limiteHoras} horas mínimas requeridas.
-                                </div>
-                            )}
-                        </div>
-                    </div>
+
 
                     {/* Acciones Rápidas */}
                     <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
