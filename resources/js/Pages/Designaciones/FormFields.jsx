@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import Field from '../../Components/Field'
 import Select from '../../Components/Select'
+import ComboboxDocente from '../../Components/ComboboxDocente'
 
 export default function FormFields({
     data,
@@ -70,14 +71,13 @@ export default function FormFields({
         return (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Docente" error={errors.Id_docente}>
-                    <Select value={data.Id_docente} onChange={(e) => setData('Id_docente', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {docentes.map((docente) => (
-                            <option key={docente.id} value={docente.id}>
-                                {docente.ci} — {docente.nombre}
-                            </option>
-                        ))}
-                    </Select>
+                    <ComboboxDocente
+                        docentes={docentes}
+                        value={data.Id_docente}
+                        onChange={(valor) => setData('Id_docente', valor)}
+                        placeholder="Seleccione un docente..."
+                        className="w-full"
+                    />
                 </Field>
 
                 <Field label="Materia" error={errors.Id_materia}>
@@ -196,51 +196,14 @@ export default function FormFields({
             {data.Id_materia && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="Docente" error={errors.Id_docente}>
-                        <Select value={data.Id_docente} onChange={(e) => setData('Id_docente', e.target.value)}>
-                            <option value="">Seleccione un docente...</option>
-                            {docentesOrdenados.length > 0 && (
-                                <>
-                                    {docentesOrdenados.some(d => (d.historial_materias || []).some(id => String(id) === String(data.Id_materia))) && (
-                                        <optgroup label="Dictó esta materia antes">
-                                            {docentesOrdenados
-                                                .filter(d => (d.historial_materias || []).some(id => String(id) === String(data.Id_materia)))
-                                                .map((docente) => (
-                                                    <option key={docente.id} value={docente.id}>
-                                                        {docente.ci} — {docente.nombre}
-                                                    </option>
-                                                ))}
-                                        </optgroup>
-                                    )}
-                                    {docentesOrdenados.some(d => data.Id_carrera && String(d.carrera_origen_id) === String(data.Id_carrera) && !(d.historial_materias || []).some(id => String(id) === String(data.Id_materia))) && (
-                                        <optgroup label={`Docentes de la carrera`}>
-                                            {docentesOrdenados
-                                                .filter(d => data.Id_carrera && String(d.carrera_origen_id) === String(data.Id_carrera) && !(d.historial_materias || []).some(id => String(id) === String(data.Id_materia)))
-                                                .map((docente) => (
-                                                    <option key={docente.id} value={docente.id}>
-                                                        {docente.ci} — {docente.nombre}
-                                                    </option>
-                                                ))}
-                                        </optgroup>
-                                    )}
-                                    {(() => {
-                                        const resto = docentesOrdenados.filter(d =>
-                                            !(d.historial_materias || []).some(id => String(id) === String(data.Id_materia)) &&
-                                            !(data.Id_carrera && String(d.carrera_origen_id) === String(data.Id_carrera))
-                                        )
-                                        if (resto.length === 0) return null
-                                        return (
-                                            <optgroup label="Otros docentes">
-                                                {resto.map((docente) => (
-                                                    <option key={docente.id} value={docente.id}>
-                                                        {docente.ci} — {docente.nombre}
-                                                    </option>
-                                                ))}
-                                            </optgroup>
-                                        )
-                                    })()}
-                                </>
-                            )}
-                        </Select>
+                    <ComboboxDocente
+                        docentes={docentesOrdenados}
+                        value={data.Id_docente}
+                        onChange={(valor) => setData('Id_docente', valor)}
+                        carreraSigla={carreras.find(c => String(c.id) === String(data.Id_carrera))?.sigla ?? ''}
+                        placeholder="Seleccione un docente..."
+                        className="w-full"
+                    />
                     </Field>
                 </div>
             )}

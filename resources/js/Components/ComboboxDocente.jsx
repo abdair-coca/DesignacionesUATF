@@ -5,7 +5,7 @@ import paletaIcono from './paletaIcono';
 
 const VACIO = { id: '', nombre: '— Sin asignar —', esVacio: true };
 
-export default function ComboboxDocente({ docentes, value, onChange, carreraSigla, placeholder = '— Sin asignar —' }) {
+export default function ComboboxDocente({ docentes, value, onChange, carreraSigla, placeholder = '— Sin asignar —', className = 'max-w-56' }) {
     const [abierto, setAbierto] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [busqueda, setBusqueda] = useState('');
@@ -70,7 +70,7 @@ export default function ComboboxDocente({ docentes, value, onChange, carreraSigl
     }
 
     return (
-        <div className="relative max-w-56">
+        <div className={`relative ${className}`}>
             <button
                 type="button"
                 onClick={(e) => (abierto ? cerrar() : abrir(e.currentTarget))}
