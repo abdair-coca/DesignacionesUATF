@@ -21,7 +21,12 @@ class DesignacionMasivaController extends Controller
 
     public function copiarForm(Request $request): Response
     {
-        $input = array_map(fn ($v) => $v === '' ? null : $v, $request->all());
+        $raw = $request->only([
+            'carrera_id', 'gestion_origen_id', 'periodo_origen_id',
+            'gestion_destino_id', 'periodo_destino_id',
+        ]);
+
+        $input = array_map(fn ($v) => $v === '' ? null : $v, $raw);
 
         $filtros = Validator::make($input, [
             'carrera_id' => ['nullable', 'exists:carreras,id'],
@@ -30,6 +35,15 @@ class DesignacionMasivaController extends Controller
             'gestion_destino_id' => ['nullable', 'exists:gestiones,id'],
             'periodo_destino_id' => ['nullable', 'exists:periodos,id'],
         ])->validate();
+
+        // Asegurar que todas las claves existan (nullable no las incluye si no vienen)
+        $filtros = array_merge([
+            'carrera_id' => null,
+            'gestion_origen_id' => null,
+            'periodo_origen_id' => null,
+            'gestion_destino_id' => null,
+            'periodo_destino_id' => null,
+        ], $filtros);
 
         $filas = null;
 
