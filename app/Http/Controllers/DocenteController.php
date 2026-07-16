@@ -39,9 +39,6 @@ class DocenteController extends Controller
         return $request->validate([
             'nombre' => ['required', 'string', 'max:150'],
             'ci' => ['required', 'string', 'max:20', 'unique:docentes,ci,'.($id ?? 'NULL')],
-            'email' => ['nullable', 'email', 'max:150', 'unique:docentes,email,'.($id ?? 'NULL')],
-            'telefono' => ['nullable', 'string', 'max:20'],
-            'direccion' => ['nullable', 'string', 'max:200'],
         ]);
     }
 
@@ -69,7 +66,9 @@ class DocenteController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Docentes/Create');
+        return Inertia::render('Docentes/Create', [
+            'carreras' => Carrera::orderBy('sigla')->get(),
+        ]);
     }
 
     public function edit(Docente $docente): Response

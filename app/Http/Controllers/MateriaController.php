@@ -52,7 +52,6 @@ class MateriaController extends Controller
             'nombre' => ['required', 'string', 'max:100'],
             'carrera_id' => ['required', 'exists:carreras,id'],
             'horas' => ['required', 'integer', 'min:1', 'max:20'],
-            'area' => ['nullable', 'string', 'max:50'],
         ]);
     }
 
@@ -83,8 +82,6 @@ class MateriaController extends Controller
 
     public function edit(Materia $materia): Response
     {
-        $materia->load('carreras');
-
         return Inertia::render('Materias/Edit', [
             'materia' => $materia,
             'carreras' => Carrera::orderBy('sigla')->get(),

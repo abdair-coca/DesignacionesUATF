@@ -8,7 +8,7 @@ export default function Create({ carreras }) {
         sigla: '',
         nombre: '',
         carrera_id: '',
-        horas: 0,
+        horas: 1,
     });
 
     function enviar(e) {

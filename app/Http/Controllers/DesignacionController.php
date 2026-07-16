@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -176,35 +177,37 @@ class DesignacionController extends Controller
             'cambios.*.Id_docente' => ['nullable', 'exists:docentes,id'],
         ]);
 
-        foreach ($data['cambios'] as $cambio) {
-            $existente = Designacion::where('Id_grupo', $cambio['Id_grupo'])
-                ->where('Id_gestion', $data['Id_gestion'])
-                ->where('Id_periodo', $data['Id_periodo'])
-                ->first();
+        DB::transaction(function () use ($data, $request) {
+            foreach ($data['cambios'] as $cambio) {
+                $existente = Designacion::where('Id_grupo', $cambio['Id_grupo'])
+                    ->where('Id_gestion', $data['Id_gestion'])
+                    ->where('Id_periodo', $data['Id_periodo'])
+                    ->first();
 
-            if ($cambio['Id_docente'] === null) {
-                $existente?->delete();
+                if ($cambio['Id_docente'] === null) {
+                    $existente?->delete();
 
-                continue;
+                    continue;
+                }
+
+                if ($existente) {
+                    $existente->update([
+                        'Id_docente' => $cambio['Id_docente'],
+                        'estado' => $existente->estado === 'rechazada' ? 'propuesta' : $existente->estado,
+                    ]);
+                } else {
+                    Designacion::create([
+                        'Id_docente' => $cambio['Id_docente'],
+                        'Id_materia' => $cambio['Id_materia'],
+                        'Id_grupo' => $cambio['Id_grupo'],
+                        'Id_gestion' => $data['Id_gestion'],
+                        'Id_periodo' => $data['Id_periodo'],
+                        'estado' => 'propuesta',
+                        'creado_por' => $request->user()->id,
+                    ]);
+                }
             }
-
-            if ($existente) {
-                $existente->update([
-                    'Id_docente' => $cambio['Id_docente'],
-                    'estado' => $existente->estado === 'rechazada' ? 'propuesta' : $existente->estado,
-                ]);
-            } else {
-                Designacion::create([
-                    'Id_docente' => $cambio['Id_docente'],
-                    'Id_materia' => $cambio['Id_materia'],
-                    'Id_grupo' => $cambio['Id_grupo'],
-                    'Id_gestion' => $data['Id_gestion'],
-                    'Id_periodo' => $data['Id_periodo'],
-                    'estado' => 'propuesta',
-                    'creado_por' => $request->user()->id,
-                ]);
-            }
-        }
+        });
 
         return redirect()->back()->with('status', 'Cambios guardados.');
     }

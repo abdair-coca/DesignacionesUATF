@@ -38,7 +38,6 @@ class CarreraController extends Controller
         return $request->validate([
             'sigla' => ['required', 'string', 'max:10', 'unique:carreras,sigla,'.($id ?? 'NULL')],
             'nombre' => ['required', 'string', 'max:100'],
-            'facultad' => ['nullable', 'string', 'max:100'],
         ]);
     }
 
@@ -56,7 +55,7 @@ class CarreraController extends Controller
 
     public function edit(Carrera $carrera): Response
     {
-        $carrera->loadCount('mallas');
+        $carrera->loadCount('mallaCurricular');
 
         return Inertia::render('Carreras/Edit', ['carrera' => $carrera]);
     }
