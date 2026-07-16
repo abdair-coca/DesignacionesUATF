@@ -68,17 +68,19 @@ const DBOARD_TONOS = {
 
 function DashboardStatTile({ tipo, tono, titulo, valor, subtitulo }) {
     return (
-        <div className="group rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center gap-2">
+        <div className="group rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md h-full flex flex-col justify-between">
+            <div>
                 <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-200 group-hover:scale-105 ${DBOARD_TONOS[tono]}`}
                 >
                     <Icono tipo={tipo} className="h-4 w-4" />
                 </span>
-                <span className="text-xs font-semibold text-gray-500 leading-tight" title={titulo}>{titulo}</span>
+                <span className="block mt-2.5 text-xs font-semibold text-gray-500 leading-tight" title={titulo}>{titulo}</span>
             </div>
-            <p className="mt-3 text-2xl font-extrabold tracking-tight text-gray-900 leading-none tabular-nums">{valor}</p>
-            {subtitulo && <p className="mt-1.5 text-[10px] text-gray-400 leading-tight" title={subtitulo}>{subtitulo}</p>}
+            <div className="mt-3">
+                <p className="text-2xl font-extrabold tracking-tight text-gray-900 leading-none tabular-nums">{valor}</p>
+                {subtitulo && <p className="mt-1.5 text-[10px] text-gray-400 leading-tight" title={subtitulo}>{subtitulo}</p>}
+            </div>
         </div>
     );
 }
