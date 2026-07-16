@@ -9,17 +9,6 @@ const navGroups = [
     {
         items: [{ label: 'Designación de Docentes', href: () => route('designaciones.index'), match: '/designaciones' }],
     },
-    {
-        titulo: 'Catálogos',
-        items: [
-            { label: 'Carreras', href: () => route('carreras.index'), match: '/carreras' },
-            { label: 'Materias', href: () => route('materias.index'), match: '/materias' },
-            { label: 'Grupos', href: () => route('grupos.index'), match: '/grupos' },
-            { label: 'Docentes', href: () => route('docentes.index'), match: '/docentes' },
-            { label: 'Gestiones', href: () => route('gestiones.index'), match: '/gestiones' },
-            { label: 'Periodos', href: () => route('periodos.index'), match: '/periodos' },
-        ],
-    },
 ];
 
 export default function AppLayout({ title, children }) {
