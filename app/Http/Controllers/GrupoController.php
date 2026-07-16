@@ -45,8 +45,22 @@ class GrupoController extends Controller
 
     public function index(): Response
     {
+        $materiaId = request('materia_id');
+        $estado = request('estado');
+
         return Inertia::render('Grupos/Index', [
-            'grupos' => Grupo::with('materia')->orderBy('nombre')->get(),
+            'grupos' => Grupo::query()
+                ->with('materia.carrera')
+                ->withCount('designaciones')
+                ->when($materiaId, fn ($q, $id) => $q->where('materia_id', $id))
+                ->when($estado, fn ($q, $e) => $q->where('estado', $e))
+                ->orderBy('codigo')
+                ->get(),
+            'materias' => Materia::orderBy('sigla')->get(),
+            'filtros' => [
+                'materia_id' => $materiaId ?? '',
+                'estado' => $estado ?? '',
+            ],
         ]);
     }
 

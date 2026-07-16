@@ -45,7 +45,7 @@ class CarreraController extends Controller
     public function index(): Response
     {
         return Inertia::render('Carreras/Index', [
-            'carreras' => Carrera::withCount(['mallas', 'docentes'])->orderBy('sigla')->get(),
+            'carreras' => Carrera::withCount('materias')->orderBy('sigla')->get(),
         ]);
     }
 

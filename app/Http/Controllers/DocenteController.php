@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\CatalogoCrud;
+use App\Models\Carrera;
 use App\Models\Docente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,15 +47,23 @@ class DocenteController extends Controller
 
     public function index(): Response
     {
-        $busqueda = request('busqueda');
+        $busqueda = request('q');
+        $carreraId = request('carrera_origen_id');
 
         return Inertia::render('Docentes/Index', [
             'docentes' => Docente::query()
-                ->when($busqueda, fn ($q, $b) => $q->where('nombre', 'ilike', "%{$b}%"))
+                ->when($busqueda, fn ($q, $b) => $q->where('nombre', 'ilike', "%{$b}%")
+                    ->orWhere('ci', 'ilike', "%{$b}%"))
+                ->when($carreraId, fn ($q, $id) => $q->where('carrera_origen_id', $id))
+                ->with('carreraOrigen')
                 ->withCount('designaciones')
                 ->orderBy('nombre')
                 ->get(),
-            'busqueda' => $busqueda,
+            'carreras' => Carrera::orderBy('sigla')->get(),
+            'filtros' => [
+                'q' => $busqueda ?? '',
+                'carrera_origen_id' => $carreraId ?? '',
+            ],
         ]);
     }
 

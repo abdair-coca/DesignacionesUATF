@@ -62,12 +62,15 @@ class MateriaController extends Controller
 
         return Inertia::render('Materias/Index', [
             'materias' => Materia::query()
-                ->with('carreras')
-                ->when($carreraId, fn ($q, $id) => $q->whereHas('carreras', fn ($cq) => $cq->where('carreras.id', $id)))
+                ->with('carrera')
+                ->withCount('grupos')
+                ->when($carreraId, fn ($q, $id) => $q->where('carrera_id', $id))
                 ->orderBy('sigla')
                 ->get(),
             'carreras' => Carrera::orderBy('sigla')->get(),
-            'carrera_id' => $carreraId,
+            'filtros' => [
+                'carrera_id' => $carreraId ?? '',
+            ],
         ]);
     }
 
