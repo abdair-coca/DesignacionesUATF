@@ -61,6 +61,12 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
     const accionesRapidas = [
         { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
         { etiqueta: 'Copiar designaciones', tipo: 'copiar', href: route('designaciones.copiar') },
+        { etiqueta: 'Gestiones', tipo: 'calendario', href: route('gestiones.index') },
+        { etiqueta: 'Periodos', tipo: 'reloj', href: route('periodos.index') },
+        { etiqueta: 'Carreras', tipo: 'libro', href: route('carreras.index') },
+        { etiqueta: 'Materias', tipo: 'documento', href: route('materias.index') },
+        { etiqueta: 'Docentes', tipo: 'lapiz', href: route('docentes.index') },
+        { etiqueta: 'Grupos', tipo: 'capas', href: route('grupos.index') },
     ];
 
     return (
