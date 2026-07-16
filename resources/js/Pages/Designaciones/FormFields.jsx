@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import Field from '../../Components/Field'
 import Select from '../../Components/Select'
 import ComboboxDocente from '../../Components/ComboboxDocente'
+import Combobox from '../../Components/Combobox'
 
 export default function FormFields({
     data,
@@ -81,47 +82,39 @@ export default function FormFields({
                 </Field>
 
                 <Field label="Materia" error={errors.Id_materia}>
-                    <Select value={data.Id_materia} onChange={(e) => setData('Id_materia', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {materias.map((materia) => (
-                            <option key={materia.id} value={materia.id}>
-                                {materia.sigla} — {materia.nombre} ({materia.horas}h)
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={materias.map(m => ({ value: m.id, label: `${m.nombre} (${m.horas}h)`, sublabel: m.sigla }))}
+                        value={data.Id_materia}
+                        onChange={(val) => setData('Id_materia', val)}
+                        placeholder="Seleccione una materia..."
+                    />
                 </Field>
 
                 <Field label="Grupo" error={errors.Id_grupo}>
-                    <Select value={data.Id_grupo} onChange={(e) => setData('Id_grupo', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {grupos.filter(g => g.estado === 'habilitado').map((grupo) => (
-                            <option key={grupo.id} value={grupo.id}>
-                                {grupo.materia.sigla} — Grupo {grupo.codigo}
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={grupos.filter(g => g.estado === 'habilitado').map(g => ({ value: g.id, label: `Grupo ${g.codigo}`, sublabel: g.materia.sigla }))}
+                        value={data.Id_grupo}
+                        onChange={(val) => setData('Id_grupo', val)}
+                        placeholder="Seleccione un grupo..."
+                    />
                 </Field>
 
                 <Field label="Gestión" error={errors.Id_gestion}>
-                    <Select value={data.Id_gestion} onChange={(e) => setData('Id_gestion', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {gestiones.map((gestion) => (
-                            <option key={gestion.id} value={gestion.id}>
-                                {gestion.nombre}
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={gestiones.map(g => ({ value: g.id, label: g.nombre }))}
+                        value={data.Id_gestion}
+                        onChange={(val) => setData('Id_gestion', val)}
+                        placeholder="Seleccione una gestión..."
+                    />
                 </Field>
 
                 <Field label="Periodo" error={errors.Id_periodo}>
-                    <Select value={data.Id_periodo} onChange={(e) => setData('Id_periodo', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {periodos.map((periodo) => (
-                            <option key={periodo.id} value={periodo.id}>
-                                {periodo.nombre}
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={periodos.map(p => ({ value: p.id, label: p.nombre }))}
+                        value={data.Id_periodo}
+                        onChange={(val) => setData('Id_periodo', val)}
+                        placeholder="Seleccione un periodo..."
+                    />
                 </Field>
 
                 {showEstado && (
@@ -151,28 +144,24 @@ export default function FormFields({
             {/* Carrera */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Carrera" error={errors.Id_carrera}>
-                    <Select value={data.Id_carrera} onChange={(e) => handleCarreraChange(e.target.value)}>
-                        <option value="">Todas las carreras</option>
-                        {carreras.map((carrera) => (
-                            <option key={carrera.id} value={carrera.id}>
-                                {carrera.sigla} — {carrera.nombre}
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={carreras.map(c => ({ value: c.id, label: c.nombre, sublabel: c.sigla }))}
+                        value={data.Id_carrera}
+                        onChange={handleCarreraChange}
+                        placeholder="Todas las carreras"
+                    />
                 </Field>
             </div>
 
             {/* Materia */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Materia" error={errors.Id_materia}>
-                    <Select value={data.Id_materia} onChange={(e) => handleMateriaChange(e.target.value)}>
-                        <option value="">Seleccione una materia...</option>
-                        {materiasFiltradas.map((materia) => (
-                            <option key={materia.id} value={materia.id}>
-                                {materia.sigla} — {materia.nombre} ({materia.horas}h)
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={materiasFiltradas.map(m => ({ value: m.id, label: `${m.nombre} (${m.horas}h)`, sublabel: m.sigla }))}
+                        value={data.Id_materia}
+                        onChange={handleMateriaChange}
+                        placeholder="Seleccione una materia..."
+                    />
                 </Field>
             </div>
 
@@ -180,14 +169,12 @@ export default function FormFields({
             {data.Id_materia && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="Grupo" error={errors.Id_grupo}>
-                        <Select value={data.Id_grupo} onChange={(e) => setData('Id_grupo', e.target.value)}>
-                            <option value="">Seleccione un grupo...</option>
-                            {gruposFiltrados.map((grupo) => (
-                                <option key={grupo.id} value={grupo.id}>
-                                    Grupo {grupo.codigo}
-                                </option>
-                            ))}
-                        </Select>
+                        <Combobox
+                            options={gruposFiltrados.map(g => ({ value: g.id, label: `Grupo ${g.codigo}` }))}
+                            value={data.Id_grupo}
+                            onChange={(val) => setData('Id_grupo', val)}
+                            placeholder="Seleccione un grupo..."
+                        />
                     </Field>
                 </div>
             )}
@@ -211,25 +198,21 @@ export default function FormFields({
             {/* Gestión + Periodo */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Gestión" error={errors.Id_gestion}>
-                    <Select value={data.Id_gestion} onChange={(e) => setData('Id_gestion', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {gestiones.map((gestion) => (
-                            <option key={gestion.id} value={gestion.id}>
-                                {gestion.nombre}
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={gestiones.map(g => ({ value: g.id, label: g.nombre }))}
+                        value={data.Id_gestion}
+                        onChange={(val) => setData('Id_gestion', val)}
+                        placeholder="Seleccione una gestión..."
+                    />
                 </Field>
 
                 <Field label="Periodo" error={errors.Id_periodo}>
-                    <Select value={data.Id_periodo} onChange={(e) => setData('Id_periodo', e.target.value)}>
-                        <option value="">Seleccione...</option>
-                        {periodos.map((periodo) => (
-                            <option key={periodo.id} value={periodo.id}>
-                                {periodo.nombre}
-                            </option>
-                        ))}
-                    </Select>
+                    <Combobox
+                        options={periodos.map(p => ({ value: p.id, label: p.nombre }))}
+                        value={data.Id_periodo}
+                        onChange={(val) => setData('Id_periodo', val)}
+                        placeholder="Seleccione un periodo..."
+                    />
                 </Field>
             </div>
 
