@@ -44,6 +44,15 @@ class DesignacionSeeder extends Seeder
                     continue;
                 }
 
+                $anio = (int) $escenario['gestion'];
+                $esPeriodo1 = ($escenario['periodo'] === '1');
+                $mes = $esPeriodo1 ? fake()->numberBetween(1, 6) : fake()->numberBetween(7, 12);
+                $dia = fake()->numberBetween(1, 28);
+                $hora = fake()->numberBetween(8, 20);
+                $minuto = fake()->numberBetween(0, 59);
+                $segundo = fake()->numberBetween(0, 59);
+                $createdAt = sprintf('%04d-%02d-%02d %02d:%02d:%02d', $anio, $mes, $dia, $hora, $minuto, $segundo);
+
                 Designacion::create([
                     'Id_docente' => $candidatos->random()->id,
                     'Id_materia' => $grupo->materia_id,
@@ -53,6 +62,8 @@ class DesignacionSeeder extends Seeder
                     'estado' => fake()->randomElement(self::expandirEstados($escenario['estados'])),
                     'creado_por' => fake()->randomElement($usuarioIds),
                     'aprobado_por' => null,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
                 ]);
             }
         }

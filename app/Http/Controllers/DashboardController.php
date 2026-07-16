@@ -24,6 +24,8 @@ class DashboardController extends Controller
         $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::min('id') ?? 0);
 
         $datos = $this->reportes->datosDashboard($gestionId, $periodoId);
+        $resumenCarreras = $this->reportes->resumenPorCarrera($gestionId, $periodoId);
+        $evolucion = $this->reportes->evolucionDesignaciones($gestionId, $periodoId);
 
         return Inertia::render('Dashboard/Index', array_merge([
             'gestiones' => Gestion::orderBy('nombre')->get(),
@@ -32,6 +34,8 @@ class DashboardController extends Controller
                 'gestion_id' => (string) $gestionId,
                 'periodo_id' => (string) $periodoId,
             ],
+            'resumenCarreras' => $resumenCarreras,
+            'evolucion' => $evolucion,
         ], $datos));
     }
 }

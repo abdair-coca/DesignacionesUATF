@@ -7,6 +7,8 @@ use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Grupo;
 use App\Models\Materia;
+use App\Models\Periodo;
+use App\Models\Gestion;
 use Illuminate\Support\Collection;
 
 class DesignacionReportService
@@ -162,6 +164,68 @@ class DesignacionReportService
             'docentesBajoLimite' => $docentesBajoLimite,
             'limiteHoras' => CargaAcademicaService::LIMITE_HORAS,
         ];
+    }
+
+    /**
+     * Evolución acumulada de designaciones en el periodo.
+     */
+    public function evolucionDesignaciones(int $gestionId, int $periodoId): array
+    {
+        $periodo = Periodo::find($periodoId);
+        $periodoNombre = $periodo ? $periodo->nombre : '1';
+        $esPeriodo1 = ($periodoNombre === '1');
+
+        $gestion = Gestion::find($gestionId);
+        $anio = $gestion ? (int) $gestion->nombre : (int) date('Y');
+
+        if ($esPeriodo1) {
+            $meses = [
+                ['label' => '01 Ene', 'date' => "$anio-01-01 00:00:00"],
+                ['label' => '15 Ene', 'date' => "$anio-01-15 23:59:59"],
+                ['label' => '01 Feb', 'date' => "$anio-02-01 23:59:59"],
+                ['label' => '15 Feb', 'date' => "$anio-02-15 23:59:59"],
+                ['label' => '01 Mar', 'date' => "$anio-03-01 23:59:59"],
+                ['label' => '15 Mar', 'date' => "$anio-03-15 23:59:59"],
+                ['label' => '01 Abr', 'date' => "$anio-04-01 23:59:59"],
+                ['label' => '15 Abr', 'date' => "$anio-04-15 23:59:59"],
+                ['label' => '01 May', 'date' => "$anio-05-01 23:59:59"],
+                ['label' => '15 May', 'date' => "$anio-05-15 23:59:59"],
+                ['label' => '01 Jun', 'date' => "$anio-06-01 23:59:59"],
+                ['label' => '15 Jun', 'date' => "$anio-06-15 23:59:59"],
+                ['label' => '30 Jun', 'date' => "$anio-06-30 23:59:59"],
+            ];
+        } else {
+            $meses = [
+                ['label' => '01 Jul', 'date' => "$anio-07-01 00:00:00"],
+                ['label' => '15 Jul', 'date' => "$anio-07-15 23:59:59"],
+                ['label' => '01 Ago', 'date' => "$anio-08-01 23:59:59"],
+                ['label' => '15 Ago', 'date' => "$anio-08-15 23:59:59"],
+                ['label' => '01 Sep', 'date' => "$anio-09-01 23:59:59"],
+                ['label' => '15 Sep', 'date' => "$anio-09-15 23:59:59"],
+                ['label' => '01 Oct', 'date' => "$anio-10-01 23:59:59"],
+                ['label' => '15 Oct', 'date' => "$anio-10-15 23:59:59"],
+                ['label' => '01 Nov', 'date' => "$anio-11-01 23:59:59"],
+                ['label' => '15 Nov', 'date' => "$anio-11-15 23:59:59"],
+                ['label' => '01 Dic', 'date' => "$anio-12-01 23:59:59"],
+                ['label' => '15 Dic', 'date' => "$anio-12-15 23:59:59"],
+                ['label' => '30 Dic', 'date' => "$anio-12-30 23:59:59"],
+            ];
+        }
+
+        $puntos = [];
+        foreach ($meses as $punto) {
+            $cant = Designacion::where('Id_gestion', $gestionId)
+                ->where('Id_periodo', $periodoId)
+                ->where('estado', '!=', 'rechazada')
+                ->where('created_at', '<=', $punto['date'])
+                ->count();
+            $puntos[] = [
+                'label' => $punto['label'],
+                'valor' => $cant
+            ];
+        }
+
+        return $puntos;
     }
 
     /**
