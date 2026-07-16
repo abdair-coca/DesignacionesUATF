@@ -37,6 +37,7 @@ export default function Edit({ docentes, materias, grupos, gestiones, periodos, 
                         grupos={grupos}
                         gestiones={gestiones}
                         periodos={periodos}
+                        showEstado
                     />
 
                     {resumenCarga?.excedeLimite && (

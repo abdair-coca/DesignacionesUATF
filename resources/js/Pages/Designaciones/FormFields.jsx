@@ -1,7 +1,7 @@
 import Field from '../../Components/Field';
 import Select from '../../Components/Select';
 
-export default function FormFields({ data, setData, errors, docentes, materias, grupos, gestiones, periodos }) {
+export default function FormFields({ data, setData, errors, docentes, materias, grupos, gestiones, periodos, showEstado = false }) {
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Docente" error={errors.Id_docente}>
@@ -37,16 +37,6 @@ export default function FormFields({ data, setData, errors, docentes, materias, 
                 </Select>
             </Field>
 
-            <Field label="Estado" error={errors.estado}>
-                <Select value={data.estado} onChange={(e) => setData('estado', e.target.value)}>
-                    {['propuesta', 'aprobada', 'rechazada'].map((estado) => (
-                        <option key={estado} value={estado}>
-                            {estado.charAt(0).toUpperCase() + estado.slice(1)}
-                        </option>
-                    ))}
-                </Select>
-            </Field>
-
             <Field label="Gestión" error={errors.Id_gestion}>
                 <Select value={data.Id_gestion} onChange={(e) => setData('Id_gestion', e.target.value)}>
                     <option value="">Seleccione...</option>
@@ -68,6 +58,24 @@ export default function FormFields({ data, setData, errors, docentes, materias, 
                     ))}
                 </Select>
             </Field>
+
+            {showEstado && (
+                <Field label="Estado" error={errors.estado}>
+                    <Select value={data.estado} onChange={(e) => setData('estado', e.target.value)}>
+                        {['propuesta', 'aprobada', 'rechazada'].map((estado) => (
+                            <option key={estado} value={estado}>
+                                {estado.charAt(0).toUpperCase() + estado.slice(1)}
+                            </option>
+                        ))}
+                    </Select>
+                </Field>
+            )}
+
+            <div className="sm:col-span-2">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                    Las designaciones se crean como <strong>propuesta</strong> y deben ser aprobadas por un superior.
+                </div>
+            </div>
         </div>
     );
 }

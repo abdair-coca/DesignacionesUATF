@@ -309,7 +309,12 @@ class DesignacionController extends Controller
 
     public function create(Request $request): Response
     {
-        return Inertia::render('Designaciones/Create', array_merge($this->catalogos(), [
+        $gestionId = (int) (Gestion::max('id') ?? 0);
+        $periodoId = (int) (Periodo::min('id') ?? 0);
+
+        return Inertia::render('Designaciones/Create', array_merge($this->catalogos($gestionId, $periodoId), [
+            'gestionActual' => $gestionId,
+            'periodoActual' => $periodoId,
             'prefill' => $request->only(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']),
             'resumenCarga' => $this->reportes->resumenCarga($request->only([
                 'Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo',
@@ -330,8 +335,11 @@ class DesignacionController extends Controller
 
     public function edit(Request $request, Designacion $designacion): Response
     {
+        $gestionId = $designacion->Id_gestion;
+        $periodoId = $designacion->Id_periodo;
+
         return Inertia::render('Designaciones/Edit', array_merge(
-            $this->catalogos(),
+            $this->catalogos($gestionId, $periodoId),
             [
                 'designacion' => $designacion,
                 'resumenCarga' => $this->reportes->resumenCarga($request->only([
@@ -365,11 +373,26 @@ class DesignacionController extends Controller
         return Inertia::render('Designaciones/Historial', compact('designacion', 'historial'));
     }
 
-    private function catalogos(): array
+    private function catalogos(int $gestionId = 0, int $periodoId = 0): array
     {
+        // Materias que tienen al menos un grupo habilitado
+        $materiasConGrupos = Materia::whereIn('id', function ($q) {
+            $q->select('materia_id')->from('grupos')->where('estado', 'habilitado');
+        })->orderBy('sigla')->get();
+
+        // Docentes con horas disponibles (< límite) en gestión/periodo actual
+        $docentes = Docente::orderBy('nombre')->get();
+
+        if ($gestionId && $periodoId) {
+            $docentes = $docentes->filter(function (Docente $docente) use ($gestionId, $periodoId) {
+                $horas = $this->cargaAcademica->horasAsignadas($docente->id, $gestionId, $periodoId);
+                return $horas < CargaAcademicaService::LIMITE_HORAS;
+            })->values();
+        }
+
         return [
-            'docentes' => Docente::orderBy('nombre')->get(),
-            'materias' => Materia::orderBy('sigla')->get(),
+            'docentes' => $docentes,
+            'materias' => $materiasConGrupos,
             'grupos' => Grupo::with('materia')->where('estado', 'habilitado')->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),

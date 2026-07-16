@@ -20,21 +20,32 @@ class DesignacionValidationTest extends TestCase
     {
         $this->actingAs(User::factory()->create())
             ->post('/designaciones', [])
-            ->assertSessionHasErrors(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo', 'estado']);
+            ->assertSessionHasErrors(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']);
     }
 
-    public function test_store_rechaza_estado_invalido(): void
+    public function test_store_ignora_estado_del_usuario_y_fuerza_propuesta(): void
     {
+        $docente = Docente::factory()->create();
+        $materia = Materia::factory()->create();
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
         $this->actingAs(User::factory()->create())
             ->post('/designaciones', [
-                'Id_docente' => Docente::factory()->create()->id,
-                'Id_materia' => Materia::factory()->create()->id,
-                'Id_grupo' => Grupo::factory()->create()->id,
-                'Id_gestion' => Gestion::factory()->create()->id,
-                'Id_periodo' => Periodo::factory()->create()->id,
-                'estado' => 'invalido',
+                'Id_docente' => $docente->id,
+                'Id_materia' => $materia->id,
+                'Id_grupo' => $grupo->id,
+                'Id_gestion' => $gestion->id,
+                'Id_periodo' => $periodo->id,
+                'estado' => 'aprobada',  // usuario intenta forzar estado
             ])
-            ->assertSessionHasErrors('estado');
+            ->assertRedirect('/designaciones');
+
+        $this->assertDatabaseHas('designaciones', [
+            'Id_docente' => $docente->id,
+            'estado' => 'propuesta',  // siempre forzado a propuesta
+        ]);
     }
 
     public function test_store_rechaza_ids_inexistentes(): void
@@ -46,36 +57,8 @@ class DesignacionValidationTest extends TestCase
                 'Id_grupo' => 9999,
                 'Id_gestion' => 9999,
                 'Id_periodo' => 9999,
-                'estado' => 'propuesta',
             ])
             ->assertSessionHasErrors(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']);
-    }
-
-    public function test_store_acepta_estados_validos(): void
-    {
-        foreach (['propuesta', 'aprobada', 'rechazada'] as $estado) {
-            $docente = Docente::factory()->create();
-            $materia = Materia::factory()->create();
-            $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-            $gestion = Gestion::factory()->create();
-            $periodo = Periodo::factory()->create();
-
-            $this->actingAs(User::factory()->create())
-                ->post('/designaciones', [
-                    'Id_docente' => $docente->id,
-                    'Id_materia' => $materia->id,
-                    'Id_grupo' => $grupo->id,
-                    'Id_gestion' => $gestion->id,
-                    'Id_periodo' => $periodo->id,
-                    'estado' => $estado,
-                ])
-                ->assertRedirect('/designaciones');
-
-            $this->assertDatabaseHas('designaciones', [
-                'Id_docente' => $docente->id,
-                'estado' => $estado,
-            ]);
-        }
     }
 
     public function test_update_permite_mismos_datos_sin_error(): void

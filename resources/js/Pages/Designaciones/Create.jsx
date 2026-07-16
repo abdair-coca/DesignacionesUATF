@@ -5,14 +5,13 @@ import WarningBanner from '../../Components/WarningBanner';
 import FormActions from '@/Components/FormActions';
 import { useResumenCarga } from '../../Hooks/useResumenCarga';
 
-export default function Create({ docentes, materias, grupos, gestiones, periodos, prefill, resumenCarga }) {
+export default function Create({ docentes, materias, grupos, gestiones, periodos, gestionActual, periodoActual, prefill, resumenCarga }) {
     const { data, setData, post, processing, errors } = useForm({
         Id_docente: prefill?.Id_docente ?? '',
         Id_materia: prefill?.Id_materia ?? '',
         Id_grupo: prefill?.Id_grupo ?? '',
-        Id_gestion: prefill?.Id_gestion ?? '',
-        Id_periodo: prefill?.Id_periodo ?? '',
-        estado: 'propuesta',
+        Id_gestion: prefill?.Id_gestion ?? String(gestionActual),
+        Id_periodo: prefill?.Id_periodo ?? String(periodoActual),
     });
 
     useResumenCarga(data);

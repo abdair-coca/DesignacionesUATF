@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Models\Designacion;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreDesignacionRequest extends FormRequest
 {
@@ -21,13 +20,15 @@ class StoreDesignacionRequest extends FormRequest
             'Id_grupo' => ['required', 'exists:grupos,id'],
             'Id_gestion' => ['required', 'exists:gestiones,id'],
             'Id_periodo' => ['required', 'exists:periodos,id'],
-            'estado' => ['required', Rule::in(['propuesta', 'aprobada', 'rechazada'])],
         ];
     }
 
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // Forzar estado — solo un superior puede aprobar
+            $this->merge(['estado' => 'propuesta']);
+
             $existe = Designacion::where('Id_docente', $this->Id_docente)
                 ->where('Id_materia', $this->Id_materia)
                 ->where('Id_grupo', $this->Id_grupo)
