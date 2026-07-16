@@ -2,7 +2,6 @@ import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
-import Pagination from '../../Components/Pagination';
 import paletaIcono from '../../Components/paletaIcono';
 import { useDebouncedSearch } from '../../Hooks/useDebouncedSearch';
 import DataTable from '@/Components/DataTable';
@@ -10,13 +9,13 @@ import FilaAcciones from '@/Components/FilaAcciones';
 import FilterBar from '@/Components/FilterBar';
 
 export default function Index({ docentes, carreras, filtros }) {
-    const [busqueda, buscar] = useDebouncedSearch(filtros, { only: ['docentes', 'filtros'] });
+    const [busqueda, buscar] = useDebouncedSearch(filtros, { only: ['docentes', 'carreras', 'filtros'] });
 
     function aplicarFiltros(cambios) {
         router.get(
             route('docentes.index'),
             { q: busqueda, carrera_origen_id: filtros.carrera_origen_id, ...cambios },
-            { preserveState: true, preserveScroll: true, replace: true, only: ['docentes', 'filtros'] }
+            { preserveState: true, preserveScroll: true, replace: true, only: ['docentes', 'carreras', 'filtros'] }
         );
     }
 
@@ -75,7 +74,7 @@ export default function Index({ docentes, carreras, filtros }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {docentes.data.length === 0 && (
+                    {docentes.length === 0 && (
                         <tr>
                             <td colSpan={4}>
                                 <EmptyState
@@ -86,7 +85,7 @@ export default function Index({ docentes, carreras, filtros }) {
                             </td>
                         </tr>
                     )}
-                    {docentes.data.map((docente, indice) => (
+                    {docentes.map((docente, indice) => (
                         <tr
                             key={docente.id}
                             className="fila-entra transition-colors hover:bg-gray-50/60"
@@ -114,8 +113,6 @@ export default function Index({ docentes, carreras, filtros }) {
                     ))}
                 </tbody>
             </DataTable>
-
-            <Pagination paginador={docentes} etiqueta="docentes" />
         </AppLayout>
     );
 }

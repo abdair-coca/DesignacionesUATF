@@ -33,7 +33,7 @@ export default function FilterBar({ busqueda, onBusquedaChange, placeholder, cam
                     <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
                         {campo.label}
                     </label>
-                    <Select value={campo.valor} onChange={(e) => onChange(campo.key, e.target.value)}>
+                    <Select value={campo.valor} onChange={(e) => onChange({ [campo.key]: e.target.value })}>
                         <option value="">{campo.todos ?? 'Todos'}</option>
                         {campo.opciones.map((opcion) => (
                             <option key={opcion.value} value={opcion.value}>

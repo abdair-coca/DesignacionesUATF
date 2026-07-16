@@ -2,7 +2,6 @@ import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
 import EmptyState from '../../Components/EmptyState';
-import Pagination from '../../Components/Pagination';
 import paletaIcono from '../../Components/paletaIcono';
 import DataTable from '@/Components/DataTable';
 import FilaAcciones from '@/Components/FilaAcciones';
@@ -64,7 +63,7 @@ export default function Index({ materias, carreras, filtros }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {materias.data.length === 0 && (
+                    {materias.length === 0 && (
                         <tr>
                             <td colSpan={5}>
                                 <EmptyState
@@ -75,7 +74,7 @@ export default function Index({ materias, carreras, filtros }) {
                             </td>
                         </tr>
                     )}
-                    {materias.data.map((materia, indice) => (
+                    {materias.map((materia, indice) => (
                         <tr
                             key={materia.id}
                             className="fila-entra transition-colors hover:bg-gray-50/60"
@@ -102,8 +101,6 @@ export default function Index({ materias, carreras, filtros }) {
                     ))}
                 </tbody>
             </DataTable>
-
-            <Pagination paginador={materias} etiqueta="materias" />
         </AppLayout>
     );
 }
