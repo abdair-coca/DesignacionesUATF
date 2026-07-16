@@ -176,8 +176,8 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
 
     return (
         <AppLayout>
-            <div className="flex flex-col gap-6 xl:flex-row">
-                <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-6 xl:flex-row items-stretch mb-6">
+                <div className="min-w-0 flex-1 flex flex-col justify-between">
                     <div className="mb-6">
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
                         <p className="mt-1 text-sm text-gray-500">
@@ -361,9 +361,48 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Fila de Carreras y Estados */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="w-full shrink-0 xl:w-80 flex flex-col justify-end xl:pt-[76px]">
+                    {/* Resumen de designaciones */}
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm h-full flex flex-col justify-between">
+                        <div>
+                            <h3 className="font-semibold tracking-tight text-gray-900">Resumen de designaciones</h3>
+                            <div className="mt-4 flex justify-center">
+                                <GraficoAnillo resumen={resumenDashboard} etiqueta="total" />
+                            </div>
+                        </div>
+                        <div>
+                            <ul className="mt-5 space-y-1">
+                                {leyendaDona.map((fila) => (
+                                    <li
+                                        key={fila.etiqueta}
+                                        className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-gray-50"
+                                    >
+                                        <span className="flex items-center gap-2.5 text-gray-600">
+                                            <span className={`h-2.5 w-2.5 rounded-full ${fila.punto}`} />
+                                            {fila.etiqueta}
+                                        </span>
+                                        <span className="font-semibold text-gray-900 tabular-nums">
+                                            {fila.cantidad}{' '}
+                                            <span className="font-normal text-gray-400">
+                                                ({resumenDashboard.total ? Math.round((fila.cantidad / resumenDashboard.total) * 1000) / 10 : 0}%)
+                                            </span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3.5 text-sm">
+                                <span className="text-gray-500">Total designaciones</span>
+                                <span className="font-semibold text-gray-900 tabular-nums">{totalDesignaciones}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Fila de Carreras y Estados */}
+            <div className="grid grid-cols-1 gap-6 mb-6">
                         {/* Designaciones por carrera */}
                         <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
@@ -594,46 +633,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                 />
                             </>
                         )}
-                    </div>
                 </div>
-
-                <aside className="w-full shrink-0 space-y-5 xl:w-80 xl:pt-[76px]">
-                    {/* Resumen de designaciones */}
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="font-semibold tracking-tight text-gray-900">Resumen de designaciones</h3>
-                        <div className="mt-4 flex justify-center">
-                            <GraficoAnillo resumen={resumenDashboard} etiqueta="total" />
-                        </div>
-                        <ul className="mt-5 space-y-1">
-                            {leyendaDona.map((fila) => (
-                                <li
-                                    key={fila.etiqueta}
-                                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-gray-50"
-                                >
-                                    <span className="flex items-center gap-2.5 text-gray-600">
-                                        <span className={`h-2.5 w-2.5 rounded-full ${fila.punto}`} />
-                                        {fila.etiqueta}
-                                    </span>
-                                    <span className="font-semibold text-gray-900 tabular-nums">
-                                        {fila.cantidad}{' '}
-                                        <span className="font-normal text-gray-400">
-                                            ({resumenDashboard.total ? Math.round((fila.cantidad / resumenDashboard.total) * 1000) / 10 : 0}%)
-                                        </span>
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3.5 text-sm">
-                            <span className="text-gray-500">Total designaciones</span>
-                            <span className="font-semibold text-gray-900 tabular-nums">{totalDesignaciones}</span>
-                        </div>
-                    </div>
-
-
-
-
-                </aside>
-            </div>
         </AppLayout>
     );
 }
