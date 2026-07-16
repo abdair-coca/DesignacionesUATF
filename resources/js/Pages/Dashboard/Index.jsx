@@ -168,6 +168,72 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
     const gestionSeleccionada = filtros.gestion_id ? gestiones.find(g => String(g.id) === filtros.gestion_id)?.nombre : '2026';
     const periodoSeleccionado = filtros.periodo_id ? periodos.find(p => String(p.id) === filtros.periodo_id)?.nombre : '1';
 
+    // Chart calculations
+    const maxEvolucion = Math.max(...evolucion.map((e) => e.valor), 1);
+    const yMax = Math.max(maxEvolucion * 1.15, 10);
+    const N = evolucion.length - 1;
+
+    const puntosChart = evolucion.map((pt, i) => {
+        const x = N > 0 ? (i / N) * 900 + 50 : 50;
+        const y = 200 - (pt.valor / yMax) * 160 + 20;
+        return { x, y, label: pt.label, valor: pt.valor };
+    });
+
+    const dPath = puntosChart.length > 0
+        ? `M ${puntosChart[0].x} ${puntosChart[0].y} ` + puntosChart.slice(1).map((p) => `L ${p.x} ${p.y}`).join(' ')
+        : '';
+
+    const dArea = puntosChart.length > 0
+        ? `${dPath} L ${puntosChart[puntosChart.length - 1].x} 220 L ${puntosChart[0].x} 220 Z`
+        : '';
+
+    const prioridades = [
+        {
+            etiqueta: 'Alta prioridad',
+            valor: `${gruposSinDesignar.length} Grupos sin docente`,
+            bg: 'bg-red-50/70 hover:bg-red-100/50',
+            border: 'border-red-100',
+            texto: 'text-red-700',
+            circulo: 'bg-red-500',
+            icono: 'equis',
+        },
+        {
+            etiqueta: 'Media prioridad',
+            valor: `${conteoEstado.propuesta} Propuestas pendientes`,
+            bg: 'bg-amber-50/70 hover:bg-amber-100/50',
+            border: 'border-amber-100',
+            texto: 'text-amber-700',
+            circulo: 'bg-amber-500',
+            icono: 'reloj',
+        },
+        {
+            etiqueta: 'Baja prioridad',
+            valor: `${docentesBajoLimite.length} Docentes bajo 6h`,
+            bg: 'bg-yellow-50/70 hover:bg-yellow-100/50',
+            border: 'border-yellow-100',
+            texto: 'text-yellow-800',
+            circulo: 'bg-yellow-500',
+            icono: 'alerta',
+        },
+        {
+            etiqueta: 'Información',
+            valor: `${conteoEstado.rechazada} Revisar rechazadas`,
+            bg: 'bg-blue-50/70 hover:bg-blue-100/50',
+            border: 'border-blue-100',
+            texto: 'text-blue-700',
+            circulo: 'bg-blue-500',
+            icono: 'capas',
+        }
+    ];
+
+    function manejarClickPrioridad(icono) {
+        if (icono === 'equis') {
+            setTabActiva('grupos');
+        } else if (icono === 'alerta') {
+            setTabActiva('docentes');
+        }
+    }
+
     return (
         <AppLayout>
             <div className="flex flex-col gap-6 xl:flex-row">
@@ -339,6 +405,180 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                             <button onClick={() => aplicarFiltros({})} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <Icono tipo="reloj" className="h-3.5 w-3.5" />
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Fila de Carreras y Estados */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        {/* Designaciones por carrera */}
+                        <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h3 className="font-semibold tracking-tight text-gray-900">Designaciones por carrera</h3>
+                                <Link
+                                    href={route('designaciones.index')}
+                                    className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50"
+                                >
+                                    Ver detalle
+                                </Link>
+                            </div>
+                            <div className="space-y-4">
+                                {resumenCarreras.slice(0, 5).map((carrera) => {
+                                    const pct = carrera.grupos > 0 ? Math.round((carrera.activas / carrera.grupos) * 100) : 0;
+                                    const barColor = pct >= 60 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500';
+                                    return (
+                                        <div key={carrera.id} className="flex items-center gap-3">
+                                            <div className="w-36 shrink-0">
+                                                <p className="text-xs font-semibold text-gray-900 truncate" title={carrera.nombre}>
+                                                    {carrera.nombre}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">{carrera.sigla}</p>
+                                            </div>
+                                            <div className="relative h-2 w-full rounded-full bg-gray-100 ring-1 ring-inset ring-gray-200/40 overflow-hidden">
+                                                <div
+                                                    className={`absolute left-0 top-0 h-full rounded-full ${barColor} transition-[width] duration-500`}
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                            <span className="w-10 shrink-0 text-right text-xs font-bold text-gray-900 tabular-nums">{pct}%</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            
+                            <div className="mt-5 flex justify-between px-[152px] text-[10px] font-semibold text-gray-400 border-t border-gray-100 pt-3.5">
+                                <span>0%</span>
+                                <span>25%</span>
+                                <span>50%</span>
+                                <span>75%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+
+                        {/* Designaciones por estado */}
+                        <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm flex flex-col justify-between">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h3 className="font-semibold tracking-tight text-gray-900">Designaciones por estado</h3>
+                                <Link
+                                    href={route('designaciones.index')}
+                                    className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50"
+                                >
+                                    Ver detalle
+                                </Link>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center gap-6 my-auto justify-center">
+                                <div className="shrink-0">
+                                    <GraficoAnillo resumen={resumenDashboard} etiqueta="designaciones" />
+                                </div>
+                                <ul className="flex-1 space-y-1.5 w-full">
+                                    {leyendaDona.map((fila) => (
+                                        <li
+                                            key={fila.etiqueta}
+                                            className="flex items-center justify-between rounded-lg px-2.5 py-1 text-xs transition-colors hover:bg-gray-50"
+                                        >
+                                            <span className="flex items-center gap-2.5 text-gray-600">
+                                                <span className={`h-2 w-2 rounded-full ${fila.punto}`} />
+                                                {fila.etiqueta}
+                                            </span>
+                                            <span className="font-semibold text-gray-900 tabular-nums">
+                                                {fila.cantidad}{' '}
+                                                <span className="font-normal text-gray-400">
+                                                    ({resumenDashboard.total ? Math.round((fila.cantidad / resumenDashboard.total) * 1000) / 10 : 0}%)
+                                                </span>
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
+                                <span className="text-gray-500">Total</span>
+                                <span className="font-semibold text-gray-900 tabular-nums">{totalDesignaciones}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Evolución del Periodo */}
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm mb-6">
+                        <h3 className="font-semibold tracking-tight text-gray-900 mb-4">Evolución de designaciones en el periodo</h3>
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <div className="relative min-h-60 flex-1">
+                                <svg viewBox="0 0 1000 250" className="h-full w-full" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
+                                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.00" />
+                                        </linearGradient>
+                                    </defs>
+                                    <line x1="50" y1="20" x2="950" y2="20" stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
+                                    <line x1="50" y1="100" x2="950" y2="100" stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
+                                    <line x1="50" y1="180" x2="950" y2="180" stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
+                                    <line x1="50" y1="220" x2="950" y2="220" stroke="#e5e7eb" strokeWidth="1" />
+
+                                    {dArea && <path d={dArea} fill="url(#area-grad)" />}
+                                    {dPath && <path d={dPath} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+
+                                    {puntosChart.map((pt, i) => (
+                                        <g key={i} className="group/node">
+                                            <circle
+                                                cx={pt.x}
+                                                cy={pt.y}
+                                                r="4.5"
+                                                fill="#fff"
+                                                stroke="#3b82f6"
+                                                strokeWidth="2.5"
+                                                className="transition-all duration-150 group-hover/node:r-6 cursor-pointer"
+                                            />
+                                            <title>{`${pt.label}: ${pt.valor} designaciones`}</title>
+                                        </g>
+                                    ))}
+                                </svg>
+                                <div className="absolute left-0 bottom-0 w-full flex justify-between px-[50px] text-[10px] font-semibold text-gray-400">
+                                    {puntosChart.map((pt, i) => (
+                                        <span key={i} className="w-12 text-center truncate">
+                                            {pt.label}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="w-full md:w-52 shrink-0 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 flex flex-row md:flex-col justify-between md:justify-center gap-4">
+                                <div>
+                                    <p className="text-3xl font-extrabold tracking-tight text-blue-900 tabular-nums">{totalDesignaciones}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">Actuales</p>
+                                </div>
+                                <div>
+                                    <p className="text-3xl font-extrabold tracking-tight text-slate-400 tabular-nums">{pendientesDeCompletar}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">Pendientes</p>
+                                </div>
+                                <div className="md:border-t md:border-gray-100 md:pt-3">
+                                    <p className="text-3xl font-extrabold tracking-tight text-blue-950 tabular-nums">{totalDesignaciones + pendientesDeCompletar}</p>
+                                    <p className="text-xs font-semibold text-gray-400 mt-0.5">Meta estimada</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Prioridad de Atención */}
+                    <div className="mb-6">
+                        <h3 className="font-semibold tracking-tight text-gray-900 mb-3">Prioridad de atención</h3>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {prioridades.map((pr) => (
+                                <div
+                                    key={pr.etiqueta}
+                                    onClick={() => manejarClickPrioridad(pr.icono)}
+                                    className={`cursor-pointer flex items-center justify-between rounded-xl border p-4 transition-all duration-200 ${pr.bg} ${pr.border}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={`h-2 w-2 rounded-full ${pr.circulo}`} />
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{pr.etiqueta}</p>
+                                            <p className={`text-xs font-semibold ${pr.texto} mt-0.5`}>{pr.valor}</p>
+                                        </div>
+                                    </div>
+                                    <span className="rounded-lg bg-white p-1 text-gray-400 border border-gray-100 shadow-sm transition-transform duration-200 hover:scale-105">
+                                        <Icono tipo="chevronDerecha" className="h-3 w-3" />
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
