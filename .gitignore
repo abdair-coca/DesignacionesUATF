@@ -31,3 +31,5 @@ Thumbs.db
 
 # Estado local de herramientas de asistencia de código (no se sube al repo)
 /.claude/
+CLAUDE.md
+opencode.md
