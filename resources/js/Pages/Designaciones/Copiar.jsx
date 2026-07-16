@@ -49,6 +49,7 @@ export default function Copiar({ carreras, gestiones, periodos, docentes, filtro
     }
 
     function copiarTodas() {
+        if (!confirm(`¿Copiar todas las ${filasOrigen.length} designaciones de una vez?`)) return;
         setData('filas', []);
         setTimeout(() => post(route('designaciones.copiar.store')), 0);
     }

@@ -151,7 +151,6 @@ class DesignacionController extends Controller
             'roster' => $roster,
             'historialPorGrupo' => $historialPorGrupo,
             'docentes' => Docente::with('carreraOrigen:id,sigla')
-                ->where('carrera_origen_id', $carrera->id)
                 ->orderBy('nombre')
                 ->get(['id', 'nombre', 'carrera_origen_id'])
                 ->map(fn (Docente $d) => [

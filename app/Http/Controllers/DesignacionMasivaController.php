@@ -7,18 +7,14 @@ use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Gestion;
 use App\Models\Periodo;
-use App\Support\CargaAcademicaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DesignacionMasivaController extends Controller
 {
-    public function __construct(private CargaAcademicaService $cargaAcademica) {}
-
     public function copiarForm(Request $request): Response
     {
         $raw = $request->only([
@@ -119,38 +115,53 @@ class DesignacionMasivaController extends Controller
 
     private function crearEnLote(array $data, Request $request, \Closure $debeIncluir): int
     {
-        $creadas = 0;
+        $ahora = now();
+        $userId = $request->user()->id;
+        $registros = [];
 
-        DB::transaction(function () use ($data, $request, $debeIncluir, &$creadas) {
-            foreach ($data['filas'] as $fila) {
-                if (! $debeIncluir($fila)) {
-                    continue;
-                }
-
-                if ($this->cargaAcademica->hayChoque($fila['Id_grupo'], $data['Id_gestion'], $data['Id_periodo'])) {
-                    continue;
-                }
-
-                Designacion::create([
-                    'Id_docente' => $fila['Id_docente'],
-                    'Id_materia' => $fila['Id_materia'],
-                    'Id_grupo' => $fila['Id_grupo'],
-                    'Id_gestion' => $data['Id_gestion'],
-                    'Id_periodo' => $data['Id_periodo'],
-                    'estado' => 'propuesta',
-                    'creado_por' => $request->user()->id,
-                ]);
-
-                $creadas++;
+        foreach ($data['filas'] as $fila) {
+            if (! $debeIncluir($fila)) {
+                continue;
             }
-        });
 
-        return $creadas;
+            $registros[] = [
+                'Id_docente' => $fila['Id_docente'],
+                'Id_materia' => $fila['Id_materia'],
+                'Id_grupo' => $fila['Id_grupo'],
+                'Id_gestion' => $data['Id_gestion'],
+                'Id_periodo' => $data['Id_periodo'],
+                'estado' => 'propuesta',
+                'creado_por' => $userId,
+                'created_at' => $ahora,
+                'updated_at' => $ahora,
+            ];
+        }
+
+        if (empty($registros)) {
+            return 0;
+        }
+
+        // Excluir grupos que ya tienen designación activa en destino
+        $gruposDestino = Designacion::where('Id_gestion', $data['Id_gestion'])
+            ->where('Id_periodo', $data['Id_periodo'])
+            ->where('estado', '!=', 'rechazada')
+            ->pluck('Id_grupo')
+            ->toArray();
+
+        $registros = array_values(array_filter($registros, fn ($r) => ! in_array($r['Id_grupo'], $gruposDestino)));
+
+        if (empty($registros)) {
+            return 0;
+        }
+
+        Designacion::insert($registros);
+
+        return count($registros);
     }
 
     private function copiarTodas(array $data, Request $request): int
     {
-        $query = Designacion::with(['docente', 'materia', 'grupo'])
+        $query = Designacion::query()
             ->where('Id_gestion', $data['gestion_origen_id'])
             ->where('Id_periodo', $data['periodo_origen_id'])
             ->where('estado', '!=', 'rechazada')
@@ -164,29 +175,29 @@ class DesignacionMasivaController extends Controller
             $query->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']));
         }
 
-        $origen = $query->get();
-        $creadas = 0;
+        $origen = $query->get(['Id_docente', 'Id_materia', 'Id_grupo']);
 
-        DB::transaction(function () use ($origen, $data, $request, &$creadas) {
-            foreach ($origen as $fila) {
-                if ($this->cargaAcademica->hayChoque($fila->Id_grupo, $data['Id_gestion'], $data['Id_periodo'])) {
-                    continue;
-                }
+        if ($origen->isEmpty()) {
+            return 0;
+        }
 
-                Designacion::create([
-                    'Id_docente' => $fila->Id_docente,
-                    'Id_materia' => $fila->Id_materia,
-                    'Id_grupo' => $fila->Id_grupo,
-                    'Id_gestion' => $data['Id_gestion'],
-                    'Id_periodo' => $data['Id_periodo'],
-                    'estado' => 'propuesta',
-                    'creado_por' => $request->user()->id,
-                ]);
+        $ahora = now();
+        $userId = $request->user()->id;
 
-                $creadas++;
-            }
-        });
+        $registros = $origen->map(fn ($fila) => [
+            'Id_docente' => $fila->Id_docente,
+            'Id_materia' => $fila->Id_materia,
+            'Id_grupo' => $fila->Id_grupo,
+            'Id_gestion' => $data['Id_gestion'],
+            'Id_periodo' => $data['Id_periodo'],
+            'estado' => 'propuesta',
+            'creado_por' => $userId,
+            'created_at' => $ahora,
+            'updated_at' => $ahora,
+        ])->toArray();
 
-        return $creadas;
+        Designacion::insert($registros);
+
+        return count($registros);
     }
 }
