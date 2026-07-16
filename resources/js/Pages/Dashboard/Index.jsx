@@ -291,6 +291,24 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
                     </div>
 
+                    {/* Resumen de Pendientes y Meta Estimada */}
+                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-slate-400" />
+                                <span className="text-xs font-semibold text-gray-500">Designaciones pendientes de completar</span>
+                            </div>
+                            <span className="text-base font-bold text-slate-600 tabular-nums">{pendientesDeCompletar}</span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-600" />
+                                <span className="text-xs font-semibold text-gray-500">Meta estimada (Total + Pendientes)</span>
+                            </div>
+                            <span className="text-base font-bold text-blue-950 tabular-nums">{totalDesignaciones + pendientesDeCompletar}</span>
+                        </div>
+                    </div>
+
                     {/* Custom Filter Bar */}
                     <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
                         <div className="flex flex-wrap items-center gap-4">
@@ -436,69 +454,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                         </div>
                     </div>
 
-                    {/* Evolución del Periodo */}
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm mb-6">
-                        <h3 className="font-semibold tracking-tight text-gray-900 mb-4">Evolución de designaciones en el periodo</h3>
-                        <div className="flex flex-col md:flex-row gap-6">
-                            <div className="relative min-h-60 flex-1">
-                                <svg viewBox="0 0 1000 250" className="h-full w-full" preserveAspectRatio="none">
-                                    <defs>
-                                        <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
-                                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.00" />
-                                        </linearGradient>
-                                    </defs>
-                                    <line x1="50" y1="20" x2="950" y2="20" stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
-                                    <line x1="50" y1="100" x2="950" y2="100" stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
-                                    <line x1="50" y1="180" x2="950" y2="180" stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
-                                    <line x1="50" y1="220" x2="950" y2="220" stroke="#e5e7eb" strokeWidth="1" />
-
-                                    {dArea && <path d={dArea} fill="url(#area-grad)" />}
-                                    {dPath && <path d={dPath} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-
-                                    {puntosChart.map((pt, i) => (
-                                        <g key={i} className="group/node">
-                                            <circle
-                                                cx={pt.x}
-                                                cy={pt.y}
-                                                r="4.5"
-                                                fill="#fff"
-                                                stroke="#3b82f6"
-                                                strokeWidth="2.5"
-                                                className="transition-all duration-150 group-hover/node:r-6 cursor-pointer"
-                                            />
-                                            <title>{`${pt.label}: ${pt.valor} designaciones`}</title>
-                                        </g>
-                                    ))}
-                                </svg>
-                                <div className="absolute left-0 bottom-0 w-full flex justify-between px-[50px] text-[10px] font-semibold text-gray-400">
-                                    {puntosChart.map((pt, i) => {
-                                        const esPrimeroDeMes = pt.label.startsWith('01') || pt.label.startsWith('30');
-                                        return (
-                                            <span key={i} className={`w-12 text-center truncate transition-opacity duration-150 ${esPrimeroDeMes ? 'opacity-100' : 'opacity-0 sm:opacity-50'}`}>
-                                                {pt.label}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="w-full md:w-52 shrink-0 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 flex flex-row md:flex-col justify-between md:justify-center gap-4">
-                                <div>
-                                    <p className="text-3xl font-extrabold tracking-tight text-blue-900 tabular-nums">{totalDesignaciones}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">Actuales</p>
-                                </div>
-                                <div>
-                                    <p className="text-3xl font-extrabold tracking-tight text-slate-400 tabular-nums">{pendientesDeCompletar}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">Pendientes</p>
-                                </div>
-                                <div className="md:border-t md:border-gray-100 md:pt-3">
-                                    <p className="text-3xl font-extrabold tracking-tight text-blue-950 tabular-nums">{totalDesignaciones + pendientesDeCompletar}</p>
-                                    <p className="text-xs font-semibold text-gray-400 mt-0.5">Meta estimada</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
 
 
