@@ -5,7 +5,7 @@ import paletaIcono from './paletaIcono';
 
 const VACIO = { id: '', nombre: '— Sin asignar —', esVacio: true };
 
-export default function ComboboxDocente({ docentes, value, onChange, carreraSigla, placeholder = '— Sin asignar —', className = 'max-w-56' }) {
+export default function ComboboxDocente({ docentes, value, onChange, carreraSigla, placeholder = '— Sin asignar —', className = 'max-w-56', materiaId = null, carreraId = null }) {
     const [abierto, setAbierto] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [busqueda, setBusqueda] = useState('');
@@ -14,19 +14,53 @@ export default function ComboboxDocente({ docentes, value, onChange, carreraSigl
 
     const seleccionado = docentes.find((d) => String(d.id) === String(value)) ?? null;
 
-    const filtrados = useMemo(() => {
+    const opciones = useMemo(() => {
         const termino = busqueda.trim().toLowerCase();
-        const base = termino === '' ? docentes : docentes.filter((d) => d.nombre.toLowerCase().includes(termino));
+        const coincidentes = termino === '' 
+            ? docentes 
+            : docentes.filter((d) => d.nombre.toLowerCase().includes(termino));
 
-        return [...base].sort((a, b) => {
-            const aQuiParte = a.carreraSigla === carreraSigla;
-            const bQuiParte = b.carreraSigla === carreraSigla;
-            if (aQuiParte !== bQuiParte) return aQuiParte ? -1 : 1;
-            return a.nombre.localeCompare(b.nombre);
-        });
-    }, [docentes, busqueda, carreraSigla]);
+        const historial = [];
+        const mismaCarrera = [];
+        const resto = [];
 
-    const opciones = [VACIO, ...filtrados];
+        for (const d of coincidentes) {
+            const tieneHistorial = materiaId && (d.historial_materias || []).some(id => String(id) === String(materiaId));
+            const esMismaCarrera = (carreraId && String(d.carrera_origen_id) === String(carreraId)) || 
+                                   (carreraSigla && d.carreraSigla === carreraSigla);
+
+            if (tieneHistorial) {
+                historial.push(d);
+            } else if (esMismaCarrera) {
+                mismaCarrera.push(d);
+            } else {
+                resto.push(d);
+            }
+        }
+
+        const sortByName = (a, b) => a.nombre.localeCompare(b.nombre);
+        historial.sort(sortByName);
+        mismaCarrera.sort(sortByName);
+        resto.sort(sortByName);
+
+        const lista = [{ ...VACIO, esVacio: true }];
+
+        if (historial.length > 0) {
+            lista.push({ esCabecera: true, titulo: 'Dictó esta materia antes' });
+            lista.push(...historial);
+        }
+        if (mismaCarrera.length > 0) {
+            lista.push({ esCabecera: true, titulo: 'Docentes de la carrera' });
+            lista.push(...mismaCarrera);
+        }
+        if (resto.length > 0) {
+            const tituloResto = (historial.length > 0 || mismaCarrera.length > 0) ? 'Otros docentes' : 'Docentes';
+            lista.push({ esCabecera: true, titulo: tituloResto });
+            lista.push(...resto);
+        }
+
+        return lista;
+    }, [docentes, busqueda, materiaId, carreraId, carreraSigla]);
 
     function abrir(el) {
         setAnchorEl(el);
@@ -59,13 +93,22 @@ export default function ComboboxDocente({ docentes, value, onChange, carreraSigl
             cerrar();
         } else if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setResaltado((r) => Math.min(r + 1, opciones.length - 1));
+            let proximo = resaltado + 1;
+            while (proximo < opciones.length && opciones[proximo].esCabecera) {
+                proximo++;
+            }
+            if (proximo < opciones.length) setResaltado(proximo);
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setResaltado((r) => Math.max(r - 1, 0));
+            let anterior = resaltado - 1;
+            while (anterior >= 0 && opciones[anterior].esCabecera) {
+                anterior--;
+            }
+            if (anterior >= 0) setResaltado(anterior);
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            if (opciones[resaltado]) elegir(opciones[resaltado]);
+            const seleccionada = opciones[resaltado];
+            if (seleccionada && !seleccionada.esCabecera) elegir(seleccionada);
         }
     }
 
@@ -113,6 +156,16 @@ export default function ComboboxDocente({ docentes, value, onChange, carreraSigl
                             <p className="px-3 py-6 text-center text-xs text-gray-400">Ningún docente coincide.</p>
                         )}
                         {opciones.map((opcion, indice) => {
+                            if (opcion.esCabecera) {
+                                return (
+                                    <div
+                                        key={`header-${opcion.titulo}`}
+                                        className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-50/50 sticky top-0 backdrop-blur-sm first:mt-0 mt-2 rounded-md"
+                                    >
+                                        {opcion.titulo}
+                                    </div>
+                                );
+                            }
                             const activo = String(opcion.id) === String(value);
                             return (
                                 <button

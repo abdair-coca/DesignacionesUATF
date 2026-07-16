@@ -78,6 +78,7 @@ export default function FormFields({
                         onChange={(valor) => setData('Id_docente', valor)}
                         placeholder="Seleccione un docente..."
                         className="w-full"
+                        materiaId={data.Id_materia}
                     />
                 </Field>
 
@@ -188,6 +189,8 @@ export default function FormFields({
                         value={data.Id_docente}
                         onChange={(valor) => setData('Id_docente', valor)}
                         carreraSigla={carreras.find(c => String(c.id) === String(data.Id_carrera))?.sigla ?? ''}
+                        carreraId={data.Id_carrera}
+                        materiaId={data.Id_materia}
                         placeholder="Seleccione un docente..."
                         className="w-full"
                     />

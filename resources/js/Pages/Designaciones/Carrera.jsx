@@ -463,6 +463,8 @@ export default function Carrera({
                                                             value={valorDocente(fila)}
                                                             onChange={(valor) => cambiarDocente(fila, valor)}
                                                             carreraSigla={carrera.sigla}
+                                                            materiaId={fila.materia.id}
+                                                            carreraId={carrera.id}
                                                         />
                                                         {!esDirty && fila.aviso?.excedeLimite && (
                                                             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-700">
