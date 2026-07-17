@@ -1,11 +1,11 @@
-import { useClipboard } from './ClipboardContext'
+import { useClipboardCtx } from './ClipboardContext'
 
 export default function ClipboardBanner() {
-    const { clipboard, clear } = useClipboard()
+    const ctx = useClipboardCtx()
 
-    if (!clipboard || !clipboard.filas || clipboard.filas.length === 0) return null
+    if (!ctx || !ctx.clipboard || !ctx.clipboard.filas || ctx.clipboard.filas.length === 0) return null
 
-    const count = clipboard.filas.length
+    const count = ctx.clipboard.filas.length
 
     return (
         <div className="fixed bottom-0 inset-x-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -15,11 +15,11 @@ export default function ClipboardBanner() {
                 </span>
 
                 <span className="text-xs text-gray-400">
-                    ({clipboard.origen?.gestion_nombre || 'gestión'} / {clipboard.origen?.periodo_nombre || 'periodo'})
+                    ({ctx.clipboard.origen?.gestion_nombre || 'gestión'} / {ctx.clipboard.origen?.periodo_nombre || 'periodo'})
                 </span>
 
                 <button
-                    onClick={clear}
+                    onClick={ctx.clear}
                     className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
                 >
                     Limpiar

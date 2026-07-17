@@ -9,7 +9,7 @@ import ComboboxDocente from '../../Components/ComboboxDocente';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
 import { useSelection } from '../../Hooks/useSelection';
-import { useClipboard } from '../../Components/ClipboardContext';
+import { clipboardCopy, clipboardRead, clipboardClear } from '../../Hooks/useClipboard';
 
 const badgesDesignacion = {
     aprobada: { tono: 'verde', icono: 'check', etiqueta: 'Aprobada' },
@@ -91,7 +91,6 @@ export default function Carrera({
     const porPagina = 10;
 
     const seleccion = useSelection();
-    const { copy } = useClipboard();
     const seleccionRef = useRef(seleccion);
     seleccionRef.current = seleccion;
 
@@ -118,7 +117,7 @@ export default function Carrera({
 
         if (filasACopiar.length === 0) return;
 
-        copy(filasACopiar, {
+        clipboardCopy(filasACopiar, {
             gestion_id: filtros.gestion_id,
             gestion_nombre: gestionNombre,
             periodo_id: filtros.periodo_id,
@@ -127,7 +126,7 @@ export default function Carrera({
         });
 
         sel.clearAll();
-    }, [roster, carrera, filtros, copy, gestionNombre, periodoNombre]);
+    }, [roster, carrera, filtros, gestionNombre, periodoNombre]);
 
     useEffect(() => {
         function handleKeyDown(e) {
