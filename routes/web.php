@@ -31,10 +31,10 @@ Route::middleware('auth')->group(function () {
         ->name('designaciones.carrera');
     Route::post('designaciones/carrera/{carrera}/guardar', [DesignacionController::class, 'guardarRoster'])
         ->name('designaciones.carrera.guardar');
-    Route::get('designaciones/copiar', [DesignacionMasivaController::class, 'copiarForm'])
-        ->name('designaciones.copiar');
-    Route::post('designaciones/copiar', [DesignacionMasivaController::class, 'copiarStore'])
-        ->name('designaciones.copiar.store');
+    Route::post('designaciones/pegar', [DesignacionMasivaController::class, 'pegar'])
+        ->name('designaciones.pegar');
+    Route::post('designaciones/deshacer-pegado', [DesignacionMasivaController::class, 'deshacerPegado'])
+        ->name('designaciones.deshacer-pegado');
 
     Route::resource('designaciones', DesignacionController::class)
         ->except('show')

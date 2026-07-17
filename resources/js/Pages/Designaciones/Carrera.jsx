@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
@@ -8,6 +8,9 @@ import MenuFlotante from '../../Components/MenuFlotante';
 import ComboboxDocente from '../../Components/ComboboxDocente';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
+import { useSelection } from '../../Hooks/useSelection';
+import { clipboardCopy, clipboardClear, clipboardRead } from '../../Hooks/useClipboard';
+import PasteModal from '../../Components/PasteModal';
 
 const badgesDesignacion = {
     aprobada: { tono: 'verde', icono: 'check', etiqueta: 'Aprobada' },
@@ -86,6 +89,71 @@ export default function Carrera({
     const [cambios, setCambios] = useState({});
     const [histoAbierto, setHistoAbierto] = useState(null);
     const [guardando, setGuardando] = useState(false);
+    const [mostrarPegar, setMostrarPegar] = useState(false);
+    const seleccion = useSelection();
+    const seleccionRef = useRef(seleccion);
+    seleccionRef.current = seleccion;
+
+    const copiarSeleccionadas = useCallback(() => {
+        const sel = seleccionRef.current;
+        if (sel.count === 0) return;
+
+        const filasACopiar = sel.selectedIds.map((id) => {
+            const fila = roster.find((f) => String(f.id) === String(id));
+            if (!fila) return null;
+            return {
+                Id_docente: fila.designacion?.docente?.id ?? null,
+                Id_materia: fila.materia.id,
+                Id_grupo: fila.id,
+                materia_sigla: fila.materia.sigla,
+                materia_nombre: fila.materia.nombre,
+                docente_nombre: fila.designacion?.docente?.nombre ?? 'Sin asignar',
+                horas: fila.horas,
+                carrera_sigla: carrera.sigla,
+                carrera_id: carrera.id,
+                grupo_codigo: fila.codigo,
+            };
+        }).filter(Boolean);
+
+        if (filasACopiar.length === 0) return;
+
+        clipboardCopy(filasACopiar, {
+            gestion_id: filtros.gestion_id,
+            gestion_nombre: gestionNombre,
+            periodo_id: filtros.periodo_id,
+            periodo_nombre: periodoNombre,
+            carrera_id: carrera.id,
+            carrera_nombre: carrera.nombre,
+        });
+
+        sel.clearAll();
+    }, [roster, carrera, filtros, gestionNombre, periodoNombre]);
+
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                if (mostrarPegar) {
+                    setMostrarPegar(false);
+                } else {
+                    seleccionRef.current.clearAll();
+                }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                if (seleccionRef.current.count > 0 && !window.getSelection().toString()) {
+                    e.preventDefault();
+                    copiarSeleccionadas();
+                }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                if (clipboardRead()?.filas?.length > 0) {
+                    e.preventDefault();
+                    setMostrarPegar(true);
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [copiarSeleccionadas, mostrarPegar]);
     const porPagina = 10;
 
     const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
@@ -393,6 +461,26 @@ export default function Carrera({
                             <Icono tipo="embudo" className="h-4 w-4" />
                             Filtros
                         </button>
+
+                        {seleccion.count > 0 && (
+                            <button
+                                onClick={copiarSeleccionadas}
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
+                            >
+                                <Icono tipo="copiar" className="h-4 w-4" />
+                                Copiar ({seleccion.count})
+                            </button>
+                        )}
+
+                        {clipboardRead()?.filas?.length > 0 && (
+                            <button
+                                onClick={() => setMostrarPegar(true)}
+                                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 shadow-sm transition-colors hover:bg-blue-100 active:scale-[0.98]"
+                            >
+                                <Icono tipo="copiar" className="h-4 w-4 rotate-180" />
+                                Pegar ({clipboardRead().filas.length})
+                            </button>
+                        )}
                     </div>
 
                     <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
@@ -427,10 +515,19 @@ export default function Carrera({
                                             const esDirty = fila.id in cambios;
                                             const estadoBadge = badgesDesignacion[fila.designacion?.estado ?? 'sin_asignar'];
 
+                                            const estaSeleccionada = seleccion.isSelected(String(fila.id));
+
                                             return (
                                                 <tr
                                                     key={fila.id}
-                                                    className={`fila-entra transition-colors hover:bg-gray-50/60 ${esDirty ? 'bg-blue-50/40' : ''}`}
+                                                    onClick={(e) => seleccion.toggle(String(fila.id), e.ctrlKey || e.metaKey)}
+                                                    className={`fila-entra transition-colors cursor-pointer ${
+                                                        estaSeleccionada
+                                                            ? 'bg-blue-50 ring-1 ring-inset ring-blue-300'
+                                                            : esDirty
+                                                                ? 'bg-blue-50/40 hover:bg-blue-50/60'
+                                                                : 'hover:bg-gray-50/60'
+                                                    }`}
                                                     style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                                 >
                                                     <td className="px-4 py-3.5">
@@ -555,10 +652,17 @@ export default function Carrera({
                                                 </td>
                                             </tr>
                                         )}
-                                        {visibles.map((designacion, indice) => (
+                                        {visibles.map((designacion, indice) => {
+                                            const estaSeleccionada = seleccion.isSelected(String(designacion.id));
+                                            return (
                                             <tr
                                                 key={designacion.id}
-                                                className="fila-entra transition-colors hover:bg-gray-50/60"
+                                                onClick={(e) => seleccion.toggle(String(designacion.id), e.ctrlKey || e.metaKey)}
+                                                className={`fila-entra transition-colors cursor-pointer ${
+                                                    estaSeleccionada
+                                                        ? 'bg-blue-50 ring-1 ring-inset ring-blue-300'
+                                                        : 'hover:bg-gray-50/60'
+                                                }`}
                                                 style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                             >
                                                 <td className="px-4 py-3.5 font-medium text-gray-900">{designacion.docente.nombre}</td>
@@ -575,7 +679,8 @@ export default function Carrera({
                                                     </Badge>
                                                 </td>
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             )}
@@ -715,6 +820,14 @@ export default function Carrera({
                     </div>
                 </aside>
             </div>
+
+            <PasteModal
+                abierto={mostrarPegar}
+                onCerrar={() => setMostrarPegar(false)}
+                gestionNombre={gestionNombre}
+                periodoNombre={periodoNombre}
+                filtros={filtros}
+            />
         </AppLayout>
     );
 }

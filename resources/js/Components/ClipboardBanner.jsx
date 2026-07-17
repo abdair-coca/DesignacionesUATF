@@ -1,11 +1,25 @@
-import { useClipboardCtx } from './ClipboardContext'
+import { useEffect, useState } from 'react';
+import { clipboardRead, clipboardClear } from '../Hooks/useClipboard';
 
 export default function ClipboardBanner() {
-    const ctx = useClipboardCtx()
+    const [data, setData] = useState(() => clipboardRead());
 
-    if (!ctx || !ctx.clipboard || !ctx.clipboard.filas || ctx.clipboard.filas.length === 0) return null
+    useEffect(() => {
+        function refresh() {
+            setData(clipboardRead());
+        }
 
-    const count = ctx.clipboard.filas.length
+        window.addEventListener('clipboard-changed', refresh);
+        window.addEventListener('storage', refresh);
+        return () => {
+            window.removeEventListener('clipboard-changed', refresh);
+            window.removeEventListener('storage', refresh);
+        };
+    }, []);
+
+    if (!data || !data.filas || data.filas.length === 0) return null;
+
+    const count = data.filas.length;
 
     return (
         <div className="fixed bottom-0 inset-x-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -15,11 +29,14 @@ export default function ClipboardBanner() {
                 </span>
 
                 <span className="text-xs text-gray-400">
-                    ({ctx.clipboard.origen?.gestion_nombre || 'gestión'} / {ctx.clipboard.origen?.periodo_nombre || 'periodo'})
+                    ({data.origen?.gestion_nombre || 'gestión'} / {data.origen?.periodo_nombre || 'periodo'})
                 </span>
 
                 <button
-                    onClick={ctx.clear}
+                    onClick={() => {
+                        clipboardClear();
+                        setData(null);
+                    }}
                     className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
                 >
                     Limpiar
