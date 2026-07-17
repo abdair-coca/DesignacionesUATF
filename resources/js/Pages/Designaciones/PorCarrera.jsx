@@ -60,7 +60,6 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
 
     const accionesRapidas = [
         { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
-        { etiqueta: 'Copiar designaciones', tipo: 'copiar', href: route('designaciones.copiar') },
         { etiqueta: 'Gestiones', tipo: 'calendario', href: route('gestiones.index') },
         { etiqueta: 'Periodos', tipo: 'reloj', href: route('periodos.index') },
         { etiqueta: 'Carreras', tipo: 'libro', href: route('carreras.index') },
@@ -233,17 +232,6 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                                         className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                                                     >
                                                         <Icono tipo="ojo" className="h-[18px] w-[18px]" />
-                                                    </Link>
-                                                    <Link
-                                                        href={route('designaciones.copiar', {
-                                                            carrera_id: carrera.id,
-                                                            gestion_destino_id: filtros.gestion_id,
-                                                            periodo_destino_id: filtros.periodo_id,
-                                                        })}
-                                                        title="Copiar de otra gestión"
-                                                        className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
-                                                    >
-                                                        <Icono tipo="copiar" className="h-[18px] w-[18px]" />
                                                     </Link>
                                                 </div>
                                             </td>

@@ -124,7 +124,6 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
 
     const accionesRapidas = [
         { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
-        { etiqueta: 'Copiar designaciones', tipo: 'copiar', href: route('designaciones.copiar') }
     ];
 
     const gruposPaginados = gruposSinDesignar.slice((paginaGrupos - 1) * itemsPorPagina, paginaGrupos * itemsPorPagina);
