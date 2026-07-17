@@ -1,14 +1,12 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 /**
  * Multi-select con Ctrl+Click para tablas.
- *
- * @param {Object} options
- * @param {Function} options.onCopy - callback al presionar Ctrl+C (recibe selectedIds)
- * @returns {{ selected, toggle, selectAll, clearAll, isSelected, count }}
  */
-export function useSelection({ onCopy } = {}) {
+export function useSelection() {
     const [selected, setSelected] = useState(new Set())
+    const selectedRef = useRef(selected)
+    selectedRef.current = selected
 
     const toggle = useCallback((id, ctrlKey) => {
         setSelected((prev) => {
@@ -30,9 +28,9 @@ export function useSelection({ onCopy } = {}) {
         setSelected(new Set())
     }, [])
 
-    const isSelected = useCallback((id) => selected.has(id), [selected])
+    const isSelected = useCallback((id) => selectedRef.current.has(id), [])
 
-    return {
+    return useMemo(() => ({
         selected,
         toggle,
         selectAll,
@@ -40,5 +38,5 @@ export function useSelection({ onCopy } = {}) {
         isSelected,
         count: selected.size,
         selectedIds: [...selected],
-    }
+    }), [selected, toggle, selectAll, clearAll, isSelected])
 }

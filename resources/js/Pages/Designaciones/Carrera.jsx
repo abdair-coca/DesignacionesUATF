@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
@@ -92,11 +92,14 @@ export default function Carrera({
 
     const seleccion = useSelection();
     const { copy } = useClipboard();
+    const seleccionRef = useRef(seleccion);
+    seleccionRef.current = seleccion;
 
     const copiarSeleccionadas = useCallback(() => {
-        if (seleccion.count === 0) return;
+        const sel = seleccionRef.current;
+        if (sel.count === 0) return;
 
-        const filasACopiar = seleccion.selectedIds.map((id) => {
+        const filasACopiar = sel.selectedIds.map((id) => {
             const fila = roster.find((f) => String(f.id) === String(id));
             if (!fila) return null;
             return {
@@ -123,16 +126,16 @@ export default function Carrera({
             carrera_id: carrera.id,
         });
 
-        seleccion.clearAll();
-    }, [seleccion, roster, carrera, filtros, copy, gestionNombre, periodoNombre]);
+        sel.clearAll();
+    }, [roster, carrera, filtros, copy, gestionNombre, periodoNombre]);
 
     useEffect(() => {
         function handleKeyDown(e) {
             if (e.key === 'Escape') {
-                seleccion.clearAll();
+                seleccionRef.current.clearAll();
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-                if (seleccion.count > 0 && !window.getSelection().toString()) {
+                if (seleccionRef.current.count > 0 && !window.getSelection().toString()) {
                     e.preventDefault();
                     copiarSeleccionadas();
                 }
@@ -140,7 +143,7 @@ export default function Carrera({
         }
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [seleccion, copiarSeleccionadas]);
+    }, [copiarSeleccionadas]);
 
     const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
     const periodoNombre = periodos.find((p) => String(p.id) === filtros.periodo_id)?.nombre ?? '';
