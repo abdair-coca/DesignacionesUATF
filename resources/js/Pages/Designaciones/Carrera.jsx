@@ -94,6 +94,9 @@ export default function Carrera({
     const seleccionRef = useRef(seleccion);
     seleccionRef.current = seleccion;
 
+    const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
+    const periodoNombre = periodos.find((p) => String(p.id) === filtros.periodo_id)?.nombre ?? '';
+
     const copiarSeleccionadas = useCallback(() => {
         const sel = seleccionRef.current;
         if (sel.count === 0) return;
@@ -155,9 +158,6 @@ export default function Carrera({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [copiarSeleccionadas, mostrarPegar]);
     const porPagina = 10;
-
-    const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
-    const periodoNombre = periodos.find((p) => String(p.id) === filtros.periodo_id)?.nombre ?? '';
 
     const asignadas = materias.filter((m) => m.estado === 'asignada').length;
     const porAsignar = materias.filter((m) => m.estado === 'por_asignar').length;
