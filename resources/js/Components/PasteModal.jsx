@@ -8,37 +8,104 @@ export default function PasteModal({ abierto, onCerrar, gestionNombre, periodoNo
     const [incluir, setIncluir] = useState({});
     const [procesando, setProcesando] = useState(false);
     const [resultado, setResultado] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [cargandoPreview, setCargandoPreview] = useState(false);
 
     useEffect(() => {
         if (abierto) {
             const clip = clipboardRead();
             setData(clip);
             setResultado(null);
+            setPreview(null);
             if (clip?.filas) {
                 const mapa = {};
                 clip.filas.forEach((_, i) => { mapa[i] = true; });
                 setIncluir(mapa);
+                cargarPreview(clip);
             }
         } else {
             setData(null);
             setIncluir({});
             setResultado(null);
+            setPreview(null);
         }
     }, [abierto]);
+
+    async function cargarPreview(clip) {
+        if (!clip?.filas?.length) return;
+        setCargandoPreview(true);
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content
+                ?? document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]
+                ?? '';
+
+            const res = await fetch(route('designaciones.previsualizar-pegado'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': decodeURIComponent(token),
+                },
+                body: JSON.stringify({
+                    Id_gestion: filtros.gestion_id,
+                    Id_periodo: filtros.periodo_id,
+                    filas: clip.filas.map((f) => ({
+                        Id_docente: f.Id_docente,
+                        Id_materia: f.Id_materia,
+                        Id_grupo: f.Id_grupo,
+                    })),
+                }),
+            });
+
+            const json = await res.json();
+            setPreview(json);
+
+            // Deshabilitar checkboxes de filas saltadas
+            if (json.resultados) {
+                setIncluir((prev) => {
+                    const copy = { ...prev };
+                    json.resultados.forEach((r) => {
+                        if (r.estado !== 'ok') {
+                            delete copy[r.idx];
+                        }
+                    });
+                    return copy;
+                });
+            }
+        } catch {
+            // Si falla preview, continuar sin ella
+        } finally {
+            setCargandoPreview(false);
+        }
+    }
 
     if (!abierto || !data) return null;
 
     const filas = data.filas ?? [];
     const seleccionadas = Object.entries(incluir).filter(([, v]) => v).map(([k]) => filas[Number(k)]);
 
+    function previewPara(idx) {
+        return preview?.resultados?.find((r) => r.idx === idx) ?? null;
+    }
+
+    function puedeSeleccionar(idx) {
+        if (!preview) return true;
+        const p = previewPara(idx);
+        return !p || p.estado === 'ok';
+    }
+
     function toggleFila(idx) {
+        if (!puedeSeleccionar(idx)) return;
         setIncluir((prev) => ({ ...prev, [idx]: !prev[idx] }));
     }
 
     function toggleTodas() {
-        const todas = filas.every((_, i) => incluir[i]);
+        const todas = filas.every((_, i) => incluir[i] || !puedeSeleccionar(i));
         const mapa = {};
-        filas.forEach((_, i) => { mapa[i] = !todas; });
+        filas.forEach((_, i) => {
+            if (puedeSeleccionar(i)) mapa[i] = !todas;
+        });
         setIncluir(mapa);
     }
 
@@ -144,7 +211,7 @@ export default function PasteModal({ abierto, onCerrar, gestionNombre, periodoNo
                                             <th className="py-2 pr-2 text-left">
                                                 <input
                                                     type="checkbox"
-                                                    checked={filas.every((_, i) => incluir[i])}
+                                                    checked={filas.every((_, i) => incluir[i] || !puedeSeleccionar(i))}
                                                     onChange={toggleTodas}
                                                     className="h-4 w-4 rounded border-gray-300 text-blue-900"
                                                 />
@@ -152,22 +219,30 @@ export default function PasteModal({ abierto, onCerrar, gestionNombre, periodoNo
                                             <th className="py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Materia</th>
                                             <th className="py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Grupo</th>
                                             <th className="py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Docente</th>
+                                            <th className="py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Estado</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {filas.map((fila, i) => (
+                                        {filas.map((fila, i) => {
+                                            const p = previewPara(i);
+                                            const sel = !!incluir[i];
+                                            const ok = !p || p.estado === 'ok';
+                                            return (
                                             <tr
                                                 key={i}
                                                 onClick={() => toggleFila(i)}
-                                                className={`cursor-pointer transition-colors ${incluir[i] ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+                                                className={`cursor-pointer transition-colors ${
+                                                    sel ? 'bg-blue-50/50' : ok ? 'hover:bg-gray-50' : 'bg-gray-50/30'
+                                                }`}
                                             >
                                                 <td className="py-2.5 pr-2">
                                                     <input
                                                         type="checkbox"
-                                                        checked={!!incluir[i]}
+                                                        checked={sel}
                                                         onChange={() => toggleFila(i)}
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="h-4 w-4 rounded border-gray-300 text-blue-900"
+                                                        disabled={!ok}
+                                                        className="h-4 w-4 rounded border-gray-300 text-blue-900 disabled:cursor-not-allowed disabled:opacity-40"
                                                     />
                                                 </td>
                                                 <td className="py-2.5">
@@ -176,19 +251,51 @@ export default function PasteModal({ abierto, onCerrar, gestionNombre, periodoNo
                                                 </td>
                                                 <td className="py-2.5 text-gray-600">{fila.grupo_codigo}</td>
                                                 <td className="py-2.5 text-gray-600">{fila.docente_nombre}</td>
+                                                <td className="py-2.5">
+                                                    {cargandoPreview ? (
+                                                        <span className="text-xs text-gray-400">…</span>
+                                                    ) : p ? (
+                                                        p.estado === 'ok' ? (
+                                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">
+                                                                <Icono tipo="check" className="h-3.5 w-3.5" />
+                                                                Listo
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700" title={p.motivo}>
+                                                                <Icono tipo="alerta" className="h-3.5 w-3.5" />
+                                                                {p.estado === 'grupo_ocupado' ? 'Ocupado' : 'Excede horas'}
+                                                            </span>
+                                                        )
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400">—</span>
+                                                    )}
+                                                </td>
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             )}
                         </div>
 
                         <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3">
-                            <p className="text-sm text-gray-500">
-                                <span className="font-medium text-gray-900">{seleccionadas.length}</span> de {filas.length} seleccionadas
-                                {' · '}
-                                Destino: {gestionNombre}/{periodoNombre}
-                            </p>
+                            <div className="text-sm text-gray-500">
+                                {preview && !cargandoPreview ? (
+                                    <span>
+                                        <span className="font-medium text-green-700">{preview.resumen.ok}</span> se pegarán
+                                        {preview.resumen.saltadas > 0 && (
+                                            <span className="ml-1">
+                                                · <span className="font-medium text-amber-700">{preview.resumen.saltadas}</span> se omitirán
+                                            </span>
+                                        )}
+                                    </span>
+                                ) : (
+                                    <span>
+                                        <span className="font-medium text-gray-900">{seleccionadas.length}</span> de {filas.length} seleccionadas
+                                    </span>
+                                )}
+                                {' · '}Destino: {gestionNombre}/{periodoNombre}
+                            </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={onCerrar}

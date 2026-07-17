@@ -8,6 +8,11 @@ class CargaAcademicaService
 {
     public const LIMITE_HORAS = 6;
 
+    public static function getLimite(): int
+    {
+        return (int) config('designaciones.limite_horas', self::LIMITE_HORAS);
+    }
+
     public function horasAsignadas(int $docenteId, int $gestionId, int $periodoId, ?int $excluirDesignacionId = null): int
     {
         return (int) Designacion::activas()

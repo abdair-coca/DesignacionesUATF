@@ -59,7 +59,7 @@ class DesignacionMasivaController extends Controller
                 }
 
                 $horasActuales = $cargaService->horasAsignadas($fila['Id_docente'], $gestionId, $periodoId);
-                if ($horasActuales + $grupo->materia->horas > CargaAcademicaService::LIMITE_HORAS) {
+                if ($horasActuales + $grupo->materia->horas > CargaAcademicaService::getLimite()) {
                     $saltadas++;
                     continue;
                 }
@@ -84,6 +84,70 @@ class DesignacionMasivaController extends Controller
             'creadas' => $creadas,
             'saltadas' => $saltadas,
             'creadas_ids' => $creadasIds,
+        ]);
+    }
+
+    /**
+     * Previsualizar pegado: valida filas sin crear nada.
+     * POST /designaciones/previsualizar-pegado  (JSON)
+     */
+    public function previsualizar(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'Id_gestion' => ['required', 'exists:gestiones,id'],
+            'Id_periodo' => ['required', 'exists:periodos,id'],
+            'filas' => ['required', 'array', 'min:1'],
+            'filas.*.Id_docente' => ['required', 'exists:docentes,id'],
+            'filas.*.Id_materia' => ['required', 'exists:materias,id'],
+            'filas.*.Id_grupo' => ['required', 'exists:grupos,id'],
+        ]);
+
+        $gestionId = (int) $data['Id_gestion'];
+        $periodoId = (int) $data['Id_periodo'];
+
+        $gruposOcupados = Designacion::activas()
+            ->forGestionPeriodo($gestionId, $periodoId)
+            ->pluck('Id_grupo')
+            ->toArray();
+
+        $cargaService = app(CargaAcademicaService::class);
+        $resultados = [];
+
+        foreach ($data['filas'] as $i => $fila) {
+            $grupoId = (int) $fila['Id_grupo'];
+            $estado = 'ok';
+            $motivo = null;
+
+            if (in_array($grupoId, $gruposOcupados)) {
+                $estado = 'grupo_ocupado';
+                $motivo = 'Este grupo ya tiene una designación activa en el periodo destino.';
+            }
+
+            if ($estado === 'ok') {
+                $horasActuales = $cargaService->horasAsignadas($fila['Id_docente'], $gestionId, $periodoId);
+                $grupo = Grupo::with('materia')->find($grupoId);
+                if ($grupo && $horasActuales + $grupo->materia->horas > CargaAcademicaService::getLimite()) {
+                    $estado = 'excede_horas';
+                    $motivo = 'El docente excede el límite de horas al añadir este grupo.';
+                }
+            }
+
+            $resultados[] = [
+                'idx' => $i,
+                'Id_docente' => $fila['Id_docente'],
+                'Id_materia' => $fila['Id_materia'],
+                'Id_grupo' => $grupoId,
+                'estado' => $estado,
+                'motivo' => $motivo,
+            ];
+        }
+
+        return response()->json([
+            'resultados' => $resultados,
+            'resumen' => [
+                'ok' => count(array_filter($resultados, fn ($r) => $r['estado'] === 'ok')),
+                'saltadas' => count(array_filter($resultados, fn ($r) => $r['estado'] !== 'ok')),
+            ],
         ]);
     }
 

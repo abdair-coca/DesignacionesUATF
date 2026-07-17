@@ -9,6 +9,7 @@ use App\Http\Controllers\GestionController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\PeriodoController;
+use App\Http\Controllers\RevisionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -35,12 +36,21 @@ Route::middleware('auth')->group(function () {
         ->name('designaciones.pegar');
     Route::post('designaciones/deshacer-pegado', [DesignacionMasivaController::class, 'deshacerPegado'])
         ->name('designaciones.deshacer-pegado');
+    Route::post('designaciones/previsualizar-pegado', [DesignacionMasivaController::class, 'previsualizar'])
+        ->name('designaciones.previsualizar-pegado');
 
     Route::resource('designaciones', DesignacionController::class)
         ->except('show')
         ->parameters(['designaciones' => 'designacion']);
     Route::get('designaciones/{designacion}/historial', [DesignacionController::class, 'historial'])
         ->name('designaciones.historial');
+
+    // Revisiones
+    Route::post('revisiones/solicitar', [RevisionController::class, 'solicitar'])->name('revisiones.solicitar');
+    Route::get('revisiones/pendientes', [RevisionController::class, 'pendientes'])->name('revisiones.pendientes');
+    Route::get('revisiones/{revision}/revisar', [RevisionController::class, 'revisar'])->name('revisiones.revisar');
+    Route::post('revisiones/{revision}/procesar', [RevisionController::class, 'procesar'])->name('revisiones.procesar');
+    Route::post('revisiones/{revision}/completar', [RevisionController::class, 'completar'])->name('revisiones.completar');
 });
 
 require __DIR__.'/auth.php';

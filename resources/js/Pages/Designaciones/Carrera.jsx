@@ -80,6 +80,8 @@ export default function Carrera({
     gestiones,
     periodos,
     limiteHoras,
+    revision,
+    is_admin,
     filtros,
 }) {
     const [tab, setTab] = useState('roster');
@@ -90,12 +92,49 @@ export default function Carrera({
     const [histoAbierto, setHistoAbierto] = useState(null);
     const [guardando, setGuardando] = useState(false);
     const [mostrarPegar, setMostrarPegar] = useState(false);
+    const [enviando, setEnviando] = useState(false);
     const seleccion = useSelection();
     const seleccionRef = useRef(seleccion);
     seleccionRef.current = seleccion;
 
     const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
     const periodoNombre = periodos.find((p) => String(p.id) === filtros.periodo_id)?.nombre ?? '';
+
+    async function enviarARevision() {
+        setEnviando(true);
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content
+                ?? document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]
+                ?? '';
+
+            const res = await fetch(route('revisiones.solicitar'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': decodeURIComponent(token),
+                },
+                body: JSON.stringify({
+                    carrera_id: carrera.id,
+                    Id_gestion: filtros.gestion_id,
+                    Id_periodo: filtros.periodo_id,
+                }),
+            });
+
+            const json = await res.json();
+
+            if (json.success) {
+                router.reload({ only: ['revision'] });
+            } else if (json.error) {
+                alert(json.error);
+            }
+        } catch {
+            alert('Error al enviar a revisión. Intente de nuevo.');
+        } finally {
+            setEnviando(false);
+        }
+    }
 
     const copiarSeleccionadas = useCallback(() => {
         const sel = seleccionRef.current;
@@ -795,6 +834,57 @@ export default function Carrera({
                                 </div>
                             ))}
                         </dl>
+                    </div>
+
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
+                        <h3 className="mb-3 font-semibold tracking-tight text-gray-900">Estado de revisión</h3>
+                        {!revision ? (
+                            <>
+                                <p className="mb-3 text-sm text-gray-500">Sin enviar a revisión</p>
+                                {!is_admin && (
+                                    <button
+                                        onClick={enviarARevision}
+                                        disabled={enviando}
+                                        className="w-full rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        {enviando ? 'Enviando…' : 'Enviar a revisión'}
+                                    </button>
+                                )}
+                            </>
+                        ) : revision.estado === 'pendiente' ? (
+                            <>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                                        <Icono tipo="reloj" className="h-3.5 w-3.5" />
+                                    </span>
+                                    <span className="text-sm font-medium text-amber-800">En revisión</span>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    Enviado por {revision.solicitante} el {revision.solicitado_en}
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-700">
+                                        <Icono tipo="check" className="h-3.5 w-3.5" />
+                                    </span>
+                                    <span className="text-sm font-medium text-green-800">Revisado</span>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    Revisado por {revision.revisor} el {revision.revisado_en}
+                                </p>
+                                {!is_admin && (
+                                    <button
+                                        onClick={enviarARevision}
+                                        disabled={enviando}
+                                        className="mt-3 w-full rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        {enviando ? 'Enviando…' : 'Enviar de nuevo'}
+                                    </button>
+                                )}
+                            </>
+                        )}
                     </div>
 
                     <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">

@@ -150,7 +150,7 @@ class DesignacionReportService
             ->get();
 
         $docentesBajoLimite = $docentesConHoras
-            ->filter(fn ($docente) => (int) $docente->horas < CargaAcademicaService::LIMITE_HORAS)
+            ->filter(fn ($docente) => (int) $docente->horas < CargaAcademicaService::getLimite())
             ->map(fn ($docente) => ['id' => $docente->id, 'nombre' => $docente->nombre, 'horas' => (int) $docente->horas])
             ->values();
 
@@ -162,7 +162,7 @@ class DesignacionReportService
                 'rechazada' => (int) ($porEstado['rechazada'] ?? 0),
             ],
             'docentesBajoLimite' => $docentesBajoLimite,
-            'limiteHoras' => CargaAcademicaService::LIMITE_HORAS,
+            'limiteHoras' => CargaAcademicaService::getLimite(),
         ];
     }
 
@@ -256,8 +256,8 @@ class DesignacionReportService
         return [
             'horasActuales' => $horasActuales,
             'horasProyectadas' => $horasProyectadas,
-            'limite' => CargaAcademicaService::LIMITE_HORAS,
-            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > CargaAcademicaService::LIMITE_HORAS,
+            'limite' => CargaAcademicaService::getLimite(),
+            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > CargaAcademicaService::getLimite(),
             'hayChoque' => $hayChoque,
         ];
     }

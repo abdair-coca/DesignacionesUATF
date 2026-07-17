@@ -11,6 +11,7 @@ use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
+use App\Models\Revision;
 use App\Support\CargaAcademicaService;
 use App\Support\DesignacionReportService;
 use Illuminate\Http\RedirectResponse;
@@ -144,6 +145,14 @@ class DesignacionController extends Controller
         $roster = $this->construirRoster($grupos, $designaciones, $gestionId, $periodoId);
         $historialPorGrupo = $this->historialPorGrupo($grupos->pluck('id'));
 
+        // Ultima revision de esta carrera+gestion+periodo
+        $revision = Revision::with(['solicitante:id,name', 'revisor:id,name'])
+            ->where('carrera_id', $carrera->id)
+            ->where('Id_gestion', $gestionId)
+            ->where('Id_periodo', $periodoId)
+            ->latest('id')
+            ->first();
+
         return Inertia::render('Designaciones/Carrera', [
             'carrera' => $carrera,
             'materias' => $materias,
@@ -160,7 +169,16 @@ class DesignacionController extends Controller
                 ]),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
-            'limiteHoras' => CargaAcademicaService::LIMITE_HORAS,
+            'limiteHoras' => CargaAcademicaService::getLimite(),
+            'revision' => $revision ? [
+                'id' => $revision->id,
+                'estado' => $revision->estado,
+                'solicitante' => $revision->solicitante->name,
+                'solicitado_en' => $revision->solicitado_en?->format('d/m/Y H:i'),
+                'revisor' => $revision->revisor?->name,
+                'revisado_en' => $revision->revisado_en?->format('d/m/Y H:i'),
+            ] : null,
+            'is_admin' => $request->user()->is_admin,
             'filtros' => [
                 'gestion_id' => (string) $gestionId,
                 'periodo_id' => (string) $periodoId,
@@ -217,7 +235,7 @@ class DesignacionController extends Controller
                     $data['Id_periodo']
                 );
 
-                if ($horasActuales + $horasGrupo > CargaAcademicaService::LIMITE_HORAS) {
+                if ($horasActuales + $horasGrupo > CargaAcademicaService::getLimite()) {
                     $saltados++;
 
                     continue;
@@ -258,7 +276,7 @@ class DesignacionController extends Controller
                     + $grupo->materia->horas;
 
                 $aviso = [
-                    'excedeLimite' => $horasProyectadas > CargaAcademicaService::LIMITE_HORAS,
+                    'excedeLimite' => $horasProyectadas > CargaAcademicaService::getLimite(),
                     'horasProyectadas' => $horasProyectadas,
                     'hayChoque' => $this->cargaAcademica->hayChoque($grupo->id, $gestionId, $periodoId, $actual->id),
                 ];
@@ -386,7 +404,7 @@ class DesignacionController extends Controller
         if ($gestionId && $periodoId) {
             $docentes = $docentes->filter(function (Docente $docente) use ($gestionId, $periodoId) {
                 $horas = $this->cargaAcademica->horasAsignadas($docente->id, $gestionId, $periodoId);
-                return $horas < CargaAcademicaService::LIMITE_HORAS;
+                return $horas < CargaAcademicaService::getLimite();
             })->values();
         }
 
