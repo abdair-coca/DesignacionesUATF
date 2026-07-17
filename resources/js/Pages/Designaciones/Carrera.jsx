@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { Icono } from '../../Components/Icono';
@@ -8,6 +8,8 @@ import MenuFlotante from '../../Components/MenuFlotante';
 import ComboboxDocente from '../../Components/ComboboxDocente';
 import Badge from '../../Components/Badge';
 import paletaIcono from '../../Components/paletaIcono';
+import { useSelection } from '../../Hooks/useSelection';
+import { useClipboard } from '../../Components/ClipboardContext';
 
 const badgesDesignacion = {
     aprobada: { tono: 'verde', icono: 'check', etiqueta: 'Aprobada' },
@@ -87,6 +89,58 @@ export default function Carrera({
     const [histoAbierto, setHistoAbierto] = useState(null);
     const [guardando, setGuardando] = useState(false);
     const porPagina = 10;
+
+    const seleccion = useSelection();
+    const { copy } = useClipboard();
+
+    const copiarSeleccionadas = useCallback(() => {
+        if (seleccion.count === 0) return;
+
+        const filasACopiar = seleccion.selectedIds.map((id) => {
+            const fila = roster.find((f) => String(f.id) === String(id));
+            if (!fila) return null;
+            return {
+                Id_docente: fila.designacion?.docente?.id ?? null,
+                Id_materia: fila.materia.id,
+                Id_grupo: fila.id,
+                materia_sigla: fila.materia.sigla,
+                materia_nombre: fila.materia.nombre,
+                docente_nombre: fila.designacion?.docente?.nombre ?? 'Sin asignar',
+                horas: fila.horas,
+                carrera_sigla: carrera.sigla,
+                carrera_id: carrera.id,
+                grupo_codigo: fila.codigo,
+            };
+        }).filter(Boolean);
+
+        if (filasACopiar.length === 0) return;
+
+        copy(filasACopiar, {
+            gestion_id: filtros.gestion_id,
+            gestion_nombre: gestionNombre,
+            periodo_id: filtros.periodo_id,
+            periodo_nombre: periodoNombre,
+            carrera_id: carrera.id,
+        });
+
+        seleccion.clearAll();
+    }, [seleccion, roster, carrera, filtros, copy, gestionNombre, periodoNombre]);
+
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                seleccion.clearAll();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                if (seleccion.count > 0 && !window.getSelection().toString()) {
+                    e.preventDefault();
+                    copiarSeleccionadas();
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [seleccion, copiarSeleccionadas]);
 
     const gestionNombre = gestiones.find((g) => String(g.id) === filtros.gestion_id)?.nombre ?? '';
     const periodoNombre = periodos.find((p) => String(p.id) === filtros.periodo_id)?.nombre ?? '';
@@ -213,15 +267,6 @@ export default function Carrera({
     ];
 
     const accionesRapidas = [
-        {
-            etiqueta: 'Copiar designaciones',
-            tipo: 'copiar',
-            href: route('designaciones.copiar', {
-                carrera_id: carrera.id,
-                gestion_destino_id: filtros.gestion_id,
-                periodo_destino_id: filtros.periodo_id,
-            }),
-        },
         {
             etiqueta: 'Ver designaciones',
             tipo: 'ojo',
@@ -402,6 +447,16 @@ export default function Carrera({
                             <Icono tipo="embudo" className="h-4 w-4" />
                             Filtros
                         </button>
+
+                        {seleccion.count > 0 && (
+                            <button
+                                onClick={copiarSeleccionadas}
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
+                            >
+                                <Icono tipo="copiar" className="h-4 w-4" />
+                                Copiar ({seleccion.count})
+                            </button>
+                        )}
                     </div>
 
                     <div className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
@@ -435,11 +490,19 @@ export default function Carrera({
                                             const historial = historialPorGrupo[fila.id] ?? [];
                                             const esDirty = fila.id in cambios;
                                             const estadoBadge = badgesDesignacion[fila.designacion?.estado ?? 'sin_asignar'];
+                                            const estaSeleccionada = seleccion.isSelected(String(fila.id));
 
                                             return (
                                                 <tr
                                                     key={fila.id}
-                                                    className={`fila-entra transition-colors hover:bg-gray-50/60 ${esDirty ? 'bg-blue-50/40' : ''}`}
+                                                    onClick={(e) => seleccion.toggle(String(fila.id), e.ctrlKey || e.metaKey)}
+                                                    className={`fila-entra transition-colors cursor-pointer ${
+                                                        estaSeleccionada
+                                                            ? 'bg-blue-50 ring-1 ring-inset ring-blue-300'
+                                                            : esDirty
+                                                                ? 'bg-blue-50/40 hover:bg-blue-50/60'
+                                                                : 'hover:bg-gray-50/60'
+                                                    }`}
                                                     style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                                 >
                                                     <td className="px-4 py-3.5">
@@ -564,10 +627,17 @@ export default function Carrera({
                                                 </td>
                                             </tr>
                                         )}
-                                        {visibles.map((designacion, indice) => (
+                                        {visibles.map((designacion, indice) => {
+                                            const estaSeleccionada = seleccion.isSelected(String(designacion.id));
+                                            return (
                                             <tr
                                                 key={designacion.id}
-                                                className="fila-entra transition-colors hover:bg-gray-50/60"
+                                                onClick={(e) => seleccion.toggle(String(designacion.id), e.ctrlKey || e.metaKey)}
+                                                className={`fila-entra transition-colors cursor-pointer ${
+                                                    estaSeleccionada
+                                                        ? 'bg-blue-50 ring-1 ring-inset ring-blue-300'
+                                                        : 'hover:bg-gray-50/60'
+                                                }`}
                                                 style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                             >
                                                 <td className="px-4 py-3.5 font-medium text-gray-900">{designacion.docente.nombre}</td>
@@ -584,7 +654,8 @@ export default function Carrera({
                                                     </Badge>
                                                 </td>
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             )}
