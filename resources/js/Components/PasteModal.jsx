@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import axios from 'axios';
 import { Icono } from './Icono';
 import { clipboardRead, clipboardClear } from '../Hooks/useClipboard';
 
@@ -48,17 +47,30 @@ export default function PasteModal({ abierto, onCerrar, gestionNombre, periodoNo
         setProcesando(true);
 
         try {
-            const res = await axios.post(route('designaciones.pegar'), {
-                Id_gestion: filtros.gestion_id,
-                Id_periodo: filtros.periodo_id,
-                filas: seleccionadas.map((f) => ({
-                    Id_docente: f.Id_docente,
-                    Id_materia: f.Id_materia,
-                    Id_grupo: f.Id_grupo,
-                })),
+            const token = document.querySelector('meta[name="csrf-token"]')?.content
+                ?? document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]
+                ?? '';
+
+            const res = await fetch(route('designaciones.pegar'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': decodeURIComponent(token),
+                },
+                body: JSON.stringify({
+                    Id_gestion: filtros.gestion_id,
+                    Id_periodo: filtros.periodo_id,
+                    filas: seleccionadas.map((f) => ({
+                        Id_docente: f.Id_docente,
+                        Id_materia: f.Id_materia,
+                        Id_grupo: f.Id_grupo,
+                    })),
+                }),
             });
 
-            const json = res.data;
+            const json = await res.json();
             clipboardClear();
             setResultado(json);
 
@@ -75,11 +87,23 @@ export default function PasteModal({ abierto, onCerrar, gestionNombre, periodoNo
     function deshacer() {
         if (!resultado?.creadas_ids?.length) return;
 
-        axios.post(route('designaciones.deshacer-pegado'), { ids: resultado.creadas_ids })
-            .then(() => {
-                setResultado(null);
-                router.reload({ only: ['materias', 'designaciones', 'roster', 'historialPorGrupo'] });
-            });
+        const token = document.querySelector('meta[name="csrf-token"]')?.content
+            ?? document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]
+            ?? '';
+
+        fetch(route('designaciones.deshacer-pegado'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': decodeURIComponent(token),
+            },
+            body: JSON.stringify({ ids: resultado.creadas_ids }),
+        }).then(() => {
+            setResultado(null);
+            router.reload({ only: ['materias', 'designaciones', 'roster', 'historialPorGrupo'] });
+        });
     }
 
     const esMismaCarrera = data.origen?.carrera_id === filtros.carrera_id;

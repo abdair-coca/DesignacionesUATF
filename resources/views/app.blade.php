@@ -6,6 +6,7 @@
 
         <title inertia>{{ config('app.name', 'Designación de Docentes UATF') }}</title>
 
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         @fonts
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.jsx'])
