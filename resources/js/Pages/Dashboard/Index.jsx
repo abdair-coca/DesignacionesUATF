@@ -122,10 +122,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
         { etiqueta: 'Rechazadas', cantidad: conteoEstado.rechazada, punto: 'bg-red-500' }
     ];
 
-    const accionesRapidas = [
-        { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
-        ...(is_admin ? [{ etiqueta: `Revisiones pendientes (${revisionesPendientes})`, tipo: 'reloj', href: route('revisiones.pendientes') }] : []),
-    ];
+
 
     const gruposPaginados = gruposSinDesignar.slice((paginaGrupos - 1) * itemsPorPagina, paginaGrupos * itemsPorPagina);
     const docentesPaginados = docentesBajoLimite.slice((paginaDocentes - 1) * itemsPorPagina, paginaDocentes * itemsPorPagina);
@@ -199,11 +196,31 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
         <AppLayout>
             <div className="flex flex-col gap-6 xl:flex-row items-stretch mb-6">
                 <div className="min-w-0 flex-1 flex flex-col justify-between">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Estado de designaciones para la gestión y periodo seleccionados.
-                        </p>
+                    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Estado de designaciones para la gestión y periodo seleccionados.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Link
+                                href={route('designaciones.create')}
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
+                            >
+                                <Icono tipo="mas" className="h-4 w-4" />
+                                Nueva designación
+                            </Link>
+                            {is_admin && (
+                                <Link
+                                    href={route('revisiones.pendientes')}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-800 shadow-sm transition-colors hover:bg-amber-100 active:scale-[0.98]"
+                                >
+                                    <Icono tipo="reloj" className="h-4 w-4" />
+                                    Revisiones pendientes ({revisionesPendientes})
+                                </Link>
+                            )}
+                        </div>
                     </div>
                     <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3 2xl:grid-cols-7">
                         {/* Progreso General Card */}
