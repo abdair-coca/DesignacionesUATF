@@ -213,16 +213,22 @@ class DesignacionController extends Controller
                 $grupo = Grupo::with('materia')->find($cambio['Id_grupo']);
                 $horasGrupo = $grupo->materia->horas;
 
-                // Choque: ya hay designación activa para este grupo en gestión/periodo
-                $existente = Designacion::activas()
-                    ->forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
+                // Buscar designacion existente (incluye rechazadas)
+                $existente = Designacion::forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
                     ->where('Id_grupo', $cambio['Id_grupo'])
                     ->first();
 
                 if ($existente) {
+                    $nuevoEstado = $existente->estado;
+                    if ($existente->estado === 'rechazada') {
+                        $nuevoEstado = 'propuesta';
+                    } elseif ($existente->estado === 'aprobada' && (int) $existente->Id_docente !== (int) $cambio['Id_docente']) {
+                        $nuevoEstado = 'propuesta';
+                    }
+
                     $existente->update([
                         'Id_docente' => $cambio['Id_docente'],
-                        'estado' => $existente->estado === 'rechazada' ? 'propuesta' : $existente->estado,
+                        'estado' => $nuevoEstado,
                     ]);
 
                     continue;

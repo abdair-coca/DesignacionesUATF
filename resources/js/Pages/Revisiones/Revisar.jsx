@@ -181,11 +181,11 @@ export default function Revisar({ revision, designaciones }) {
                         </div>
 
                         <div className="flex gap-2">
-                            {pendientes.length > 0 && (
+                            {designaciones.length > 0 && (
                                 <>
                                     <button
                                         onClick={() => {
-                                            pendientes.forEach((d) => marcar(d.id, 'aprobar'));
+                                            designaciones.forEach((d) => marcar(d.id, 'aprobar'));
                                         }}
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-800 transition-colors hover:bg-green-100"
                                     >
@@ -194,7 +194,7 @@ export default function Revisar({ revision, designaciones }) {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            pendientes.forEach((d) => marcar(d.id, 'rechazar'));
+                                            designaciones.forEach((d) => marcar(d.id, 'rechazar'));
                                         }}
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-800 transition-colors hover:bg-red-100"
                                     >
@@ -253,41 +253,37 @@ export default function Revisar({ revision, designaciones }) {
                                                 </Badge>
                                             </td>
                                             <td className="px-4 py-3.5">
-                                                {d.estado === 'propuesta' ? (
-                                                    <div className="flex gap-1.5">
-                                                        <button
-                                                            onClick={() => marcar(d.id, 'aprobar')}
-                                                            disabled={accion === 'aprobar'}
-                                                            className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                                                                accion === 'aprobar'
-                                                                    ? 'bg-green-100 text-green-800 ring-1 ring-inset ring-green-300'
-                                                                    : 'border border-green-200 text-green-700 hover:bg-green-50'
-                                                            }`}
-                                                        >
-                                                            {accion === 'aprobar' ? '✓ Aprobada' : 'Aprobar'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => marcar(d.id, 'rechazar')}
-                                                            disabled={accion === 'rechazar'}
-                                                            className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                                                                accion === 'rechazar'
-                                                                    ? 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-300'
-                                                                    : 'border border-red-200 text-red-700 hover:bg-red-50'
-                                                            }`}
-                                                        >
-                                                            {accion === 'rechazar' ? '✗ Rechazada' : 'Rechazar'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => desmarcar(d.id)}
-                                                            disabled={!accion}
-                                                            className="rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-0"
-                                                        >
-                                                            <Icono tipo="cerrar" className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-gray-400">—</span>
-                                                )}
+                                                <div className="flex gap-1.5">
+                                                    <button
+                                                        onClick={() => marcar(d.id, 'aprobar')}
+                                                        disabled={accion === 'aprobar'}
+                                                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                                                            accion === 'aprobar'
+                                                                ? 'bg-green-100 text-green-800 ring-1 ring-inset ring-green-300'
+                                                                : 'border border-green-200 text-green-700 hover:bg-green-50'
+                                                        }`}
+                                                    >
+                                                        {accion === 'aprobar' ? '✓ Aprobada' : 'Aprobar'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => marcar(d.id, 'rechazar')}
+                                                        disabled={accion === 'rechazar'}
+                                                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                                                            accion === 'rechazar'
+                                                                ? 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-300'
+                                                                : 'border border-red-200 text-red-700 hover:bg-red-50'
+                                                        }`}
+                                                    >
+                                                        {accion === 'rechazar' ? '✗ Rechazada' : 'Rechazar'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => desmarcar(d.id)}
+                                                        disabled={!accion}
+                                                        className="rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-0"
+                                                    >
+                                                        <Icono tipo="cerrar" className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );
