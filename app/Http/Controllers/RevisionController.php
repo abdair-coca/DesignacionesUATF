@@ -93,17 +93,34 @@ class RevisionController extends Controller
             abort(403);
         }
 
-        $revision->load(['carrera', 'solicitante', 'gestion', 'periodo']);
+        $revision->load(['carrera:id,sigla,nombre', 'solicitante:id,name', 'gestion:id,nombre', 'periodo:id,nombre']);
 
-        $designaciones = Designacion::with(['docente', 'materia', 'grupo'])
+        $designaciones = Designacion::with(['docente:id,nombre', 'materia:id,sigla,nombre', 'grupo:id,codigo'])
             ->where('Id_gestion', $revision->Id_gestion)
             ->where('Id_periodo', $revision->Id_periodo)
             ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
             ->orderBy('Id_materia')
-            ->get();
+            ->get()
+            ->map(fn (Designacion $d) => [
+                'id' => $d->id,
+                'docente_nombre' => $d->docente?->nombre ?? 'Sin asignar',
+                'materia_sigla' => $d->materia->sigla,
+                'materia_nombre' => $d->materia->nombre,
+                'grupo_codigo' => $d->grupo->codigo,
+                'estado' => $d->estado,
+            ]);
 
         return Inertia::render('Revisiones/Revisar', [
-            'revision' => $revision,
+            'revision' => [
+                'id' => $revision->id,
+                'carrera_nombre' => $revision->carrera->nombre,
+                'carrera_sigla' => $revision->carrera->sigla,
+                'gestion_nombre' => $revision->gestion->nombre,
+                'periodo_nombre' => $revision->periodo->nombre,
+                'solicitante' => $revision->solicitante->name,
+                'solicitado_en' => $revision->solicitado_en?->format('d/m/Y H:i'),
+                'estado' => $revision->estado,
+            ],
             'designaciones' => $designaciones,
         ]);
     }
