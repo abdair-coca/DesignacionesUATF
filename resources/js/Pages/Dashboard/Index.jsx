@@ -85,7 +85,7 @@ function DashboardStatTile({ tipo, tono, titulo, valor, subtitulo }) {
     );
 }
 
-export default function Index({ gestiones, periodos, filtros, gruposSinDesignar, conteoEstado, docentesBajoLimite, limiteHoras, resumenCarreras, evolucion }) {
+export default function Index({ gestiones, periodos, filtros, gruposSinDesignar, conteoEstado, docentesBajoLimite, limiteHoras, resumenCarreras, evolucion, is_admin, revisionesPendientes }) {
     const [tabActiva, setTabActiva] = useState('grupos');
     const [paginaGrupos, setPaginaGrupos] = useState(1);
     const [paginaDocentes, setPaginaDocentes] = useState(1);
@@ -124,6 +124,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
 
     const accionesRapidas = [
         { etiqueta: 'Nueva designación', tipo: 'mas', href: route('designaciones.create') },
+        ...(is_admin ? [{ etiqueta: `Revisiones pendientes (${revisionesPendientes})`, tipo: 'reloj', href: route('revisiones.pendientes') }] : []),
     ];
 
     const gruposPaginados = gruposSinDesignar.slice((paginaGrupos - 1) * itemsPorPagina, paginaGrupos * itemsPorPagina);

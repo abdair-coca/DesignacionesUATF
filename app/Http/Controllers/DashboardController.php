@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gestion;
 use App\Models\Periodo;
+use App\Models\Revision;
 use App\Support\DesignacionReportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,6 +28,8 @@ class DashboardController extends Controller
         $resumenCarreras = $this->reportes->resumenPorCarrera($gestionId, $periodoId);
         $evolucion = $this->reportes->evolucionDesignaciones($gestionId, $periodoId);
 
+        $revisionesPendientes = Revision::where('estado', 'pendiente')->count();
+
         return Inertia::render('Dashboard/Index', array_merge([
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
@@ -36,6 +39,8 @@ class DashboardController extends Controller
             ],
             'resumenCarreras' => $resumenCarreras,
             'evolucion' => $evolucion,
+            'is_admin' => $request->user()->is_admin,
+            'revisionesPendientes' => $revisionesPendientes,
         ], $datos));
     }
 }
