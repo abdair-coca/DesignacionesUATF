@@ -75,7 +75,11 @@ export default function Revisar({ revision, designaciones }) {
     }
 
     async function completarRevision() {
-        if (procesadas.length === 0 && accionesCount === 0) {
+        if (accionesCount > 0 && procesadas.length === 0) {
+            alert('Seleccionó acciones sin aplicar. Haga clic en "Aplicar" primero.');
+            return;
+        }
+        if (procesadas.length === 0) {
             alert('Debe aprobar o rechazar al menos una designación.');
             return;
         }
