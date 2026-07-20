@@ -174,7 +174,7 @@ class RevisionController extends Controller
 
     /**
      * POST /revisiones/{revision}/completar
-     * Admin marca la revision como completada.
+     * Admin marca la revision como completada y opcionalmente procesa acciones pendientes.
      */
     public function completar(Request $request, Revision $revision): JsonResponse
     {
@@ -186,11 +186,40 @@ class RevisionController extends Controller
             return response()->json(['error' => 'Esta revisión ya fue completada.'], 422);
         }
 
-        $revision->update([
-            'estado' => 'revisado',
-            'revisado_por' => $request->user()->id,
-            'revisado_en' => now(),
+        $data = $request->validate([
+            'acciones' => ['nullable', 'array'],
+            'acciones.*.id' => ['required_with:acciones', 'exists:designaciones,id'],
+            'acciones.*.accion' => ['required_with:acciones', 'in:aprobar,rechazar'],
         ]);
+
+        DB::transaction(function () use ($revision, $data, $request) {
+            if (! empty($data['acciones'])) {
+                foreach ($data['acciones'] as $accion) {
+                    $designacion = Designacion::find($accion['id']);
+
+                    if (! $designacion) {
+                        continue;
+                    }
+
+                    if ($accion['accion'] === 'aprobar') {
+                        $designacion->update([
+                            'estado' => 'aprobada',
+                            'aprobado_por' => $request->user()->id,
+                        ]);
+                    } else {
+                        $designacion->update([
+                            'estado' => 'rechazada',
+                        ]);
+                    }
+                }
+            }
+
+            $revision->update([
+                'estado' => 'revisado',
+                'revisado_por' => $request->user()->id,
+                'revisado_en' => now(),
+            ]);
+        });
 
         return response()->json(['success' => true]);
     }

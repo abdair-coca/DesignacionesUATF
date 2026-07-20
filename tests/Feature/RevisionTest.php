@@ -277,4 +277,71 @@ class RevisionTest extends TestCase
         $response->assertStatus(200)
             ->assertInertia(fn ($page) => $page->component('Revisiones/Pendientes'));
     }
+
+    public function test_admin_completa_revision_y_procesa_acciones_pendientes_en_un_solo_paso(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $carrera = Carrera::factory()->create();
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $materia1 = Materia::factory()->create(['carrera_id' => $carrera->id]);
+        $grupo1 = Grupo::factory()->create(['materia_id' => $materia1->id]);
+        $designacion1 = Designacion::factory()->create([
+            'Id_materia' => $materia1->id,
+            'Id_grupo' => $grupo1->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'estado' => 'propuesta',
+        ]);
+
+        $materia2 = Materia::factory()->create(['carrera_id' => $carrera->id]);
+        $grupo2 = Grupo::factory()->create(['materia_id' => $materia2->id]);
+        $designacion2 = Designacion::factory()->create([
+            'Id_materia' => $materia2->id,
+            'Id_grupo' => $grupo2->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'estado' => 'propuesta',
+        ]);
+
+        $revision = Revision::create([
+            'carrera_id' => $carrera->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => User::factory()->create()->id,
+            'solicitado_en' => now(),
+            'estado' => 'pendiente',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson("/revisiones/{$revision->id}/completar", [
+                'acciones' => [
+                    ['id' => $designacion1->id, 'accion' => 'aprobar'],
+                    ['id' => $designacion2->id, 'accion' => 'rechazar'],
+                ],
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('designaciones', [
+            'id' => $designacion1->id,
+            'estado' => 'aprobada',
+            'aprobado_por' => $admin->id,
+        ]);
+
+        $this->assertDatabaseHas('designaciones', [
+            'id' => $designacion2->id,
+            'estado' => 'rechazada',
+        ]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'id' => $revision->id,
+            'estado' => 'revisado',
+            'revisado_por' => $admin->id,
+        ]);
+    }
 }

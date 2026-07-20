@@ -75,11 +75,8 @@ export default function Revisar({ revision, designaciones }) {
     }
 
     async function completarRevision() {
-        if (accionesCount > 0 && procesadas.length === 0) {
-            alert('Seleccionó acciones sin aplicar. Haga clic en "Aplicar" primero.');
-            return;
-        }
-        if (procesadas.length === 0) {
+        const entries = Object.entries(acciones);
+        if (entries.length === 0 && procesadas.length === 0) {
             alert('Debe aprobar o rechazar al menos una designación.');
             return;
         }
@@ -99,6 +96,9 @@ export default function Revisar({ revision, designaciones }) {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-XSRF-TOKEN': decodeURIComponent(token),
                 },
+                body: JSON.stringify({
+                    acciones: entries.map(([id, accion]) => ({ id, accion })),
+                }),
             });
 
             const json = await res.json();
@@ -234,7 +234,12 @@ export default function Revisar({ revision, designaciones }) {
                             <tbody className="divide-y divide-gray-100">
                                 {designaciones.map((d) => {
                                     const accion = accionPara(d.id);
-                                    const badge = BADGES_ESTADO[d.estado];
+                                    const estadoEfectivo = accion === 'aprobar'
+                                        ? 'aprobada'
+                                        : accion === 'rechazar'
+                                            ? 'rechazada'
+                                            : d.estado;
+                                    const badge = BADGES_ESTADO[estadoEfectivo];
                                     return (
                                         <tr
                                             key={d.id}
