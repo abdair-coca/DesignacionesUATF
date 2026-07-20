@@ -300,6 +300,7 @@ class DesignacionController extends Controller
                 'designacion' => $actual ? [
                     'id' => $actual->id,
                     'estado' => $actual->estado,
+                    'motivo_rechazo' => $actual->motivo_rechazo,
                     'docente' => ['id' => $actual->docente->id, 'nombre' => $actual->docente->nombre],
                 ] : null,
                 'aviso' => $aviso,

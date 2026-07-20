@@ -108,6 +108,7 @@ class RevisionController extends Controller
                 'materia_nombre' => $d->materia->nombre,
                 'grupo_codigo' => $d->grupo->codigo,
                 'estado' => $d->estado,
+                'motivo_rechazo' => $d->motivo_rechazo,
             ]);
 
         return Inertia::render('Revisiones/Revisar', [
@@ -143,6 +144,7 @@ class RevisionController extends Controller
             'acciones' => ['required', 'array', 'min:1'],
             'acciones.*.id' => ['required', 'exists:designaciones,id'],
             'acciones.*.accion' => ['required', 'in:aprobar,rechazar'],
+            'acciones.*.motivo_rechazo' => ['nullable', 'string', 'max:500'],
         ]);
 
         DB::transaction(function () use ($data, $request) {
@@ -157,10 +159,12 @@ class RevisionController extends Controller
                     $designacion->update([
                         'estado' => 'aprobada',
                         'aprobado_por' => $request->user()->id,
+                        'motivo_rechazo' => null,
                     ]);
                 } else {
                     $designacion->update([
                         'estado' => 'rechazada',
+                        'motivo_rechazo' => $accion['motivo_rechazo'] ?? null,
                     ]);
                 }
             }
@@ -190,6 +194,7 @@ class RevisionController extends Controller
             'acciones' => ['nullable', 'array'],
             'acciones.*.id' => ['required_with:acciones', 'exists:designaciones,id'],
             'acciones.*.accion' => ['required_with:acciones', 'in:aprobar,rechazar'],
+            'acciones.*.motivo_rechazo' => ['nullable', 'string', 'max:500'],
         ]);
 
         DB::transaction(function () use ($revision, $data, $request) {
@@ -205,10 +210,12 @@ class RevisionController extends Controller
                         $designacion->update([
                             'estado' => 'aprobada',
                             'aprobado_por' => $request->user()->id,
+                            'motivo_rechazo' => null,
                         ]);
                     } else {
                         $designacion->update([
                             'estado' => 'rechazada',
+                            'motivo_rechazo' => $accion['motivo_rechazo'] ?? null,
                         ]);
                     }
                 }

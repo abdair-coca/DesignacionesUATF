@@ -21,8 +21,18 @@ export default function Revisar({ revision, designaciones }) {
     const procesadas = designaciones.filter((d) => d.estado !== 'propuesta');
     const accionesCount = Object.keys(acciones).length;
 
-    function marcar(id, accion) {
-        setAcciones((prev) => ({ ...prev, [id]: accion }));
+    function marcar(id, accion, motivo = '') {
+        setAcciones((prev) => ({
+            ...prev,
+            [id]: { accion, motivo_rechazo: prev[id]?.motivo_rechazo ?? motivo },
+        }));
+    }
+
+    function cambiarMotivo(id, motivo) {
+        setAcciones((prev) => ({
+            ...prev,
+            [id]: { ...(prev[id] || { accion: 'rechazar' }), motivo_rechazo: motivo },
+        }));
     }
 
     function desmarcar(id) {
@@ -34,7 +44,11 @@ export default function Revisar({ revision, designaciones }) {
     }
 
     function accionPara(id) {
-        return acciones[id] ?? null;
+        return acciones[id]?.accion ?? null;
+    }
+
+    function motivoPara(id) {
+        return acciones[id]?.motivo_rechazo ?? '';
     }
 
     async function enviarAcciones() {
@@ -57,7 +71,11 @@ export default function Revisar({ revision, designaciones }) {
                     'X-XSRF-TOKEN': decodeURIComponent(token),
                 },
                 body: JSON.stringify({
-                    acciones: entries.map(([id, accion]) => ({ id, accion })),
+                    acciones: entries.map(([id, data]) => ({
+                        id,
+                        accion: data.accion,
+                        motivo_rechazo: data.motivo_rechazo || null,
+                    })),
                 }),
             });
 
@@ -97,7 +115,11 @@ export default function Revisar({ revision, designaciones }) {
                     'X-XSRF-TOKEN': decodeURIComponent(token),
                 },
                 body: JSON.stringify({
-                    acciones: entries.map(([id, accion]) => ({ id, accion })),
+                    acciones: entries.map(([id, data]) => ({
+                        id,
+                        accion: data.accion,
+                        motivo_rechazo: data.motivo_rechazo || null,
+                    })),
                 }),
             });
 
@@ -260,6 +282,11 @@ export default function Revisar({ revision, designaciones }) {
                                                 <Badge tono={badge.tono} icono={badge.icono}>
                                                     {badge.etiqueta}
                                                 </Badge>
+                                                {d.motivo_rechazo && !accion && (
+                                                    <p className="mt-1 text-[11px] text-red-600 font-normal">
+                                                        Motivo: {d.motivo_rechazo}
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3.5">
                                                 <div className="flex gap-1.5">
@@ -275,7 +302,7 @@ export default function Revisar({ revision, designaciones }) {
                                                         {accion === 'aprobar' ? '✓ Aprobada' : 'Aprobar'}
                                                     </button>
                                                     <button
-                                                        onClick={() => marcar(d.id, 'rechazar')}
+                                                        onClick={() => marcar(d.id, 'rechazar', d.motivo_rechazo || '')}
                                                         disabled={accion === 'rechazar'}
                                                         className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                                                             accion === 'rechazar'
@@ -293,6 +320,17 @@ export default function Revisar({ revision, designaciones }) {
                                                         <Icono tipo="cerrar" className="h-3.5 w-3.5" />
                                                     </button>
                                                 </div>
+                                                {accion === 'rechazar' && (
+                                                    <div className="mt-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Motivo de rechazo (opcional)..."
+                                                            value={motivoPara(d.id)}
+                                                            onChange={(e) => cambiarMotivo(d.id, e.target.value)}
+                                                            className="w-full rounded-md border border-red-200 bg-white px-2 py-1 text-xs text-gray-700 placeholder:text-gray-400 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
+                                                        />
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     );

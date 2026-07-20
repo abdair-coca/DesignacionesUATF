@@ -611,6 +611,11 @@ export default function Carrera({
                                                         <Badge tono={estadoBadge.tono} icono={estadoBadge.icono}>
                                                             {estadoBadge.etiqueta}
                                                         </Badge>
+                                                        {fila.designacion?.estado === 'rechazada' && fila.designacion?.motivo_rechazo && (
+                                                            <p className="mt-1 text-[11px] text-red-600 font-normal">
+                                                                Motivo: {fila.designacion.motivo_rechazo}
+                                                            </p>
+                                                        )}
                                                     </td>
                                                     <td className="px-4 py-3.5">
                                                         <button

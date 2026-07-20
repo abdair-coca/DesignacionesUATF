@@ -23,6 +23,7 @@ class Designacion extends Model
         'estado',
         'creado_por',
         'aprobado_por',
+        'motivo_rechazo',
     ];
 
     protected function casts(): array

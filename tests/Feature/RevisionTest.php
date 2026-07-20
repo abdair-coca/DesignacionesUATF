@@ -186,8 +186,8 @@ class RevisionTest extends TestCase
         $response = $this->actingAs($admin)
             ->postJson("/revisiones/{$revision->id}/procesar", [
                 'acciones' => [
-                    ['id' => $designacion1->id, 'accion' => 'rechazar'],
-                    ['id' => $designacion2->id, 'accion' => 'rechazar'],
+                    ['id' => $designacion1->id, 'accion' => 'rechazar', 'motivo_rechazo' => 'Excede horas del docente'],
+                    ['id' => $designacion2->id, 'accion' => 'rechazar', 'motivo_rechazo' => 'Conflicto de materia'],
                 ],
             ]);
 
@@ -200,11 +200,13 @@ class RevisionTest extends TestCase
         $this->assertDatabaseHas('designaciones', [
             'id' => $designacion1->id,
             'estado' => 'rechazada',
+            'motivo_rechazo' => 'Excede horas del docente',
         ]);
 
         $this->assertDatabaseHas('designaciones', [
             'id' => $designacion2->id,
             'estado' => 'rechazada',
+            'motivo_rechazo' => 'Conflicto de materia',
         ]);
     }
 
