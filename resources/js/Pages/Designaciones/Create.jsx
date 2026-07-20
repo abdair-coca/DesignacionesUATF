@@ -5,6 +5,7 @@ import WarningBanner from '../../Components/WarningBanner';
 import FormActions from '@/Components/FormActions';
 import { useResumenCarga } from '../../Hooks/useResumenCarga';
 import { Icono } from '../../Components/Icono';
+import PanelRestricciones from '../../Components/PanelRestricciones';
 
 export default function Create({ carreras, docentes, materias, grupos, gestiones, periodos, gestionActual, periodoActual, prefill, resumenCarga }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -58,6 +59,10 @@ export default function Create({ carreras, docentes, materias, grupos, gestiones
                         periodos={periodos}
                         cascading
                     />
+
+                    {data.Id_docente && (
+                        <PanelRestricciones resumenCarga={resumenCarga} />
+                    )}
 
                     {resumenCarga?.excedeLimite && (
                         <WarningBanner

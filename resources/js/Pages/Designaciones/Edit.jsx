@@ -5,6 +5,7 @@ import WarningBanner from '../../Components/WarningBanner';
 import FormActions from '@/Components/FormActions';
 import { useResumenCarga } from '../../Hooks/useResumenCarga';
 import { Icono } from '../../Components/Icono';
+import PanelRestricciones from '../../Components/PanelRestricciones';
 
 export default function Edit({ docentes, materias, grupos, gestiones, periodos, designacion, resumenCarga }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -57,6 +58,10 @@ export default function Edit({ docentes, materias, grupos, gestiones, periodos, 
                         periodos={periodos}
                         showEstado
                     />
+
+                    {data.Id_docente && (
+                        <PanelRestricciones resumenCarga={resumenCarga} />
+                    )}
 
                     {resumenCarga?.excedeLimite && (
                         <WarningBanner
