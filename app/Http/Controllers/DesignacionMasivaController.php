@@ -51,15 +51,9 @@ class DesignacionMasivaController extends Controller
                     continue;
                 }
 
-                // Check límite de horas
+                // Check límite de horas (removido: los docentes no tienen límite máximo de horas)
                 $grupo = Grupo::with('materia')->find($grupoId);
                 if (! $grupo) {
-                    $saltadas++;
-                    continue;
-                }
-
-                $horasActuales = $cargaService->horasAsignadas($fila['Id_docente'], $gestionId, $periodoId);
-                if ($horasActuales + $grupo->materia->horas > CargaAcademicaService::getLimite()) {
                     $saltadas++;
                     continue;
                 }
@@ -110,7 +104,6 @@ class DesignacionMasivaController extends Controller
             ->pluck('Id_grupo')
             ->toArray();
 
-        $cargaService = app(CargaAcademicaService::class);
         $resultados = [];
 
         foreach ($data['filas'] as $i => $fila) {
@@ -121,15 +114,6 @@ class DesignacionMasivaController extends Controller
             if (in_array($grupoId, $gruposOcupados)) {
                 $estado = 'grupo_ocupado';
                 $motivo = 'Este grupo ya tiene una designación activa en el periodo destino.';
-            }
-
-            if ($estado === 'ok') {
-                $horasActuales = $cargaService->horasAsignadas($fila['Id_docente'], $gestionId, $periodoId);
-                $grupo = Grupo::with('materia')->find($grupoId);
-                if ($grupo && $horasActuales + $grupo->materia->horas > CargaAcademicaService::getLimite()) {
-                    $estado = 'excede_horas';
-                    $motivo = 'El docente excede el límite de horas al añadir este grupo.';
-                }
             }
 
             $resultados[] = [

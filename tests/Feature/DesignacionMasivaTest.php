@@ -102,14 +102,14 @@ class DesignacionMasivaTest extends TestCase
             ]);
     }
 
-    public function test_previsualizar_pegado_detecta_exceso_de_horas(): void
+    public function test_previsualizar_pegado_permite_mas_de_6_horas_sin_limite(): void
     {
         $usuario = User::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
         $docente = Docente::factory()->create();
 
-        // Asignar 5 horas de las 6 permitidas
+        // Asignar 5 horas
         $materiaExistente = Materia::factory()->create(['horas' => 5]);
         $grupoExistente = Grupo::factory()->create(['materia_id' => $materiaExistente->id]);
         Designacion::factory()->create([
@@ -121,8 +121,8 @@ class DesignacionMasivaTest extends TestCase
             'estado' => 'aprobada',
         ]);
 
-        // Intentar agregar una materia de 3 horas (total seria 8 > 6)
-        $materiaNueva = Materia::factory()->create(['horas' => 3]);
+        // Agregar otra materia de 4 horas (total seria 9h > 6h -> Permitido sin limite)
+        $materiaNueva = Materia::factory()->create(['horas' => 4]);
         $grupoNuevo = Grupo::factory()->create(['materia_id' => $materiaNueva->id]);
 
         $response = $this->actingAs($usuario)
@@ -141,13 +141,13 @@ class DesignacionMasivaTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'resumen' => [
-                    'ok' => 0,
-                    'saltadas' => 1,
+                    'ok' => 1,
+                    'saltadas' => 0,
                 ],
                 'resultados' => [
                     [
                         'idx' => 0,
-                        'estado' => 'excede_horas',
+                        'estado' => 'ok',
                     ],
                 ],
             ]);

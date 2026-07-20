@@ -593,11 +593,10 @@ export default function Carrera({
                                                             materiaId={fila.materia.id}
                                                             carreraId={carrera.id}
                                                         />
-                                                        {!esDirty && fila.aviso?.excedeLimite && (
+                                                        {!esDirty && fila.aviso?.faltaMinimo && (
                                                             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-amber-700">
                                                                 <Icono tipo="alerta" className="h-3 w-3 shrink-0" />
-                                                                {fila.aviso.horasProyectadas}h en esta gestión — supera el límite de{' '}
-                                                                {limiteHoras}h
+                                                                {fila.aviso.horasProyectadas}h asignadas — por debajo del mínimo recomendante de 6h
                                                             </p>
                                                         )}
                                                         {!esDirty && fila.aviso?.hayChoque && (

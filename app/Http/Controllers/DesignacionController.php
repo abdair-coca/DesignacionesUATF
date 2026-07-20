@@ -235,18 +235,6 @@ class DesignacionController extends Controller
                 }
 
                 // Límite de horas: verificar antes de crear
-                $horasActuales = $this->cargaAcademica->horasAsignadas(
-                    $cambio['Id_docente'],
-                    $data['Id_gestion'],
-                    $data['Id_periodo']
-                );
-
-                if ($horasActuales + $horasGrupo > CargaAcademicaService::getLimite()) {
-                    $saltados++;
-
-                    continue;
-                }
-
                 Designacion::create([
                     'Id_docente' => $cambio['Id_docente'],
                     'Id_materia' => $cambio['Id_materia'],
@@ -259,12 +247,7 @@ class DesignacionController extends Controller
             }
         });
 
-        $mensaje = 'Cambios guardados.';
-        if ($saltados > 0) {
-            $mensaje .= " {$saltados} grupo(s) omitido(s) por exceder límite de horas del docente.";
-        }
-
-        return redirect()->back()->with('status', $mensaje);
+        return redirect()->back()->with('status', 'Cambios guardados.');
     }
 
     /**
@@ -282,7 +265,8 @@ class DesignacionController extends Controller
                     + $grupo->materia->horas;
 
                 $aviso = [
-                    'excedeLimite' => $horasProyectadas > CargaAcademicaService::getLimite(),
+                    'faltaMinimo' => $horasProyectadas < CargaAcademicaService::getMinimo(),
+                    'cumpleMinimo' => $horasProyectadas >= CargaAcademicaService::getMinimo(),
                     'horasProyectadas' => $horasProyectadas,
                     'hayChoque' => $this->cargaAcademica->hayChoque($grupo->id, $gestionId, $periodoId, $actual->id),
                 ];

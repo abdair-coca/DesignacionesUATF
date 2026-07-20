@@ -62,12 +62,6 @@ export default function Edit({ docentes, materias, grupos, gestiones, periodos, 
                     {data.Id_docente && (
                         <PanelRestricciones resumenCarga={resumenCarga} />
                     )}
-
-                    {resumenCarga?.excedeLimite && (
-                        <WarningBanner
-                            mensaje={`El docente quedaría con ${resumenCarga.horasProyectadas}h asignadas en esta gestión y periodo (supera el límite recomendado de ${resumenCarga.limite}h).`}
-                        />
-                    )}
                     {resumenCarga?.hayChoque && (
                         <WarningBanner mensaje="Este grupo ya tiene otra designación activa en esta gestión y periodo." />
                     )}

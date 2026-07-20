@@ -3,8 +3,7 @@ import Badge from './Badge';
 
 /**
  * Componente reutilizable para visualizar validaciones y restricciones académicas.
- * Diseñado de forma extensible para incorporar nuevas reglas del negocio en el futuro
- * (ej. dedicación, traslape de horario, categoría docente, etc.).
+ * Regla de negocio UATF: Cada docente debe tener un MÍNIMO de 6 horas semanales (sin tope máximo).
  */
 export default function PanelRestricciones({
     resumenCarga,
@@ -16,20 +15,20 @@ export default function PanelRestricciones({
     const {
         horasActuales = 0,
         horasProyectadas = 0,
-        limite = 6,
-        excedeLimite = false,
+        minimo = 6,
         hayChoque = false,
     } = resumenCarga;
 
     const tieneDocente = horasActuales !== null && horasActuales !== undefined;
-    const porcentaje = tieneDocente && limite > 0 ? Math.min(Math.round((horasProyectadas / limite) * 100), 100) : 0;
+    const cumpleMinimo = tieneDocente && horasProyectadas >= minimo;
+    const porcentaje = tieneDocente && minimo > 0 ? Math.min(Math.round((horasProyectadas / minimo) * 100), 100) : 0;
 
-    // Modulo 1: Carga horaria (Regla activa actual)
-    const estadoCarga = excedeLimite
-        ? { tono: 'rojo', icono: 'equis', etiqueta: 'Excede límite', msj: `Proyección de ${horasProyectadas}h supera el máximo de ${limite}h` }
-        : tieneDocente && horasProyectadas > 0
-            ? { tono: 'verde', icono: 'check', etiqueta: 'Carga permitida', msj: `${horasProyectadas}h asignadas de ${limite}h permitidas` }
-            : { tono: 'gris', icono: 'vacio', etiqueta: 'Sin proyección', msj: 'Selecciona docente y materia para verificar carga' };
+    // Modulo 1: Carga horaria mínima (6 horas semanales)
+    const estadoCarga = tieneDocente && horasProyectadas > 0
+        ? cumpleMinimo
+            ? { tono: 'verde', icono: 'check', etiqueta: 'Mínimo cumplido (6h+)', msj: `Carga proyectada de ${horasProyectadas}h cumple con el mínimo exigido de ${minimo}h.` }
+            : { tono: 'ambar', icono: 'alerta', etiqueta: 'Carga insuficiente', msj: `Carga proyectada de ${horasProyectadas}h es menor al mínimo semanal de ${minimo}h.` }
+        : { tono: 'gris', icono: 'vacio', etiqueta: 'Sin proyección', msj: 'Selecciona docente y materia para verificar carga' };
 
     // Modulo 2: Choque de horarios (Regla activa actual)
     const estadoChoque = hayChoque
@@ -52,10 +51,10 @@ export default function PanelRestricciones({
                 </span>
             </div>
 
-            {/* Restricción 1: Carga Horaria de Docente */}
+            {/* Restricción 1: Carga Horaria Mínima de 6h */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-gray-700">Carga académica acumulada</span>
+                    <span className="font-medium text-gray-700">Mínimo de carga académica</span>
                     <Badge tono={estadoCarga.tono} icono={estadoCarga.icono}>
                         {estadoCarga.etiqueta}
                     </Badge>
@@ -66,14 +65,14 @@ export default function PanelRestricciones({
                         <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 ring-1 ring-inset ring-gray-200/50">
                             <div
                                 className={`h-full transition-[width] duration-500 ease-out ${
-                                    excedeLimite ? 'bg-red-500' : 'bg-blue-900'
+                                    cumpleMinimo ? 'bg-green-600' : 'bg-amber-500'
                                 }`}
                                 style={{ width: `${porcentaje}%` }}
                             />
                         </div>
                         <div className="flex justify-between text-[11px] text-gray-400 tabular-nums">
                             <span>Actuales: {horasActuales}h</span>
-                            <span className="font-medium text-gray-600">Proyectadas: {horasProyectadas}h / {limite}h</span>
+                            <span className="font-medium text-gray-600">Proyectadas: {horasProyectadas}h (Mínimo: {minimo}h)</span>
                         </div>
                     </div>
                 )}

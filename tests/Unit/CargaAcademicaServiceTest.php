@@ -146,4 +146,27 @@ class CargaAcademicaServiceTest extends TestCase
 
         $this->assertFalse($this->servicio->hayChoque($grupo->id, $gestion->id, $periodo->id, $designacion->id));
     }
+
+    public function test_cumple_minimo_verifica_carga_semanal_mayor_o_igual_a_6h(): void
+    {
+        $docente = Docente::factory()->create();
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+        $materia4h = Materia::factory()->create(['horas' => 4]);
+
+        Designacion::factory()->create([
+            'Id_docente' => $docente->id,
+            'Id_materia' => $materia4h->id,
+            'Id_grupo' => Grupo::factory()->create(['materia_id' => $materia4h->id])->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'estado' => 'propuesta',
+        ]);
+
+        // Con 4h no cumple el mínimo de 6h
+        $this->assertFalse($this->servicio->cumpleMinimo($docente->id, $gestion->id, $periodo->id));
+
+        // Con 4h + 3h adicionales = 7h >= 6h -> Cumple mínimo
+        $this->assertTrue($this->servicio->cumpleMinimo($docente->id, $gestion->id, $periodo->id, 3));
+    }
 }

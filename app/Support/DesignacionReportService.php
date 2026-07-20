@@ -5,135 +5,114 @@ namespace App\Support;
 use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
-use App\Models\Grupo;
+use App\Models\Gestion;
 use App\Models\Materia;
 use App\Models\Periodo;
-use App\Models\Gestion;
-use Illuminate\Support\Collection;
 
 class DesignacionReportService
 {
     public function __construct(private CargaAcademicaService $cargaAcademica) {}
 
     /**
-     * Resumen por carrera: materias, grupos habilitados, asignados, situación.
+     * Reporte por carrera (KPIs, lista de materias con estado de asignación).
      */
-    public function resumenPorCarrera(int $gestionId, int $periodoId): Collection
+    public function reporteCarrera(int $carreraId, int $gestionId, int $periodoId): array
     {
-        $materiasPorCarrera = Materia::selectRaw('carrera_id, count(*) as total')
-            ->groupBy('carrera_id')
-            ->pluck('total', 'carrera_id');
+        $materias = Materia::where('carrera_id', $carreraId)
+            ->with(['grupos' => function ($query) use ($gestionId, $periodoId) {
+                $query->where('estado', 'habilitado')
+                    ->with(['designaciones' => function ($q) use ($gestionId, $periodoId) {
+                        $q->activas()->forGestionPeriodo($gestionId, $periodoId)->with('docente');
+                    }]);
+            }])
+            ->orderBy('sigla')
+            ->get();
 
-        $gruposPorCarrera = Grupo::where('grupos.estado', 'habilitado')
-            ->join('materias', 'materias.id', '=', 'grupos.materia_id')
-            ->selectRaw('materias.carrera_id, count(*) as total')
-            ->groupBy('materias.carrera_id')
-            ->pluck('total', 'carrera_id');
+        $totalGruposHabilitados = 0;
+        $totalGruposDesignados = 0;
 
-        $asignadosPorCarrera = Designacion::where('Id_gestion', $gestionId)
-            ->where('Id_periodo', $periodoId)
-            ->where('designaciones.estado', '!=', 'rechazada')
-            ->join('materias', 'materias.id', '=', 'designaciones.Id_materia')
-            ->join('grupos', function ($join) {
-                $join->on('grupos.id', '=', 'designaciones.Id_grupo')
-                    ->where('grupos.estado', 'habilitado');
-            })
-            ->selectRaw('materias.carrera_id, count(distinct designaciones."Id_grupo") as total')
-            ->groupBy('materias.carrera_id')
-            ->pluck('total', 'carrera_id');
+        foreach ($materias as $materia) {
+            foreach ($materia->grupos as $grupo) {
+                $totalGruposHabilitados++;
+                if ($grupo->designaciones->isNotEmpty()) {
+                    $totalGruposDesignados++;
+                }
+            }
+        }
 
-        return Carrera::orderBy('nombre')->get()->map(function (Carrera $carrera) use ($materiasPorCarrera, $gruposPorCarrera, $asignadosPorCarrera) {
-            $grupos = (int) ($gruposPorCarrera[$carrera->id] ?? 0);
-            $activas = min((int) ($asignadosPorCarrera[$carrera->id] ?? 0), $grupos);
-            $pendientes = $grupos - $activas;
-            $situacion = $activas === 0 ? 'sin' : ($pendientes > 0 ? 'pendientes' : 'activas');
+        $cobertura = $totalGruposHabilitados > 0
+            ? round(($totalGruposDesignados / $totalGruposHabilitados) * 100, 1)
+            : 0;
+
+        return [
+            'materias' => $materias,
+            'kpis' => [
+                'totalGruposHabilitados' => $totalGruposHabilitados,
+                'totalGruposDesignados' => $totalGruposDesignados,
+                'gruposPendientes' => $totalGruposHabilitados - $totalGruposDesignados,
+                'porcentajeCobertura' => $cobertura,
+            ],
+        ];
+    }
+
+    public function resumenPorCarrera(int $gestionId, int $periodoId)
+    {
+        return Carrera::all()->map(function ($carrera) use ($gestionId, $periodoId) {
+            $rep = $this->reporteCarrera($carrera->id, $gestionId, $periodoId);
+            $grupos = $rep['kpis']['totalGruposHabilitados'];
+            $activas = $rep['kpis']['totalGruposDesignados'];
+            $pendientes = $rep['kpis']['gruposPendientes'];
 
             return [
                 'id' => $carrera->id,
-                'sigla' => $carrera->sigla,
-                'nombre' => $carrera->nombre,
-                'materias' => (int) ($materiasPorCarrera[$carrera->id] ?? 0),
+                'materias' => $carrera->materias()->count(),
                 'grupos' => $grupos,
                 'activas' => $activas,
                 'pendientes' => $pendientes,
-                'situacion' => $situacion,
+                'situacion' => $activas > 0 ? ($pendientes > 0 ? 'pendientes' : 'activas') : 'sin',
+            ];
+        });
+    }
+
+    public function resumenPorMateria(Carrera $carrera, int $gestionId, int $periodoId)
+    {
+        $rep = $this->reporteCarrera($carrera->id, $gestionId, $periodoId);
+
+        return $rep['materias']->map(function ($materia) {
+            $total = $materia->grupos->count();
+            $asignados = $materia->grupos->filter(fn ($g) => $g->designaciones->isNotEmpty())->count();
+
+            return [
+                'id' => $materia->id,
+                'grupos_total' => $total,
+                'grupos_asignados' => $asignados,
+                'estado' => $asignados === $total ? 'completa' : ($asignados > 0 ? 'por_asignar' : 'sin_asignar'),
             ];
         });
     }
 
     /**
-     * Resumen por materia dentro de una carrera.
+     * Dashboard general (KPIs globales, resumen por carrera).
      */
-    public function resumenPorMateria(Carrera $carrera, int $gestionId, int $periodoId): Collection
+    public function dashboardGeneral(int $gestionId, int $periodoId): array
     {
-        $gruposPorMateria = Grupo::where('estado', 'habilitado')
-            ->whereIn('materia_id', $carrera->materias()->select('id'))
-            ->selectRaw('materia_id, count(*) as total')
-            ->groupBy('materia_id')
-            ->pluck('total', 'materia_id');
-
-        $asignadosPorMateria = Designacion::where('Id_gestion', $gestionId)
-            ->where('Id_periodo', $periodoId)
-            ->where('designaciones.estado', '!=', 'rechazada')
-            ->join('grupos', function ($join) {
-                $join->on('grupos.id', '=', 'designaciones.Id_grupo')
-                    ->where('grupos.estado', 'habilitado');
+        $gruposSinDesignar = (int) Materia::join('grupos', 'grupos.materia_id', '=', 'materias.id')
+            ->where('grupos.estado', 'habilitado')
+            ->whereNotExists(function ($query) use ($gestionId, $periodoId) {
+                $query->selectRaw(1)
+                    ->from('designaciones')
+                    ->whereColumn('designaciones.Id_grupo', 'grupos.id')
+                    ->where('designaciones.Id_gestion', $gestionId)
+                    ->where('designaciones.Id_periodo', $periodoId)
+                    ->where('designaciones.estado', '!=', 'rechazada');
             })
-            ->join('materias', 'materias.id', '=', 'designaciones.Id_materia')
-            ->where('materias.carrera_id', $carrera->id)
-            ->selectRaw('designaciones."Id_materia" as materia_id, count(distinct designaciones."Id_grupo") as total')
-            ->groupBy('designaciones.Id_materia')
-            ->pluck('total', 'materia_id');
+            ->count('grupos.id');
 
-        return $carrera->materias()->orderBy('sigla')->get()
-            ->map(function (Materia $materia) use ($gruposPorMateria, $asignadosPorMateria) {
-                $total = (int) ($gruposPorMateria[$materia->id] ?? 0);
-                $asignados = min((int) ($asignadosPorMateria[$materia->id] ?? 0), $total);
-                $estado = $total === 0 ? 'sin_grupos' : ($asignados >= $total ? 'asignada' : 'por_asignar');
-
-                return [
-                    'id' => $materia->id,
-                    'sigla' => $materia->sigla,
-                    'nombre' => $materia->nombre,
-                    'grupos_total' => $total,
-                    'grupos_asignados' => $asignados,
-                    'estado' => $estado,
-                ];
-            })
-            ->values();
-    }
-
-    /**
-     * Datos del dashboard: grupos sin designar, conteo por estado, docentes bajo límite.
-     */
-    public function datosDashboard(int $gestionId, int $periodoId): array
-    {
-        $gruposSinDesignar = Grupo::with('materia.carrera')
-            ->where('estado', 'habilitado')
-            ->whereDoesntHave('designaciones', function ($q) use ($gestionId, $periodoId) {
-                $q->where('Id_gestion', $gestionId)
-                    ->where('Id_periodo', $periodoId)
-                    ->where('estado', '!=', 'rechazada');
-            })
-            ->orderBy('materia_id')
-            ->get()
-            ->map(fn (Grupo $grupo) => [
-                'id' => $grupo->id,
-                'codigo' => $grupo->codigo,
-                'materia' => [
-                    'id' => $grupo->materia->id,
-                    'sigla' => $grupo->materia->sigla,
-                    'nombre' => $grupo->materia->nombre,
-                ],
-                'carrera' => ['sigla' => $grupo->materia->carrera->sigla],
-            ])
-            ->values();
-
-        $porEstado = Designacion::where('Id_gestion', $gestionId)
-            ->where('Id_periodo', $periodoId)
+        $porEstado = Designacion::forGestionPeriodo($gestionId, $periodoId)
             ->selectRaw('estado, count(*) as total')
             ->groupBy('estado')
-            ->pluck('total', 'estado');
+            ->pluck('total', 'estado')
+            ->toArray();
 
         $docentesConHoras = Docente::query()
             ->leftJoin('designaciones', function ($join) use ($gestionId, $periodoId) {
@@ -149,8 +128,8 @@ class DesignacionReportService
             ->orderBy('docentes.nombre')
             ->get();
 
-        $docentesBajoLimite = $docentesConHoras
-            ->filter(fn ($docente) => (int) $docente->horas < CargaAcademicaService::getLimite())
+        $docentesFaltaMinimo = $docentesConHoras
+            ->filter(fn ($docente) => (int) $docente->horas < CargaAcademicaService::getMinimo())
             ->map(fn ($docente) => ['id' => $docente->id, 'nombre' => $docente->nombre, 'horas' => (int) $docente->horas])
             ->values();
 
@@ -161,8 +140,33 @@ class DesignacionReportService
                 'aprobada' => (int) ($porEstado['aprobada'] ?? 0),
                 'rechazada' => (int) ($porEstado['rechazada'] ?? 0),
             ],
-            'docentesBajoLimite' => $docentesBajoLimite,
-            'limiteHoras' => CargaAcademicaService::getLimite(),
+            'docentesBajoLimite' => $docentesFaltaMinimo,
+            'docentesFaltaMinimo' => $docentesFaltaMinimo,
+            'minimoHoras' => CargaAcademicaService::getMinimo(),
+            'limiteHoras' => CargaAcademicaService::getMinimo(),
+        ];
+    }
+
+    public function datosDashboard(int $gestionId, int $periodoId): array
+    {
+        $dash = $this->dashboardGeneral($gestionId, $periodoId);
+
+        return [
+            'gruposSinDesignar' => Materia::join('grupos', 'grupos.materia_id', '=', 'materias.id')
+                ->where('grupos.estado', 'habilitado')
+                ->whereNotExists(function ($query) use ($gestionId, $periodoId) {
+                    $query->selectRaw(1)
+                        ->from('designaciones')
+                        ->whereColumn('designaciones.Id_grupo', 'grupos.id')
+                        ->where('designaciones.Id_gestion', $gestionId)
+                        ->where('designaciones.Id_periodo', $periodoId)
+                        ->where('designaciones.estado', '!=', 'rechazada');
+                })
+                ->select('grupos.*')
+                ->get(),
+            'conteoEstado' => $dash['conteoEstado'],
+            'docentesBajoLimite' => $dash['docentesBajoLimite'],
+            'minimoHoras' => CargaAcademicaService::getMinimo(),
         ];
     }
 
@@ -173,59 +177,29 @@ class DesignacionReportService
     {
         $periodo = Periodo::find($periodoId);
         $periodoNombre = $periodo ? $periodo->nombre : '1';
-        $esPeriodo1 = ($periodoNombre === '1');
 
-        $gestion = Gestion::find($gestionId);
-        $anio = $gestion ? (int) $gestion->nombre : (int) date('Y');
+        $raw = Designacion::activas()
+            ->forGestionPeriodo($gestionId, $periodoId)
+            ->selectRaw('DATE(created_at) as fecha, count(*) as total')
+            ->groupBy('fecha')
+            ->orderBy('fecha')
+            ->get();
 
-        if ($esPeriodo1) {
-            $meses = [
-                ['label' => '01 Ene', 'date' => "$anio-01-01 00:00:00"],
-                ['label' => '15 Ene', 'date' => "$anio-01-15 23:59:59"],
-                ['label' => '01 Feb', 'date' => "$anio-02-01 23:59:59"],
-                ['label' => '15 Feb', 'date' => "$anio-02-15 23:59:59"],
-                ['label' => '01 Mar', 'date' => "$anio-03-01 23:59:59"],
-                ['label' => '15 Mar', 'date' => "$anio-03-15 23:59:59"],
-                ['label' => '01 Abr', 'date' => "$anio-04-01 23:59:59"],
-                ['label' => '15 Abr', 'date' => "$anio-04-15 23:59:59"],
-                ['label' => '01 May', 'date' => "$anio-05-01 23:59:59"],
-                ['label' => '15 May', 'date' => "$anio-05-15 23:59:59"],
-                ['label' => '01 Jun', 'date' => "$anio-06-01 23:59:59"],
-                ['label' => '15 Jun', 'date' => "$anio-06-15 23:59:59"],
-                ['label' => '30 Jun', 'date' => "$anio-06-30 23:59:59"],
-            ];
-        } else {
-            $meses = [
-                ['label' => '01 Jul', 'date' => "$anio-07-01 00:00:00"],
-                ['label' => '15 Jul', 'date' => "$anio-07-15 23:59:59"],
-                ['label' => '01 Ago', 'date' => "$anio-08-01 23:59:59"],
-                ['label' => '15 Ago', 'date' => "$anio-08-15 23:59:59"],
-                ['label' => '01 Sep', 'date' => "$anio-09-01 23:59:59"],
-                ['label' => '15 Sep', 'date' => "$anio-09-15 23:59:59"],
-                ['label' => '01 Oct', 'date' => "$anio-10-01 23:59:59"],
-                ['label' => '15 Oct', 'date' => "$anio-10-15 23:59:59"],
-                ['label' => '01 Nov', 'date' => "$anio-11-01 23:59:59"],
-                ['label' => '15 Nov', 'date' => "$anio-11-15 23:59:59"],
-                ['label' => '01 Dic', 'date' => "$anio-12-01 23:59:59"],
-                ['label' => '15 Dic', 'date' => "$anio-12-15 23:59:59"],
-                ['label' => '30 Dic', 'date' => "$anio-12-30 23:59:59"],
-            ];
-        }
-
+        $acumulado = 0;
         $puntos = [];
-        foreach ($meses as $punto) {
-            $cant = Designacion::where('Id_gestion', $gestionId)
-                ->where('Id_periodo', $periodoId)
-                ->where('estado', '!=', 'rechazada')
-                ->where('created_at', '<=', $punto['date'])
-                ->count();
+
+        foreach ($raw as $row) {
+            $acumulado += (int) $row->total;
             $puntos[] = [
-                'label' => $punto['label'],
-                'valor' => $cant
+                'fecha' => $row->fecha,
+                'acumulado' => $acumulado,
             ];
         }
 
-        return $puntos;
+        return [
+            'periodo' => $periodoNombre,
+            'puntos' => $puntos,
+        ];
     }
 
     /**
@@ -256,8 +230,11 @@ class DesignacionReportService
         return [
             'horasActuales' => $horasActuales,
             'horasProyectadas' => $horasProyectadas,
-            'limite' => CargaAcademicaService::getLimite(),
-            'excedeLimite' => $horasProyectadas !== null && $horasProyectadas > CargaAcademicaService::getLimite(),
+            'minimo' => CargaAcademicaService::getMinimo(),
+            'limite' => CargaAcademicaService::getMinimo(),
+            'cumpleMinimo' => $horasProyectadas !== null && $horasProyectadas >= CargaAcademicaService::getMinimo(),
+            'faltaMinimo' => $horasProyectadas !== null && $horasProyectadas < CargaAcademicaService::getMinimo(),
+            'excedeLimite' => false,
             'hayChoque' => $hayChoque,
         ];
     }
