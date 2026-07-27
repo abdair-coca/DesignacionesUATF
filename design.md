@@ -24,15 +24,20 @@ y `resources/js/Pages/Designaciones/Carrera.jsx` son la implementación canónic
 
 ### Colores
 
-| Rol | Clase |
+| Rol | Clase / Hex |
 |---|---|
-| Primario (botones sólidos, links activos, paginación activa) | `bg-blue-900`, hover `bg-blue-800`, texto links `text-blue-700` |
-| Éxito / asignado / activa | `green-500` (punto/barra), tono `verde` (badge — ver sección Badges) |
+| Sidebar Fondo (Color Admin v2) | `#2d353c` (Charcoal Slate) |
+| Sidebar Item Activo | `#20252a` con texto/icono `#00acac` (Teal) y borde izquierdo `border-[#00acac]` |
+| Sidebar Item Hover | `#23282c` con texto `#ffffff` |
+| Sidebar Texto Inactivo | `#a8b6c1` (Light Slate Gray) |
+| Submenú Árbol Fondo | `#1d2226` con viñetas circulares `w-1.5 h-1.5` |
+| Primario (botones sólidos, links activos, paginación activa) | `bg-[#00acac]`, hover `bg-[#008a8a]`, `bg-blue-900` |
+| Éxito / asignado / activa | `green-500` (punto/barra), tono `verde` (badge) |
 | Advertencia / pendiente | `amber-400` (barra), tono `ambar` (badge), icono `text-amber-600` |
 | Peligro / sin datos / rechazada | `red-500` (punto/barra), tono `rojo` (badge) |
 | Informativo / por asignar | `blue-500` (punto), tono `azul` (badge) |
-| Neutro / deshabilitado | tono `gris` (badge), `bg-gray-50 text-gray-500 ring-gray-400/30` en otros usos (tiles, tracks) |
-| Fondo de página | `bg-gray-50` (lo da `AppLayout`) |
+| Neutro / deshabilitado | tono `gris` (badge) |
+| Fondo de página | `bg-gray-100` |
 | Superficies (cards, tablas) | `bg-white` con `border border-gray-200/80` y `shadow-sm` |
 | Texto principal / secundario / terciario | `text-gray-900` / `text-gray-500` / `text-gray-400` |
 
