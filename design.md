@@ -97,22 +97,22 @@ Nota: `propuesta` pasa de gris a **ámbar** — es "pendiente de decisión", que
 de color definido arriba; antes usaba gris por inconsistencia entre pantallas, no por
 decisión de diseño.
 
-### Tablas
+### DataTable - Select (Color Admin v2)
 
-- Contenedor: `overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm`
-  con `overflow-x-auto` interno.
-- `thead`: `bg-gray-50/80`, celdas con micro-label (ver tipografía).
-- Filas: `divide-y divide-gray-100`, hover `hover:bg-gray-50/60 transition-colors`,
-  entrada con clase `fila-entra` y `animationDelay` escalonado (30ms por fila, tope 240ms).
-- Celda de entidad: tile de color (`h-9 w-9 rounded-lg` + inicial de la sigla) + nombre
-  (`font-medium text-gray-900`) + sigla debajo (`text-xs text-gray-400`).
-- Pie de tabla: "Mostrando X a Y de Z ..." (`text-[13px] text-gray-400 tabular-nums`,
-  cifras en `font-medium text-gray-600`) + paginación.
+- **Contenedor**: `rounded-lg border border-gray-200/80 bg-white shadow-md overflow-hidden`.
+- **Barra de Título Oscura**: `bg-[#2d353c] text-white px-4 py-2.5 flex items-center justify-between font-semibold text-xs border-b border-gray-800`.
+- **Barra Superior de Filtros & Búsqueda**: `p-3.5 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs`.
+- **Encabezados `thead`**: `bg-[#f2f4f6] border-b border-gray-200 text-gray-800 font-bold uppercase text-[11px] tracking-wider`.
+- **Fila Seleccionada**: Destacada con fondo suave `bg-[#fff9d6] transition-colors`.
+- **Pie de Tabla & Paginador**:
+  - `Showing 1 to 10 of N entries | 1 row selected`
+  - Botones cuadrados de paginador `px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold`. Paginador activo en `bg-[#2d353c] text-white`.
 
-### Paginación
+### Modal Asignación de Materias (Color Admin v2)
 
-Botones `h-8 min-w-8 rounded-lg px-2 text-sm`: activo `bg-blue-900 text-white shadow-sm`;
-normal outline gris; deshabilitado `text-gray-300`. Flechas `‹` `›`.
+- **Header de Modal**: Bar con `bg-[#2d353c] text-white px-5 py-3.5 font-bold text-sm flex justify-between`.
+- **Muestra Numérica de Carga Horaria**: Muestra las horas numéricas directamente (`X hrs` de 32 hrs máx), **sin utilizar barra de progreso gráfica**.
+- **Footer de Modal**: `bg-gray-100 border-t border-gray-200 px-5 py-3 flex justify-between`, con botón "Guardar Designación" en `bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-5 py-2 rounded text-xs`.
 
 ### Formularios y filtros
 
