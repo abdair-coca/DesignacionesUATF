@@ -6,8 +6,7 @@ use App\Http\Controllers\Concerns\CatalogoCrud;
 use App\Models\Gestion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class GestionController extends Controller
 {
@@ -28,7 +27,7 @@ class GestionController extends Controller
         return 'gestiones.index';
     }
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
         return 'designaciones';
     }
@@ -40,21 +39,21 @@ class GestionController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(): View
     {
-        return Inertia::render('Gestiones/Index', [
+        return view('gestiones.index', [
             'gestiones' => Gestion::withCount('designaciones')->orderBy('nombre')->get(),
         ]);
     }
 
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Gestiones/Create');
+        return view('gestiones.create');
     }
 
-    public function edit(Gestion $gestion): Response
+    public function edit(Gestion $gestion): View
     {
-        return Inertia::render('Gestiones/Edit', ['gestion' => $gestion]);
+        return view('gestiones.edit', ['gestion' => $gestion]);
     }
 
     public function update(Request $request, Gestion $gestion): RedirectResponse

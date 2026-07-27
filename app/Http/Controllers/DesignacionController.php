@@ -19,8 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class DesignacionController extends Controller
 {
@@ -29,7 +28,7 @@ class DesignacionController extends Controller
         private DesignacionReportService $reportes,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request): View
     {
         $filtros = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
@@ -67,7 +66,7 @@ class DesignacionController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return Inertia::render('Designaciones/PorCarrera', [
+        return view('designaciones.por-carrera', [
             'carreras' => $carreras,
             'resumen' => $resumen,
             'gestiones' => Gestion::orderBy('nombre')->get(),
@@ -81,7 +80,7 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function lista(Request $request): Response
+    public function lista(Request $request): View
     {
         $filtros = $request->validate([
             'carrera_id' => ['nullable', 'exists:carreras,id'],
@@ -101,7 +100,7 @@ class DesignacionController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return Inertia::render('Designaciones/Lista', [
+        return view('designaciones.lista', [
             'designaciones' => $designaciones,
             'carreras' => Carrera::orderBy('nombre')->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
@@ -116,7 +115,7 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function carrera(Request $request, Carrera $carrera): Response
+    public function carrera(Request $request, Carrera $carrera): View
     {
         $filtros = $request->validate([
             'gestion_id' => ['nullable', 'exists:gestiones,id'],
@@ -153,7 +152,7 @@ class DesignacionController extends Controller
             ->latest('id')
             ->first();
 
-        return Inertia::render('Designaciones/Carrera', [
+        return view('designaciones.carrera', [
             'carrera' => $carrera,
             'materias' => $materias,
             'designaciones' => $designaciones,
@@ -316,12 +315,12 @@ class DesignacionController extends Controller
             );
     }
 
-    public function create(Request $request): Response
+    public function create(Request $request): View
     {
         $gestionId = (int) (Gestion::max('id') ?? 0);
         $periodoId = (int) (Periodo::min('id') ?? 0);
 
-        return Inertia::render('Designaciones/Create', array_merge($this->catalogos($gestionId, $periodoId), [
+        return view('designaciones.create', array_merge($this->catalogos($gestionId, $periodoId), [
             'gestionActual' => $gestionId,
             'periodoActual' => $periodoId,
             'prefill' => $request->only(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']),
@@ -342,12 +341,12 @@ class DesignacionController extends Controller
             ->with('status', 'Designación creada correctamente.');
     }
 
-    public function edit(Request $request, Designacion $designacion): Response
+    public function edit(Request $request, Designacion $designacion): View
     {
         $gestionId = $designacion->Id_gestion;
         $periodoId = $designacion->Id_periodo;
 
-        return Inertia::render('Designaciones/Edit', array_merge(
+        return view('designaciones.edit', array_merge(
             $this->catalogos($gestionId, $periodoId),
             [
                 'designacion' => $designacion,
@@ -374,12 +373,12 @@ class DesignacionController extends Controller
             ->with('status', 'Designación eliminada.');
     }
 
-    public function historial(Designacion $designacion): Response
+    public function historial(Designacion $designacion): View
     {
         $designacion->load(['docente', 'materia', 'grupo', 'gestion', 'periodo']);
         $historial = $designacion->historial()->orderByDesc('fecha')->get();
 
-        return Inertia::render('Designaciones/Historial', compact('designacion', 'historial'));
+        return view('designaciones.historial', compact('designacion', 'historial'));
     }
 
     private function catalogos(int $gestionId = 0, int $periodoId = 0): array

@@ -11,8 +11,7 @@ use Tests\TestCase;
 
 class DesignacionObserverTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_registra_historial_al_cambiar_estado(): void
     {
         $designacion = Designacion::factory()->create(['estado' => 'propuesta']);

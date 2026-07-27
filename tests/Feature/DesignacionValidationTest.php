@@ -14,8 +14,7 @@ use Tests\TestCase;
 
 class DesignacionValidationTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_store_requiere_campos_obligatorios(): void
     {
         $this->actingAs(User::factory()->create())

@@ -9,8 +9,7 @@ use Tests\TestCase;
 
 class DocenteCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_un_docente(): void
     {
         $this->actingAs(User::factory()->create())

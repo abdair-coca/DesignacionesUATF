@@ -14,8 +14,7 @@ use Tests\TestCase;
 
 class DesignacionCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_una_designacion_y_queda_registrado_como_creador(): void
     {
         $docente = Docente::factory()->create();

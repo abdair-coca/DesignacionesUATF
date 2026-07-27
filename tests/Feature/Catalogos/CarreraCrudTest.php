@@ -9,8 +9,7 @@ use Tests\TestCase;
 
 class CarreraCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_una_carrera(): void
     {
         $this->actingAs(User::factory()->create())

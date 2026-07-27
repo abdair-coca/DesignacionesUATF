@@ -6,8 +6,7 @@ use App\Http\Controllers\Concerns\CatalogoCrud;
 use App\Models\Periodo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class PeriodoController extends Controller
 {
@@ -28,7 +27,7 @@ class PeriodoController extends Controller
         return 'periodos.index';
     }
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
         return 'designaciones';
     }
@@ -40,21 +39,21 @@ class PeriodoController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(): View
     {
-        return Inertia::render('Periodos/Index', [
+        return view('periodos.index', [
             'periodos' => Periodo::withCount('designaciones')->orderBy('nombre')->get(),
         ]);
     }
 
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Periodos/Create');
+        return view('periodos.create');
     }
 
-    public function edit(Periodo $periodo): Response
+    public function edit(Periodo $periodo): View
     {
-        return Inertia::render('Periodos/Edit', ['periodo' => $periodo]);
+        return view('periodos.edit', ['periodo' => $periodo]);
     }
 
     public function update(Request $request, Periodo $periodo): RedirectResponse

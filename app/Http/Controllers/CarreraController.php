@@ -6,8 +6,7 @@ use App\Http\Controllers\Concerns\CatalogoCrud;
 use App\Models\Carrera;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class CarreraController extends Controller
 {
@@ -28,9 +27,9 @@ class CarreraController extends Controller
         return 'carreras.index';
     }
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
-        return 'mallaCurricular';
+        return 'materias';
     }
 
     protected function reglas(Request $request, ?int $id = null): array
@@ -41,23 +40,23 @@ class CarreraController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(): View
     {
-        return Inertia::render('Carreras/Index', [
+        return view('carreras.index', [
             'carreras' => Carrera::withCount('materias')->orderBy('sigla')->get(),
         ]);
     }
 
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Carreras/Create');
+        return view('carreras.create');
     }
 
-    public function edit(Carrera $carrera): Response
+    public function edit(Carrera $carrera): View
     {
         $carrera->loadCount('mallaCurricular');
 
-        return Inertia::render('Carreras/Edit', ['carrera' => $carrera]);
+        return view('carreras.edit', ['carrera' => $carrera]);
     }
 
     public function update(Request $request, Carrera $carrera): RedirectResponse

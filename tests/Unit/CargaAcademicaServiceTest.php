@@ -14,8 +14,7 @@ use Tests\TestCase;
 
 class CargaAcademicaServiceTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     private CargaAcademicaService $servicio;
 
     protected function setUp(): void

@@ -7,14 +7,13 @@ use App\Models\Periodo;
 use App\Models\Revision;
 use App\Support\DesignacionReportService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function __construct(private DesignacionReportService $reportes) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request): View
     {
         $filtros = $request->validate([
             'gestion_id' => ['nullable', 'exists:gestiones,id'],
@@ -30,7 +29,7 @@ class DashboardController extends Controller
 
         $revisionesPendientes = Revision::where('estado', 'pendiente')->count();
 
-        return Inertia::render('Dashboard/Index', array_merge([
+        return view('dashboard.index', array_merge([
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
             'filtros' => [

@@ -7,8 +7,7 @@ use App\Models\Carrera;
 use App\Models\Docente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class DocenteController extends Controller
 {
@@ -29,7 +28,7 @@ class DocenteController extends Controller
         return 'docentes.index';
     }
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
         return 'designaciones';
     }
@@ -42,12 +41,12 @@ class DocenteController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(): View
     {
         $busqueda = request('q');
         $carreraId = request('carrera_origen_id');
 
-        return Inertia::render('Docentes/Index', [
+        return view('docentes.index', [
             'docentes' => Docente::query()
                 ->when($busqueda, fn ($q, $b) => $q->where('nombre', 'ilike', "%{$b}%")
                     ->orWhere('ci', 'ilike', "%{$b}%"))
@@ -65,16 +64,16 @@ class DocenteController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Docentes/Create', [
+        return view('docentes.create', [
             'carreras' => Carrera::orderBy('sigla')->get(),
         ]);
     }
 
-    public function edit(Docente $docente): Response
+    public function edit(Docente $docente): View
     {
-        return Inertia::render('Docentes/Edit', ['docente' => $docente]);
+        return view('docentes.edit', ['docente' => $docente]);
     }
 
     public function update(Request $request, Docente $docente): RedirectResponse

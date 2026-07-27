@@ -7,8 +7,8 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class GrupoController extends Controller
 {
@@ -29,7 +29,7 @@ class GrupoController extends Controller
         return 'grupos.index';
     }
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
         return 'designaciones';
     }
@@ -38,17 +38,22 @@ class GrupoController extends Controller
     {
         return $request->validate([
             'materia_id' => ['required', 'exists:materias,id'],
-            'codigo' => ['required', 'string', 'max:10'],
+            'codigo' => [
+                'required', 'string', 'max:10',
+                Rule::unique('grupos', 'codigo')
+                    ->where('materia_id', $request->materia_id)
+                    ->ignore($id),
+            ],
             'estado' => ['required', 'string', 'in:habilitado,deshabilitado'],
         ]);
     }
 
-    public function index(): Response
+    public function index(): View
     {
         $materiaId = request('materia_id');
         $estado = request('estado');
 
-        return Inertia::render('Grupos/Index', [
+        return view('grupos.index', [
             'grupos' => Grupo::query()
                 ->with('materia.carrera')
                 ->withCount('designaciones')
@@ -65,18 +70,18 @@ class GrupoController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Grupos/Create', [
+        return view('grupos.create', [
             'materias' => Materia::orderBy('sigla')->get(),
         ]);
     }
 
-    public function edit(Grupo $grupo): Response
+    public function edit(Grupo $grupo): View
     {
         $grupo->load('materia');
 
-        return Inertia::render('Grupos/Edit', [
+        return view('grupos.edit', [
             'grupo' => $grupo,
             'materias' => Materia::orderBy('sigla')->get(),
         ]);

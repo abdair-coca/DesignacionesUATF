@@ -10,8 +10,7 @@ use Tests\TestCase;
 
 class MateriaCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_una_materia(): void
     {
         $carrera = Carrera::factory()->create();

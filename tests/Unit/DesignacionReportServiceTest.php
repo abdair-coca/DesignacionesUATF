@@ -15,8 +15,7 @@ use Tests\TestCase;
 
 class DesignacionReportServiceTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     private DesignacionReportService $servicio;
 
     protected function setUp(): void

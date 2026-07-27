@@ -9,8 +9,7 @@ use Tests\TestCase;
 
 class PeriodoCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_un_periodo(): void
     {
         $this->actingAs(User::factory()->create())

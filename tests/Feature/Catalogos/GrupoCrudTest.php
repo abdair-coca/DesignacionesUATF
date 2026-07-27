@@ -10,8 +10,7 @@ use Tests\TestCase;
 
 class GrupoCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_un_grupo(): void
     {
         $materia = Materia::factory()->create();

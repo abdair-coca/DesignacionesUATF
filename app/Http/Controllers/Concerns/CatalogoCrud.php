@@ -15,7 +15,7 @@ trait CatalogoCrud
 
     abstract protected function rutaIndex(): string;
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
         return null;
     }
@@ -43,11 +43,13 @@ trait CatalogoCrud
 
     protected function eliminarModelo(mixed $modelo): RedirectResponse
     {
-        $relacion = $this->destroyRelacion();
+        $relaciones = (array) $this->destroyRelacion();
 
-        if ($relacion && $modelo->$relacion()->exists()) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar: '.$this->nombreEntidad().' tiene '.$this->destroyEtiqueta().' asociados.');
+        foreach ($relaciones as $relacion) {
+            if ($relacion && $modelo->$relacion()->exists()) {
+                return redirect()->back()
+                    ->with('error', 'No se puede eliminar: '.$this->nombreEntidad().' tiene '.$this->destroyEtiqueta().' asociados.');
+            }
         }
 
         $modelo->delete();

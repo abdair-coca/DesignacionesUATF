@@ -9,8 +9,7 @@ use Tests\TestCase;
 
 class GestionCrudTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_usuario_autenticado_crea_una_gestion(): void
     {
         $this->actingAs(User::factory()->create())

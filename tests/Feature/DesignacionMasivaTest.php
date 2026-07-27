@@ -14,8 +14,7 @@ use Tests\TestCase;
 
 class DesignacionMasivaTest extends TestCase
 {
-    use DatabaseTransactions;
-
+    
     public function test_previsualizar_pegado_retorna_filas_ok_cuando_no_hay_conflictos(): void
     {
         $usuario = User::factory()->create();

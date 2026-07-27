@@ -7,8 +7,7 @@ use App\Models\Revision;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class RevisionController extends Controller
 {
@@ -56,7 +55,7 @@ class RevisionController extends Controller
      * GET /revisiones/pendientes
      * Admin ve lista de carreras pendientes de revision.
      */
-    public function pendientes(Request $request): Response
+    public function pendientes(Request $request): View
     {
         if (! $request->user()->is_admin) {
             abort(403, 'Solo administradores pueden ver revisiones pendientes.');
@@ -78,7 +77,7 @@ class RevisionController extends Controller
             'solicitado_en' => $r->solicitado_en?->format('d/m/Y H:i') ?? '',
         ]);
 
-        return Inertia::render('Revisiones/Pendientes', [
+        return view('revisiones.pendientes', [
             'pendientes' => $pendientes,
         ]);
     }
@@ -87,7 +86,7 @@ class RevisionController extends Controller
      * GET /revisiones/{revision}/revisar
      * Admin revisa todas las designaciones de una carrera.
      */
-    public function revisar(Request $request, Revision $revision): Response
+    public function revisar(Request $request, Revision $revision): View
     {
         if (! $request->user()->is_admin) {
             abort(403);
@@ -111,7 +110,7 @@ class RevisionController extends Controller
                 'motivo_rechazo' => $d->motivo_rechazo,
             ]);
 
-        return Inertia::render('Revisiones/Revisar', [
+        return view('revisiones.revisar', [
             'revision' => [
                 'id' => $revision->id,
                 'carrera_nombre' => $revision->carrera->nombre,

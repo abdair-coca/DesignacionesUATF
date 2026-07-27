@@ -8,8 +8,7 @@ use App\Models\Materia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class MateriaController extends Controller
 {
@@ -30,14 +29,14 @@ class MateriaController extends Controller
         return 'materias.index';
     }
 
-    protected function destroyRelacion(): ?string
+    protected function destroyRelacion(): array|string|null
     {
-        return 'mallaCurricular';
+        return ['grupos', 'mallaCurricular'];
     }
 
     protected function destroyEtiqueta(): string
     {
-        return 'mallas curriculares';
+        return 'registros asociados';
     }
 
     protected function reglas(Request $request, ?int $id = null): array
@@ -55,11 +54,11 @@ class MateriaController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(): View
     {
         $carreraId = request('carrera_id');
 
-        return Inertia::render('Materias/Index', [
+        return view('materias.index', [
             'materias' => Materia::query()
                 ->with('carrera')
                 ->withCount('grupos')
@@ -74,16 +73,16 @@ class MateriaController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Materias/Create', [
+        return view('materias.create', [
             'carreras' => Carrera::orderBy('sigla')->get(),
         ]);
     }
 
-    public function edit(Materia $materia): Response
+    public function edit(Materia $materia): View
     {
-        return Inertia::render('Materias/Edit', [
+        return view('materias.edit', [
             'materia' => $materia,
             'carreras' => Carrera::orderBy('sigla')->get(),
         ]);
