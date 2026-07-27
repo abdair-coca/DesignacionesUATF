@@ -219,8 +219,23 @@ export default function Carrera({
                 }
             }
         }
+        function handleClickOutside(e) {
+            if (seleccionRef.current.count === 0) return;
+
+            const isTableRow = e.target.closest('tr');
+            const isMenuPop = e.target.closest('.menu-pop');
+
+            if (!isTableRow && !isMenuPop) {
+                seleccionRef.current.clearAll();
+            }
+        }
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('click', handleClickOutside);
+        };
     }, [copiarSeleccionadas, mostrarPegar]);
     const porPagina = 10;
 
@@ -618,7 +633,7 @@ export default function Carrera({
                                                     </td>
                                                     <td className="px-4 py-2.5 text-gray-600">{fila.codigo}</td>
                                                     <td className="px-4 py-2.5 text-gray-600 tabular-nums">{fila.horas}h</td>
-                                                    <td className="px-4 py-2.5">
+                                                    <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
                                                         <ComboboxDocente
                                                             docentes={docentes}
                                                             value={valorDocente(fila)}
@@ -650,15 +665,16 @@ export default function Carrera({
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-2.5">
+                                                    <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
                                                         <button
-                                                            onClick={(e) =>
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 setHistoAbierto(
                                                                     histoAbierto?.grupoId === fila.id
                                                                         ? null
                                                                         : { grupoId: fila.id, el: e.currentTarget }
                                                                 )
-                                                            }
+                                                            }}
                                                             disabled={historial.length === 0}
                                                             className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
                                                             title={historial.length === 0 ? 'Todavía no tiene historial' : 'Ver historial de docentes'}
