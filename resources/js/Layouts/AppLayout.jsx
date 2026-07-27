@@ -58,7 +58,7 @@ export default function AppLayout({ title, children }) {
                 </div>
             </nav>
 
-            <main className="flex-1 p-8">
+            <main className="flex-1 p-6">
                 <div className={`flex items-center justify-between ${title ? 'mb-6' : 'mb-4'}`}>
                     {title ? <h2 className="text-2xl font-semibold">{title}</h2> : <div />}
 

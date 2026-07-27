@@ -41,7 +41,7 @@ function AnilloProgreso({ asignadas, porAsignar, sinGrupos }) {
 
     return (
         <div className="relative shrink-0">
-            <svg viewBox="0 0 100 100" className="h-28 w-28">
+            <svg viewBox="0 0 100 100" className="h-24 w-24">
                 <circle cx="50" cy="50" r={radio} fill="none" stroke="#f3f4f6" strokeWidth="11" />
                 {arcos.map(
                     (arco, i) =>
@@ -365,7 +365,7 @@ export default function Carrera({
                     </div>
 
 
-                    <div className="relative mb-4 flex flex-wrap items-center gap-4 rounded-xl border border-gray-200/80 bg-white p-3 shadow-sm">
+                    <div className="relative mb-3 flex flex-wrap items-center gap-4 rounded-xl border border-gray-200/80 bg-white p-3 shadow-sm">
                         <div className="flex items-center gap-3">
                             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-200/50">
                                 <Icono tipo="calendario" className="h-[18px] w-[18px]" />
@@ -794,10 +794,10 @@ export default function Carrera({
                     )}
                 </div>
 
-                <aside className="w-full shrink-0 space-y-3 xl:w-80">
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                <aside className="w-full shrink-0 space-y-2.5 xl:w-80">
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm">
                         <h3 className="text-sm font-semibold tracking-tight text-gray-900">Progreso</h3>
-                        <div className="mt-3 flex items-center gap-3">
+                        <div className="mt-2.5 flex items-center gap-3">
                             <AnilloProgreso asignadas={asignadas} porAsignar={porAsignar} sinGrupos={sinGrupos} />
                             <div>
                                 <p className="text-lg font-semibold tracking-tight text-gray-900 tabular-nums">
@@ -806,11 +806,11 @@ export default function Carrera({
                                 <p className="text-sm text-gray-500">Materias asignadas</p>
                             </div>
                         </div>
-                        <ul className="mt-3 space-y-0.5">
+                        <ul className="mt-2.5 space-y-0.5">
                             {leyendaProgreso.map((fila) => (
                                 <li
                                     key={fila.etiqueta}
-                                    className="flex items-center justify-between rounded-lg px-2 py-1 text-xs transition-colors hover:bg-gray-50"
+                                    className="flex items-center justify-between rounded-lg px-2 py-0.5 text-xs transition-colors hover:bg-gray-50"
                                 >
                                     <span className="flex items-center gap-2 text-gray-600">
                                         <span className={`h-2 w-2 rounded-full ${fila.punto}`} />
@@ -825,10 +825,10 @@ export default function Carrera({
                         </ul>
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Información</h3>
-                        <p className="mb-2 text-sm font-medium text-gray-900">{carrera.nombre}</p>
-                        <dl className="space-y-1.5">
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm">
+                        <h3 className="mb-1.5 text-sm font-semibold tracking-tight text-gray-900">Información</h3>
+                        <p className="mb-1.5 text-sm font-medium text-gray-900">{carrera.nombre}</p>
+                        <dl className="space-y-1">
                             {infoCarrera.map((fila) => (
                                 <div key={fila.etiqueta} className="flex items-center justify-between text-xs">
                                     <dt className="text-gray-500">{fila.etiqueta}</dt>
@@ -838,11 +838,11 @@ export default function Carrera({
                         </dl>
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Revisión</h3>
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm">
+                        <h3 className="mb-1.5 text-sm font-semibold tracking-tight text-gray-900">Revisión</h3>
                         {!revision ? (
                             <>
-                                <p className="mb-3 text-sm text-gray-500">Sin enviar a revisión</p>
+                                <p className="mb-2.5 text-sm text-gray-500">Sin enviar a revisión</p>
                                 {!is_admin && (
                                     <button
                                         onClick={enviarARevision}
@@ -855,7 +855,7 @@ export default function Carrera({
                             </>
                         ) : revision.estado === 'pendiente' ? (
                             <>
-                                <div className="mb-2 flex items-center gap-2">
+                                <div className="mb-1.5 flex items-center gap-2">
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700">
                                         <Icono tipo="reloj" className="h-3 w-3" />
                                     </span>
@@ -867,7 +867,7 @@ export default function Carrera({
                             </>
                         ) : (
                             <>
-                                <div className="mb-2 flex items-center gap-2">
+                                <div className="mb-1.5 flex items-center gap-2">
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-700">
                                         <Icono tipo="check" className="h-3 w-3" />
                                     </span>
@@ -880,7 +880,7 @@ export default function Carrera({
                                     <button
                                         onClick={enviarARevision}
                                         disabled={enviando}
-                                        className="mt-3 w-full rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="mt-2.5 w-full rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         {enviando ? 'Enviando…' : 'Enviar de nuevo'}
                                     </button>
@@ -889,17 +889,17 @@ export default function Carrera({
                         )}
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm">
+                        <h3 className="mb-1.5 text-sm font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
                         <ul className="space-y-0.5">
                             {accionesRapidas.map((accion) => (
                                 <li key={accion.etiqueta}>
                                     <Link
                                         href={accion.href}
-                                        className="group flex items-center gap-2 rounded-lg px-2 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-50"
+                                        className="group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-50"
                                     >
-                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-gray-400 ring-1 ring-inset ring-gray-200/60 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-200/60">
-                                            <Icono tipo={accion.tipo} className="h-3.5 w-3.5" />
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gray-50 text-gray-400 ring-1 ring-inset ring-gray-200/60 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-200/60">
+                                            <Icono tipo={accion.tipo} className="h-3 w-3" />
                                         </span>
                                         <span className="flex-1 font-medium">{accion.etiqueta}</span>
                                         <span className="text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-gray-400">

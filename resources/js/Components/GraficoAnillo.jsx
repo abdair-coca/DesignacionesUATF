@@ -19,7 +19,7 @@ export default function GraficoAnillo({ resumen, etiqueta = 'carreras' }) {
 
     return (
         <div className="relative">
-            <svg viewBox="0 0 100 100" className="h-40 w-40">
+            <svg viewBox="0 0 100 100" className="h-32 w-32">
                 <circle cx="50" cy="50" r={radio} fill="none" stroke="#f3f4f6" strokeWidth="12" />
                 {arcos.map(
                     (arco, i) =>

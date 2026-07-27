@@ -22,7 +22,7 @@ class DashboardController extends Controller
         ]);
 
         $gestionId = (int) ($filtros['gestion_id'] ?? Gestion::max('id') ?? 0);
-        $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::min('id') ?? 0);
+        $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::where('nombre', '2')->value('id') ?? 0);
 
         $datos = $this->reportes->datosDashboard($gestionId, $periodoId);
         $resumenCarreras = $this->reportes->resumenPorCarrera($gestionId, $periodoId);
