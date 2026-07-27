@@ -63,14 +63,16 @@ class DesignacionReportService
             $activas = $rep['kpis']['totalGruposDesignados'];
             $pendientes = $rep['kpis']['gruposPendientes'];
 
-            return [
-                'id' => $carrera->id,
-                'materias' => $carrera->materias()->count(),
-                'grupos' => $grupos,
-                'activas' => $activas,
-                'pendientes' => $pendientes,
-                'situacion' => $activas > 0 ? ($pendientes > 0 ? 'pendientes' : 'activas') : 'sin',
-            ];
+        return [
+            'id' => $carrera->id,
+            'nombre' => $carrera->nombre,
+            'sigla' => $carrera->sigla,
+            'materias' => $carrera->materias()->count(),
+            'grupos' => $grupos,
+            'activas' => $activas,
+            'pendientes' => $pendientes,
+            'situacion' => $activas > 0 ? ($pendientes > 0 ? 'pendientes' : 'activas') : 'sin',
+        ];
         });
     }
 
@@ -167,6 +169,7 @@ class DesignacionReportService
             'conteoEstado' => $dash['conteoEstado'],
             'docentesBajoLimite' => $dash['docentesBajoLimite'],
             'minimoHoras' => CargaAcademicaService::getMinimo(),
+            'limiteHoras' => CargaAcademicaService::getLimite(),
         ];
     }
 
@@ -196,10 +199,10 @@ class DesignacionReportService
             ];
         }
 
-        return [
-            'periodo' => $periodoNombre,
-            'puntos' => $puntos,
-        ];
+        return collect($puntos)->map(fn ($p) => [
+            'label' => $p['fecha'],
+            'valor' => $p['acumulado'],
+        ])->values()->toArray();
     }
 
     /**
