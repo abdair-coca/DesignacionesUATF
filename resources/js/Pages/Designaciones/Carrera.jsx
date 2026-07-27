@@ -394,15 +394,6 @@ export default function Carrera({
                 <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                         <h1 className="text-xl font-bold tracking-tight text-gray-900">Designar en: {carrera.nombre}</h1>
-                        {asignadas + porAsignar > 0 && designaciones.some((d) => d.estado !== 'rechazada') ? (
-                            <Badge tono="verde" icono="check">
-                                Activa
-                            </Badge>
-                        ) : (
-                            <Badge tono="rojo" icono="equis">
-                                Sin designaciones
-                            </Badge>
-                        )}
                     </div>
 
 
