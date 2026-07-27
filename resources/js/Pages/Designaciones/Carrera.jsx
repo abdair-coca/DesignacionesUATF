@@ -332,7 +332,7 @@ export default function Carrera({
 
     return (
         <AppLayout>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <nav className="flex items-center gap-1.5 text-sm">
                     <Link href={route('designaciones.index')} className="text-blue-700 transition-colors hover:text-blue-800 hover:underline">
                         Designaciones por carrera
@@ -349,10 +349,10 @@ export default function Carrera({
                 </Link>
             </div>
 
-            <div className="flex flex-col gap-6 xl:flex-row">
+            <div className="flex flex-col gap-4 xl:flex-row">
                 <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-3">
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Designar en: {carrera.nombre}</h1>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <h1 className="text-xl font-bold tracking-tight text-gray-900">Designar en: {carrera.nombre}</h1>
                         {asignadas + porAsignar > 0 && designaciones.some((d) => d.estado !== 'rechazada') ? (
                             <Badge tono="verde" icono="check">
                                 Activa
@@ -363,11 +363,9 @@ export default function Carrera({
                             </Badge>
                         )}
                     </div>
-                    <p className="mb-6 text-sm text-gray-500">
-                        Asigna docentes a las materias del plan de estudio. Selecciona el periodo y configura las designaciones.
-                    </p>
 
-                    <div className="relative mb-6 flex flex-wrap items-center gap-6 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+
+                    <div className="relative mb-4 flex flex-wrap items-center gap-4 rounded-xl border border-gray-200/80 bg-white p-3 shadow-sm">
                         <div className="flex items-center gap-3">
                             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-200/50">
                                 <Icono tipo="calendario" className="h-[18px] w-[18px]" />
@@ -468,7 +466,7 @@ export default function Carrera({
                         </nav>
                     </div>
 
-                    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200/80 bg-white p-3 shadow-sm">
                         <div className="relative min-w-52 flex-1">
                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 <Icono tipo="buscar" className="h-4 w-4" />
@@ -569,22 +567,22 @@ export default function Carrera({
                                                     }`}
                                                     style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                                 >
-                                                    <td className="px-4 py-3.5">
-                                                        <div className="flex items-center gap-3">
+                                                    <td className="px-4 py-2.5">
+                                                        <div className="flex items-center gap-2">
                                                             <span
-                                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[fila.materia.id % paletaIcono.length]}`}
+                                                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ring-1 ring-inset ${paletaIcono[fila.materia.id % paletaIcono.length]}`}
                                                             >
                                                                 {fila.materia.sigla.charAt(0)}
                                                             </span>
                                                             <div>
-                                                                <p className="font-medium text-gray-900">{fila.materia.nombre}</p>
-                                                                <p className="mt-0.5 text-xs text-gray-400">{fila.materia.sigla}</p>
+                                                                <p className="text-sm font-medium text-gray-900">{fila.materia.nombre}</p>
+                                                                <p className="text-xs text-gray-400">{fila.materia.sigla}</p>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3.5 text-gray-600">{fila.codigo}</td>
-                                                    <td className="px-4 py-3.5 text-gray-600 tabular-nums">{fila.horas}h</td>
-                                                    <td className="px-4 py-3.5">
+                                                    <td className="px-4 py-2.5 text-gray-600">{fila.codigo}</td>
+                                                    <td className="px-4 py-2.5 text-gray-600 tabular-nums">{fila.horas}h</td>
+                                                    <td className="px-4 py-2.5">
                                                         <ComboboxDocente
                                                             docentes={docentes}
                                                             value={valorDocente(fila)}
@@ -606,7 +604,7 @@ export default function Carrera({
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3.5">
+                                                    <td className="px-4 py-2.5">
                                                         <Badge tono={estadoBadge.tono} icono={estadoBadge.icono}>
                                                             {estadoBadge.etiqueta}
                                                         </Badge>
@@ -616,7 +614,7 @@ export default function Carrera({
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3.5">
+                                                    <td className="px-4 py-2.5">
                                                         <button
                                                             onClick={(e) =>
                                                                 setHistoAbierto(
@@ -708,12 +706,12 @@ export default function Carrera({
                                                 }`}
                                                 style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                             >
-                                                <td className="px-4 py-3.5 font-medium text-gray-900">{designacion.docente.nombre}</td>
-                                                <td className="px-4 py-3.5 text-gray-600">
+                                                <td className="px-4 py-2.5 font-medium text-gray-900">{designacion.docente.nombre}</td>
+                                                <td className="px-4 py-2.5 text-gray-600">
                                                     {designacion.materia.sigla} — {designacion.materia.nombre}
                                                 </td>
-                                                <td className="px-4 py-3.5 text-gray-600">{designacion.grupo.codigo}</td>
-                                                <td className="px-4 py-3.5">
+                                                <td className="px-4 py-2.5 text-gray-600">{designacion.grupo.codigo}</td>
+                                                <td className="px-4 py-2.5">
                                                     <Badge
                                                         tono={badgesDesignacion[designacion.estado].tono}
                                                         icono={badgesDesignacion[designacion.estado].icono}
@@ -796,10 +794,10 @@ export default function Carrera({
                     )}
                 </div>
 
-                <aside className="w-full shrink-0 space-y-5 xl:w-80">
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="font-semibold tracking-tight text-gray-900">Progreso de designación</h3>
-                        <div className="mt-4 flex items-center gap-4">
+                <aside className="w-full shrink-0 space-y-3 xl:w-80">
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <h3 className="text-sm font-semibold tracking-tight text-gray-900">Progreso</h3>
+                        <div className="mt-3 flex items-center gap-3">
                             <AnilloProgreso asignadas={asignadas} porAsignar={porAsignar} sinGrupos={sinGrupos} />
                             <div>
                                 <p className="text-lg font-semibold tracking-tight text-gray-900 tabular-nums">
@@ -808,14 +806,14 @@ export default function Carrera({
                                 <p className="text-sm text-gray-500">Materias asignadas</p>
                             </div>
                         </div>
-                        <ul className="mt-4 space-y-1">
+                        <ul className="mt-3 space-y-0.5">
                             {leyendaProgreso.map((fila) => (
                                 <li
                                     key={fila.etiqueta}
-                                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-gray-50"
+                                    className="flex items-center justify-between rounded-lg px-2 py-1 text-xs transition-colors hover:bg-gray-50"
                                 >
-                                    <span className="flex items-center gap-2.5 text-gray-600">
-                                        <span className={`h-2.5 w-2.5 rounded-full ${fila.punto}`} />
+                                    <span className="flex items-center gap-2 text-gray-600">
+                                        <span className={`h-2 w-2 rounded-full ${fila.punto}`} />
                                         {fila.etiqueta}
                                     </span>
                                     <span className="font-semibold text-gray-900 tabular-nums">
@@ -827,12 +825,12 @@ export default function Carrera({
                         </ul>
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 font-semibold tracking-tight text-gray-900">Información de la carrera</h3>
-                        <p className="mb-3 text-sm font-medium text-gray-900">{carrera.nombre}</p>
-                        <dl className="space-y-2.5">
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Información</h3>
+                        <p className="mb-2 text-sm font-medium text-gray-900">{carrera.nombre}</p>
+                        <dl className="space-y-1.5">
                             {infoCarrera.map((fila) => (
-                                <div key={fila.etiqueta} className="flex items-center justify-between text-sm">
+                                <div key={fila.etiqueta} className="flex items-center justify-between text-xs">
                                     <dt className="text-gray-500">{fila.etiqueta}</dt>
                                     <dd className="font-medium text-gray-900 tabular-nums">{fila.valor}</dd>
                                 </div>
@@ -840,8 +838,8 @@ export default function Carrera({
                         </dl>
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 font-semibold tracking-tight text-gray-900">Estado de revisión</h3>
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Revisión</h3>
                         {!revision ? (
                             <>
                                 <p className="mb-3 text-sm text-gray-500">Sin enviar a revisión</p>
@@ -857,11 +855,11 @@ export default function Carrera({
                             </>
                         ) : revision.estado === 'pendiente' ? (
                             <>
-                                <div className="mb-3 flex items-center gap-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                                        <Icono tipo="reloj" className="h-3.5 w-3.5" />
+                                <div className="mb-2 flex items-center gap-2">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                                        <Icono tipo="reloj" className="h-3 w-3" />
                                     </span>
-                                    <span className="text-sm font-medium text-amber-800">En revisión</span>
+                                    <span className="text-xs font-medium text-amber-800">En revisión</span>
                                 </div>
                                 <p className="text-xs text-gray-500">
                                     Enviado por {revision.solicitante} el {revision.solicitado_en}
@@ -869,11 +867,11 @@ export default function Carrera({
                             </>
                         ) : (
                             <>
-                                <div className="mb-3 flex items-center gap-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-700">
-                                        <Icono tipo="check" className="h-3.5 w-3.5" />
+                                <div className="mb-2 flex items-center gap-2">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-700">
+                                        <Icono tipo="check" className="h-3 w-3" />
                                     </span>
-                                    <span className="text-sm font-medium text-green-800">Revisado</span>
+                                    <span className="text-xs font-medium text-green-800">Revisado</span>
                                 </div>
                                 <p className="text-xs text-gray-500">
                                     Revisado por {revision.revisor} el {revision.revisado_en}
@@ -891,21 +889,21 @@ export default function Carrera({
                         )}
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
                         <ul className="space-y-0.5">
                             {accionesRapidas.map((accion) => (
                                 <li key={accion.etiqueta}>
                                     <Link
                                         href={accion.href}
-                                        className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                        className="group flex items-center gap-2 rounded-lg px-2 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-50"
                                     >
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-400 ring-1 ring-inset ring-gray-200/60 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-200/60">
-                                            <Icono tipo={accion.tipo} className="h-4 w-4" />
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-gray-400 ring-1 ring-inset ring-gray-200/60 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-200/60">
+                                            <Icono tipo={accion.tipo} className="h-3.5 w-3.5" />
                                         </span>
                                         <span className="flex-1 font-medium">{accion.etiqueta}</span>
                                         <span className="text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-gray-400">
-                                            <Icono tipo="chevronDerecha" className="h-3.5 w-3.5" />
+                                            <Icono tipo="chevronDerecha" className="h-3 w-3" />
                                         </span>
                                     </Link>
                                 </li>
