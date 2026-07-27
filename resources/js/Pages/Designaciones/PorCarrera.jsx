@@ -70,14 +70,11 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
 
     return (
         <AppLayout>
-            <div className="flex flex-col gap-6 xl:flex-row">
+            <div className="flex flex-col gap-4 xl:flex-row">
                 <div className="min-w-0 flex-1">
-                    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+                    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Designaciones por carrera</h1>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Administra y consulta todas las designaciones académicas organizadas por carrera.
-                            </p>
+                            <h1 className="text-xl font-bold tracking-tight text-gray-900">Designaciones por carrera</h1>
                         </div>
                         <Link
                             href={route('designaciones.create')}
@@ -88,7 +85,7 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                         </Link>
                     </div>
 
-                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <StatTile
                             tipo="total"
                             tono="azul"
@@ -188,39 +185,39 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                             className="fila-entra group transition-colors hover:bg-gray-50/60"
                                             style={{ animationDelay: `${Math.min(indice * 30, 240)}ms` }}
                                         >
-                                            <td className="px-4 py-3.5">
-                                                <div className="flex items-center gap-3">
+                                            <td className="px-4 py-2.5">
+                                                <div className="flex items-center gap-2">
                                                     <span
-                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ring-1 ring-inset ${paletaIcono[carrera.id % paletaIcono.length]}`}
+                                                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ring-1 ring-inset ${paletaIcono[carrera.id % paletaIcono.length]}`}
                                                     >
                                                         {carrera.sigla.charAt(0)}
                                                     </span>
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{carrera.nombre}</p>
-                                                        <p className="mt-0.5 text-xs text-gray-400">{carrera.sigla}</p>
+                                                        <p className="text-sm font-medium text-gray-900">{carrera.nombre}</p>
+                                                        <p className="text-xs text-gray-400">{carrera.sigla}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3.5 text-gray-600 tabular-nums">{carrera.materias}</td>
-                                            <td className="px-4 py-3.5 text-gray-600 tabular-nums">{carrera.grupos}</td>
-                                            <td className="px-4 py-3.5">
+                                            <td className="px-4 py-2.5 text-gray-600 tabular-nums">{carrera.materias}</td>
+                                            <td className="px-4 py-2.5 text-gray-600 tabular-nums">{carrera.grupos}</td>
+                                            <td className="px-4 py-2.5">
                                                 <BarraProgreso cantidad={carrera.activas} total={carrera.grupos} tono="verde" />
                                             </td>
-                                            <td className="px-4 py-3.5">
+                                            <td className="px-4 py-2.5">
                                                 <BarraProgreso
                                                     cantidad={carrera.pendientes}
                                                     total={carrera.grupos}
                                                     tono={carrera.situacion === 'sin' ? 'rojo' : 'naranja'}
                                                 />
                                             </td>
-                                            <td className="px-4 py-3.5">
+                                            <td className="px-4 py-2.5">
                                                 {carrera.activas > 0 ? (
                                                     <Badge tono="verde" icono="check">Activa</Badge>
                                                 ) : (
                                                     <Badge tono="rojo" icono="equis">Sin designaciones</Badge>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3.5">
+                                            <td className="px-4 py-2.5">
                                                 <div className="flex items-center gap-0.5">
                                                     <Link
                                                         href={route('designaciones.carrera', {
@@ -245,20 +242,20 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                     </div>
                 </div>
 
-                <aside className="w-full shrink-0 space-y-5 xl:w-80">
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="font-semibold tracking-tight text-gray-900">Resumen general</h3>
-                        <div className="mt-4 flex justify-center">
+                <aside className="w-full shrink-0 space-y-3 xl:w-80">
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <h3 className="text-sm font-semibold tracking-tight text-gray-900">Resumen general</h3>
+                        <div className="mt-3 flex justify-center">
                             <GraficoAnillo resumen={resumen} />
                         </div>
-                        <ul className="mt-5 space-y-1">
+                        <ul className="mt-3 space-y-0.5">
                             {leyendaDona.map((fila) => (
                                 <li
                                     key={fila.etiqueta}
-                                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-gray-50"
+                                    className="flex items-center justify-between rounded-lg px-2 py-1 text-xs transition-colors hover:bg-gray-50"
                                 >
-                                    <span className="flex items-center gap-2.5 text-gray-600">
-                                        <span className={`h-2.5 w-2.5 rounded-full ${fila.punto}`} />
+                                    <span className="flex items-center gap-2 text-gray-600">
+                                        <span className={`h-2 w-2 rounded-full ${fila.punto}`} />
                                         {fila.etiqueta}
                                     </span>
                                     <span className="font-semibold text-gray-900 tabular-nums">
@@ -270,27 +267,27 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                                 </li>
                             ))}
                         </ul>
-                        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3.5 text-sm">
+                        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2.5 text-xs">
                             <span className="text-gray-500">Total carreras</span>
                             <span className="font-semibold text-gray-900 tabular-nums">{resumen.total}</span>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
+                    <div className="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                        <h3 className="mb-2 text-sm font-semibold tracking-tight text-gray-900">Acciones rápidas</h3>
                         <ul className="space-y-0.5">
                             {accionesRapidas.map((accion) => (
                                 <li key={accion.etiqueta}>
                                     <Link
                                         href={accion.href}
-                                        className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                        className="group flex items-center gap-2 rounded-lg px-2 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-50"
                                     >
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-400 ring-1 ring-inset ring-gray-200/60 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-200/60">
-                                            <Icono tipo={accion.tipo} className="h-4 w-4" />
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-gray-400 ring-1 ring-inset ring-gray-200/60 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-200/60">
+                                            <Icono tipo={accion.tipo} className="h-3.5 w-3.5" />
                                         </span>
                                         <span className="flex-1 font-medium">{accion.etiqueta}</span>
                                         <span className="text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-gray-400">
-                                            <Icono tipo="chevronDerecha" className="h-3.5 w-3.5" />
+                                            <Icono tipo="chevronDerecha" className="h-3 w-3" />
                                         </span>
                                     </Link>
                                 </li>
@@ -298,24 +295,24 @@ export default function PorCarrera({ carreras, resumen, gestiones, periodos, fil
                         </ul>
                     </div>
 
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm">
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <h3 className="font-semibold tracking-tight text-gray-900">¿Necesitas ayuda?</h3>
-                                <p className="mt-1 text-sm leading-relaxed text-gray-500">
+                                <h3 className="text-sm font-semibold tracking-tight text-gray-900">¿Necesitas ayuda?</h3>
+                                <p className="mt-1 text-xs leading-relaxed text-gray-500">
                                     Consulta la guía rápida para aprender a gestionar las designaciones por carrera.
                                 </p>
                                 <a
                                     href="#"
                                     onClick={(e) => e.preventDefault()}
-                                    className="mt-2.5 inline-flex items-center gap-1 text-sm font-medium text-blue-700 transition-colors hover:text-blue-800"
+                                    className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-700 transition-colors hover:text-blue-800"
                                 >
                                     Ver guía
-                                    <Icono tipo="chevronDerecha" className="h-3.5 w-3.5" />
+                                    <Icono tipo="chevronDerecha" className="h-3 w-3" />
                                 </a>
                             </div>
                             <span className="text-blue-200">
-                                <Icono tipo="documento" className="h-10 w-10" />
+                                <Icono tipo="documento" className="h-8 w-8" />
                             </span>
                         </div>
                     </div>
