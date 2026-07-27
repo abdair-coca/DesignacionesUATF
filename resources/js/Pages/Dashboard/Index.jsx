@@ -604,7 +604,7 @@ export default function Index({ gestiones, periodos, filtros, gruposSinDesignar,
                                                     <p className="font-medium text-gray-900">{grupo.materia.nombre}</p>
                                                     <p className="text-xs text-gray-400">{grupo.materia.sigla}</p>
                                                 </td>
-                                                <td className="px-4 py-3.5 text-gray-600">{grupo.carrera.sigla}</td>
+                                                <td className="px-4 py-3.5 text-gray-600">{grupo.materia?.carrera?.sigla}</td>
                                                 <td className="px-4 py-3.5 text-gray-600">{grupo.codigo}</td>
                                                 <td className="px-4 py-3.5 text-right">
                                                     <Link

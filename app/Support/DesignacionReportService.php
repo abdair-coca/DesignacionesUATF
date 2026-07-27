@@ -6,6 +6,7 @@ use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Gestion;
+use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 
@@ -154,8 +155,8 @@ class DesignacionReportService
         $dash = $this->dashboardGeneral($gestionId, $periodoId);
 
         return [
-            'gruposSinDesignar' => Materia::join('grupos', 'grupos.materia_id', '=', 'materias.id')
-                ->where('grupos.estado', 'habilitado')
+            'gruposSinDesignar' => Grupo::with(['materia', 'materia.carrera'])
+                ->where('estado', 'habilitado')
                 ->whereNotExists(function ($query) use ($gestionId, $periodoId) {
                     $query->selectRaw(1)
                         ->from('designaciones')
@@ -164,7 +165,6 @@ class DesignacionReportService
                         ->where('designaciones.Id_periodo', $periodoId)
                         ->where('designaciones.estado', '!=', 'rechazada');
                 })
-                ->select('grupos.*')
                 ->get(),
             'conteoEstado' => $dash['conteoEstado'],
             'docentesBajoLimite' => $dash['docentesBajoLimite'],
