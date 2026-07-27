@@ -5,7 +5,7 @@ export default function FilterBar({ busqueda, onBusquedaChange, placeholder, cam
     return (
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
             {typeof onBusquedaChange === 'function' && (
-                <div className="relative min-w-52 flex-1">
+                <div className="relative min-w-[180px] flex-1">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                         <Icono tipo="buscar" className="h-4 w-4" />
                     </span>
@@ -29,7 +29,7 @@ export default function FilterBar({ busqueda, onBusquedaChange, placeholder, cam
             )}
 
             {campos.map((campo) => (
-                <div key={campo.key} className="w-48">
+                <div key={campo.key} className="min-w-[130px] flex-1 sm:flex-initial sm:w-44">
                     <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
                         {campo.label}
                     </label>

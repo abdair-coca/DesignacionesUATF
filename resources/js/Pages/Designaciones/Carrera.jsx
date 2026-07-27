@@ -794,7 +794,7 @@ export default function Carrera({
                     )}
                 </div>
 
-                <aside className="w-full shrink-0 space-y-2.5 xl:w-80">
+                <aside className="w-full shrink-0 space-y-2.5 xl:w-72 2xl:w-80">
                     <div className="rounded-xl border border-gray-200/80 bg-white p-3.5 shadow-sm">
                         <h3 className="text-sm font-semibold tracking-tight text-gray-900">Progreso</h3>
                         <div className="mt-2.5 flex items-center gap-3">
