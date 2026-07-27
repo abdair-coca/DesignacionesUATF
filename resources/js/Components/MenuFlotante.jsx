@@ -1,24 +1,47 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 export default function MenuFlotante({ anchorEl, onClose, width = 224, align = 'right', children }) {
     const [coords, setCoords] = useState(null);
+    const menuRef = useRef(null);
 
     useLayoutEffect(() => {
         if (!anchorEl) return;
 
-        function actualizarPosicion() {
+        function calcular(menuH) {
             const rect = anchorEl.getBoundingClientRect();
+            const vh = window.innerHeight;
+            const spaceBelow = vh - rect.bottom;
+            const spaceAbove = rect.top;
             const left = align === 'left' ? rect.left : rect.right - width;
-            setCoords({ top: rect.bottom + 6, left });
+            const h = menuH || 320;
+            const flip = spaceBelow < h && spaceAbove > spaceBelow;
+            return {
+                top: flip ? Math.max(rect.top - h - 6, 4) : rect.bottom + 6,
+                left,
+            };
         }
 
-        actualizarPosicion();
-        window.addEventListener('scroll', actualizarPosicion, true);
-        window.addEventListener('resize', actualizarPosicion);
+        setCoords(calcular());
+
+        const raf = requestAnimationFrame(() => {
+            if (menuRef.current) {
+                setCoords(calcular(menuRef.current.offsetHeight));
+            }
+        });
+
+        function actualizarScroll() {
+            if (menuRef.current) {
+                setCoords(calcular(menuRef.current.offsetHeight));
+            }
+        }
+
+        window.addEventListener('scroll', actualizarScroll, true);
+        window.addEventListener('resize', actualizarScroll);
         return () => {
-            window.removeEventListener('scroll', actualizarPosicion, true);
-            window.removeEventListener('resize', actualizarPosicion);
+            cancelAnimationFrame(raf);
+            window.removeEventListener('scroll', actualizarScroll, true);
+            window.removeEventListener('resize', actualizarScroll);
         };
     }, [anchorEl, width, align]);
 
@@ -28,6 +51,7 @@ export default function MenuFlotante({ anchorEl, onClose, width = 224, align = '
         <>
             <div className="fixed inset-0 z-40" onClick={onClose} />
             <div
+                ref={menuRef}
                 className="menu-pop fixed z-50 rounded-lg border border-gray-200/80 bg-white py-1 shadow-lg shadow-gray-200/60"
                 style={{ top: coords.top, left: coords.left, width }}
             >
