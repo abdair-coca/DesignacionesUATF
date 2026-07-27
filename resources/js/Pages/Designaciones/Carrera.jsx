@@ -171,6 +171,32 @@ export default function Carrera({
         sel.clearAll();
     }, [roster, carrera, filtros, gestionNombre, periodoNombre]);
 
+    const copiarTodo = useCallback(() => {
+        const filasACopiar = roster.map((fila) => ({
+            Id_docente: fila.designacion?.docente?.id ?? null,
+            Id_materia: fila.materia.id,
+            Id_grupo: fila.id,
+            materia_sigla: fila.materia.sigla,
+            materia_nombre: fila.materia.nombre,
+            docente_nombre: fila.designacion?.docente?.nombre ?? 'Sin asignar',
+            horas: fila.horas,
+            carrera_sigla: carrera.sigla,
+            carrera_id: carrera.id,
+            grupo_codigo: fila.codigo,
+        })).filter(Boolean);
+
+        if (filasACopiar.length === 0) return;
+
+        clipboardCopy(filasACopiar, {
+            gestion_id: filtros.gestion_id,
+            gestion_nombre: gestionNombre,
+            periodo_id: filtros.periodo_id,
+            periodo_nombre: periodoNombre,
+            carrera_id: carrera.id,
+            carrera_nombre: carrera.nombre,
+        });
+    }, [roster, carrera, filtros, gestionNombre, periodoNombre]);
+
     useEffect(() => {
         function handleKeyDown(e) {
             if (e.key === 'Escape') {
@@ -499,13 +525,23 @@ export default function Carrera({
                             Filtros
                         </button>
 
-                        {seleccion.count > 0 && (
+                        {seleccion.count > 0 ? (
                             <button
                                 onClick={copiarSeleccionadas}
-                                className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 active:scale-[0.98]"
                             >
                                 <Icono tipo="copiar" className="h-4 w-4" />
                                 Copiar ({seleccion.count})
+                            </button>
+                        ) : (
+                            <button
+                                onClick={copiarTodo}
+                                disabled={roster.length === 0}
+                                title="Copiar todas las materias y grupos de esta carrera"
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                <Icono tipo="copiar" className="h-4 w-4" />
+                                Copiar todo ({roster.length})
                             </button>
                         )}
 
