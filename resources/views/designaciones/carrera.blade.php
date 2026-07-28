@@ -68,7 +68,8 @@
         {{ $carrera->id }}, 
         {{ $filtros['gestion_id'] }}, 
         {{ $filtros['periodo_id'] }},
-        {{ $esGestionActual ? 'true' : 'false' }}
+        {{ $esGestionActual ? 'true' : 'false' }},
+        {{ json_encode($revision) }}
     )" 
      class="space-y-4">
 
@@ -106,7 +107,17 @@
                 <span>Copiar de Gestión Anterior</span>
             </button>
 
-            <template x-if="esGestionActual">
+            <template x-if="esGestionActual && revisionData && revisionData.estado === 'pendiente'">
+                <button @click="retirarEnvioRevision()" 
+                        class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Retirar Envío</span>
+                </button>
+            </template>
+
+            <template x-if="esGestionActual && (!revisionData || revisionData.estado !== 'pendiente')">
                 <button @click="modalSolicitarRevisionOpen = true" 
                         class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -605,7 +616,7 @@
 
 @push('scripts')
 <script>
-    function designacionesCarreraData(docentesProcesados, rosterGrupos, carreraId, gestionId, periodoId, esGestionActual) {
+    function designacionesCarreraData(docentesProcesados, rosterGrupos, carreraId, gestionId, periodoId, esGestionActual, revisionData) {
         return {
             busqueda: '',
             perPage: 10,
@@ -626,9 +637,36 @@
             docenteActual: null,
             gruposSeleccionados: [],
             esGestionActual: esGestionActual,
+            revisionData: revisionData,
             
             todosDocentes: docentesProcesados,
             todosGrupos: rosterGrupos,
+
+            retirarEnvioRevision() {
+                if (!this.revisionData || !this.revisionData.id) return;
+                if (!confirm('¿Deseas retirar esta solicitud enviada al Vicerrectorado para volver a editarla en modo borrador?')) return;
+
+                fetch('/revisiones/' + this.revisionData.id + '/retirar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        alert('La solicitud ha sido retirada exitosamente.');
+                        window.location.reload();
+                    } else {
+                        alert(res.error || 'No se pudo retirar la solicitud.');
+                    }
+                })
+                .catch(() => {
+                    alert('Ocurrió un error al intentar retirar la solicitud.');
+                });
+            },
 
             get docentesFiltrados() {
                 if (!this.busqueda.trim()) return this.todosDocentes;
