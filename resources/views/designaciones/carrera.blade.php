@@ -342,7 +342,15 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200/70 text-gray-700">
-                            <template x-for="g in todosGrupos" :key="g.id">
+                            <template x-if="gruposDisponiblesParaDocente.length === 0">
+                                <tr>
+                                    <td colspan="4" class="py-6 text-center text-gray-400 italic font-normal">
+                                        No hay materias ni grupos disponibles. Todos los grupos libres ya han sido asignados a otros docentes.
+                                    </td>
+                                </tr>
+                            </template>
+
+                            <template x-for="g in gruposDisponiblesParaDocente" :key="g.id">
                                 <tr @click="toggleGrupo(g.id)" 
                                     :class="gruposSeleccionados.includes(g.id) ? 'bg-[#fff9d6] transition-colors cursor-pointer font-semibold' : 'hover:bg-gray-50 transition-colors cursor-pointer'">
                                     
@@ -686,6 +694,24 @@
                 .catch(() => {
                     this.cargandoPreview = false;
                     this.previewItems = [];
+                });
+            },
+
+            get gruposDisponiblesParaDocente() {
+                if (!this.docenteActual) return this.todosGrupos;
+
+                const gruposOcupadosPorOtros = new Set();
+                this.todosDocentes.forEach(d => {
+                    if (d.id !== this.docenteActual.id) {
+                        d.grupos_ids.forEach(gid => gruposOcupadosPorOtros.add(gid));
+                    }
+                });
+
+                return this.todosGrupos.filter(g => {
+                    const asignadoAlActual = (g.docente_actual_id === this.docenteActual.id) || this.gruposSeleccionados.includes(g.id);
+                    const ocupadoPorOtro = gruposOcupadosPorOtros.has(g.id) || (g.docente_actual_id && g.docente_actual_id !== this.docenteActual.id);
+
+                    return asignadoAlActual || !ocupadoPorOtro;
                 });
             },
 
