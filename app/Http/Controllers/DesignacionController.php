@@ -256,6 +256,13 @@ class DesignacionController extends Controller
             }
         });
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Designación guardada correctamente.',
+            ]);
+        }
+
         return redirect()->back()->with('status', 'Cambios guardados.');
     }
 

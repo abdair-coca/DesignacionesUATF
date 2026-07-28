@@ -322,15 +322,49 @@
                     Cancelar
                 </button>
 
-                <button @click="
-                    // Guardar asignaciones para el docente actual
-                    alert('Asignación actualizada para ' + docenteActual.nombre + ' (' + totalHorasSeleccionadas + ' hrs)');
-                    cerrarModal();
-                " class="px-5 py-2 bg-[#00acac] hover:bg-[#008a8a] text-white rounded text-xs font-bold shadow-md transition-colors flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button @click="guardarDesignacionDocente()" 
+                        :disabled="cargandoGuardar"
+                        class="px-5 py-2 bg-[#00acac] hover:bg-[#008a8a] text-white rounded text-xs font-bold shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                    <svg x-show="!cargandoGuardar" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Guardar Designación</span>
+                    <svg x-show="cargandoGuardar" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span x-text="cargandoGuardar ? 'Guardando...' : 'Guardar Designación'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE ÉXITO (COLOR ADMIN V2) -->
+    <div x-show="modalExitoOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden text-center">
+            <!-- Header Modal Éxito -->
+            <div class="bg-[#2d353c] text-white px-5 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">ÉXITO</span>
+                    <span class="font-bold text-xs">Confirmación de Asignación</span>
+                </div>
+                <button @click="modalExitoOpen = false; window.location.reload();" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- Body Modal Éxito -->
+            <div class="p-6 space-y-4">
+                <div class="h-14 w-14 rounded-full bg-emerald-100 text-emerald-600 font-bold flex items-center justify-center mx-auto border-2 border-emerald-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-gray-900 text-base">¡Designación Guardada Exitosamente!</h3>
+                <p class="text-xs text-gray-600 font-medium" x-text="mensajeExito"></p>
+            </div>
+
+            <!-- Footer Modal Éxito -->
+            <div class="bg-gray-100 border-t border-gray-200 px-5 py-3 flex justify-center">
+                <button @click="modalExitoOpen = false; window.location.reload();" 
+                        class="px-6 py-2 bg-[#00acac] hover:bg-[#008a8a] text-white font-bold rounded-lg text-xs shadow-md transition-colors">
+                    Aceptar y Actualizar
                 </button>
             </div>
         </div>
@@ -346,6 +380,9 @@
             currentPage: 1,
             docenteSeleccionadoId: null,
             modalAbierta: false,
+            modalExitoOpen: false,
+            mensajeExito: '',
+            cargandoGuardar: false,
             docenteActual: null,
             gruposSeleccionados: [],
             
@@ -392,6 +429,72 @@
                 } else {
                     this.gruposSeleccionados.push(grupoId);
                 }
+            },
+
+            guardarDesignacionDocente() {
+                if (!this.docenteActual) return;
+                this.cargandoGuardar = true;
+
+                const cambios = [];
+                this.todosGrupos.forEach(g => {
+                    const estaSeleccionado = this.gruposSeleccionados.includes(g.id);
+                    const asignadoPreviamente = (g.docente_actual_id === this.docenteActual.id);
+
+                    if (estaSeleccionado) {
+                        cambios.push({
+                            Id_grupo: g.id,
+                            Id_materia: g.materia_id,
+                            Id_docente: this.docenteActual.id
+                        });
+                    } else if (asignadoPreviamente) {
+                        cambios.push({
+                            Id_grupo: g.id,
+                            Id_materia: g.materia_id,
+                            Id_docente: null
+                        });
+                    }
+                });
+
+                if (cambios.length === 0) {
+                    const nombreDocente = this.docenteActual.nombre;
+                    const horas = this.totalHorasSeleccionadas;
+                    this.cerrarModal();
+                    this.mensajeExito = `Las materias de ${nombreDocente} están al día (${horas} hrs totales).`;
+                    this.modalExitoOpen = true;
+                    this.cargandoGuardar = false;
+                    return;
+                }
+
+                fetch('/designaciones/carrera/' + carreraId + '/guardar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Id_gestion: gestionId,
+                        Id_periodo: periodoId,
+                        cambios: cambios
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    this.cargandoGuardar = false;
+                    if (res.success) {
+                        const nombreDocente = this.docenteActual.nombre;
+                        const horas = this.totalHorasSeleccionadas;
+                        this.cerrarModal();
+                        this.mensajeExito = `Las materias asignadas a ${nombreDocente} fueron guardadas exitosamente en la base de datos (${horas} hrs totales).`;
+                        this.modalExitoOpen = true;
+                    } else {
+                        alert(res.error || 'Ocurrió un error al guardar las designaciones.');
+                    }
+                })
+                .catch(() => {
+                    this.cargandoGuardar = false;
+                    alert('Ocurrió un error inesperado al guardar.');
+                });
             },
 
             enviarSolicitudVicedecanato() {
