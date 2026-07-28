@@ -218,7 +218,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Gestión Origen</label>
-                            <select x-model="copiaForm.origen_gestion_id" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 bg-white">
+                            <select x-model="copiaForm.origen_gestion_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 bg-white">
                                 @foreach($gestiones as $g)
                                     <option value="{{ $g->id }}">Gestión {{ $g->nombre }}</option>
                                 @endforeach
@@ -226,7 +226,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Periodo Origen</label>
-                            <select x-model="copiaForm.origen_periodo_id" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 bg-white">
+                            <select x-model="copiaForm.origen_periodo_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 bg-white">
                                 @foreach($periodos as $p)
                                     <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
                                 @endforeach
@@ -246,16 +246,32 @@
                                     <tr>
                                         <th class="p-1.5">Materia</th>
                                         <th class="p-1.5">Docente Origen</th>
-                                        <th class="p-1.5 text-center">Impacto</th>
+                                        <th class="p-1.5 text-center">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <template x-for="item in previsualizacionData" :key="item.materia_sigla">
+                                    <template x-if="cargandoPreview">
+                                        <tr>
+                                            <td colspan="3" class="p-3 text-center text-gray-500 italic">
+                                                Cargando previsualización de docentes...
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                    <template x-if="!cargandoPreview && previsualizacionData.length === 0">
+                                        <tr>
+                                            <td colspan="3" class="p-3 text-center text-gray-400 italic">
+                                                No existen designaciones registradas en el periodo de origen seleccionado.
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                    <template x-for="(item, idx) in previsualizacionData" :key="idx">
                                         <tr class="hover:bg-gray-50">
                                             <td class="p-1.5 font-bold text-gray-900" x-text="item.materia_sigla + ' (G' + item.grupo_codigo + ')'"></td>
                                             <td class="p-1.5 text-gray-700" x-text="item.docente_nombre"></td>
                                             <td class="p-1.5 text-center">
-                                                <span class="bg-cyan-100 text-cyan-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-xs">Nueva asignación</span>
+                                                <span class="bg-cyan-100 text-cyan-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-xs">Importar</span>
                                             </td>
                                         </tr>
                                     </template>
@@ -433,11 +449,43 @@
                 origen_periodo_id: 1
             },
 
-            previsualizacionData: [
-                { materia_sigla: 'INF-111', grupo_codigo: '1', docente_nombre: 'ING. CARLOS MENDOZA' },
-                { materia_sigla: 'INF-121', grupo_codigo: '1', docente_nombre: 'ING. MARÍA GUTIÉRREZ' },
-                { materia_sigla: 'INF-211', grupo_codigo: '1', docente_nombre: 'ING. JAVIER LOZA' }
-            ],
+            cargandoPreview: false,
+            previsualizacionData: [],
+
+            cargarPrevisualizacionCopia() {
+                if (!this.copiaForm.origen_gestion_id || !this.copiaForm.origen_periodo_id) return;
+
+                this.cargandoPreview = true;
+                this.previsualizacionData = [];
+
+                fetch('/designaciones/carrera/' + this.carrera.id + '/previsualizar-copia', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        origen_gestion_id: this.copiaForm.origen_gestion_id,
+                        origen_periodo_id: this.copiaForm.origen_periodo_id,
+                        destino_gestion_id: {{ $gestionActualId }},
+                        destino_periodo_id: this.nuevaForm.periodo_id || 1
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    this.cargandoPreview = false;
+                    if (res.success && res.items) {
+                        this.previsualizacionData = res.items;
+                    } else {
+                        this.previsualizacionData = [];
+                    }
+                })
+                .catch(() => {
+                    this.cargandoPreview = false;
+                    this.previsualizacionData = [];
+                });
+            },
 
             propuestas: propuestasIniciales,
 
@@ -450,6 +498,7 @@
 
             abrirModalNuevaPropuesta() {
                 this.modalNuevaOpen = true;
+                this.cargarPrevisualizacionCopia();
             },
 
             abrirModalObservaciones(item) {
@@ -494,6 +543,35 @@
             },
 
             guardarNuevaPropuesta() {
+                if (this.tabModal === 'copiar') {
+                    fetch('/designaciones/carrera/' + this.carrera.id + '/copiar-anterior', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            origen_gestion_id: this.copiaForm.origen_gestion_id,
+                            origen_periodo_id: this.copiaForm.origen_periodo_id,
+                            destino_gestion_id: {{ $gestionActualId }},
+                            destino_periodo_id: this.nuevaForm.periodo_id || 1
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + (this.nuevaForm.periodo_id || 1);
+                        } else {
+                            alert(res.error || 'No se pudieron copiar las designaciones del periodo seleccionado.');
+                        }
+                    })
+                    .catch(() => {
+                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + (this.nuevaForm.periodo_id || 1);
+                    });
+                    return;
+                }
+
                 if (!this.nuevaForm.descripcion.trim()) return;
 
                 const nueva = {
