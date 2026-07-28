@@ -23,6 +23,15 @@ class RevisionController extends Controller
             'Id_periodo' => ['required', 'exists:periodos,id'],
         ]);
 
+        $gestion = \App\Models\Gestion::find($data['Id_gestion']);
+        $anioActual = (string) date('Y');
+
+        if ($gestion && (string) $gestion->nombre !== $anioActual) {
+            return response()->json([
+                'error' => "Únicamente se pueden enviar a revisión las designaciones correspondientes a la gestión actual ({$anioActual}).",
+            ], 422);
+        }
+
         // Verificar si ya hay una revision pendiente
         $pendiente = Revision::where('carrera_id', $data['carrera_id'])
             ->where('Id_gestion', $data['Id_gestion'])

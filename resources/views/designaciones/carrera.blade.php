@@ -56,6 +56,10 @@
         'horas' => $r['horas'],
         'docente_actual_id' => $r['designacion']['docente']['id'] ?? null,
     ])->values();
+
+    $gestionSeleccionada = $gestiones->firstWhere('id', $filtros['gestion_id']);
+    $gestionNombreSeleccionada = $gestionSeleccionada?->nombre ?? '';
+    $esGestionActual = ($gestionNombreSeleccionada === (string)date('Y'));
 @endphp
 
 <div x-data="designacionesCarreraData(
@@ -63,7 +67,8 @@
         {{ json_encode($rosterGrupos) }}, 
         {{ $carrera->id }}, 
         {{ $filtros['gestion_id'] }}, 
-        {{ $filtros['periodo_id'] }}
+        {{ $filtros['periodo_id'] }},
+        {{ $esGestionActual ? 'true' : 'false' }}
     )" 
      class="space-y-4">
 
@@ -101,13 +106,26 @@
                 <span>Copiar de Gestión Anterior</span>
             </button>
 
-            <button @click="enviarSolicitudVicedecanato()" 
-                    class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                <span>Enviar Propuesta a Vicedecanato</span>
-            </button>
+            <template x-if="esGestionActual">
+                <button @click="modalSolicitarRevisionOpen = true" 
+                        class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    <span>Enviar Propuesta a Vicedecanato</span>
+                </button>
+            </template>
+
+            <template x-if="!esGestionActual">
+                <button disabled 
+                        title="Únicamente se pueden enviar a revisión las designaciones correspondientes a la gestión actual ({{ date('Y') }})"
+                        class="bg-gray-200 text-gray-400 border border-gray-300 font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow-none cursor-not-allowed opacity-75">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span>Revisión Bloqueada (Gestión Histórica)</span>
+                </button>
+            </template>
         </div>
     </div>
 
@@ -486,6 +504,52 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIRMACIÓN DE SOLICITUD DE REVISIÓN (COLOR ADMIN V2) -->
+    <div x-show="modalSolicitarRevisionOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden text-center">
+            <!-- Header -->
+            <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">SOLICITAR REVISIÓN</span>
+                    <span class="font-bold text-xs">Vicedecanato UATF</span>
+                </div>
+                <button @click="modalSolicitarRevisionOpen = false" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                <div class="h-14 w-14 rounded-full bg-teal-100 text-[#00acac] font-bold flex items-center justify-center mx-auto border-2 border-teal-200">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-gray-900 text-base">¿Enviar propuesta a revisión?</h3>
+                <p class="text-xs text-gray-600 font-medium">
+                    Se enviarán todas las designaciones docentes de <span class="font-bold text-gray-900">{{ $carrera->nombre }}</span> correspondientes a la <span class="font-bold text-gray-900">Gestión {{ $gestionNombreSeleccionada }}</span> al Vicedecanato para su evaluación.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-100 border-t border-gray-200 px-5 py-3 flex items-center justify-between">
+                <button @click="modalSolicitarRevisionOpen = false" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-semibold">
+                    Cancelar
+                </button>
+
+                <button @click="confirmarEnviarSolicitudVicedecanato()" 
+                        :disabled="cargandoSolicitar"
+                        class="px-5 py-2 bg-[#00acac] hover:bg-[#008a8a] text-white rounded text-xs font-bold shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
+                    <svg x-show="!cargandoSolicitar" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg x-show="cargandoSolicitar" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span x-text="cargandoSolicitar ? 'Enviando...' : 'Confirmar y Enviar'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE CONFIRMACIÓN DE ÉXITO (COLOR ADMIN V2) -->
     <div x-show="modalExitoOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden text-center">
@@ -522,7 +586,7 @@
 
 @push('scripts')
 <script>
-    function designacionesCarreraData(docentesProcesados, rosterGrupos, carreraId, gestionId, periodoId) {
+    function designacionesCarreraData(docentesProcesados, rosterGrupos, carreraId, gestionId, periodoId, esGestionActual) {
         return {
             busqueda: '',
             perPage: 10,
@@ -531,15 +595,18 @@
             modalAbierta: false,
             modalExitoOpen: false,
             modalCopiarOpen: false,
+            modalSolicitarRevisionOpen: false,
             copiarOrigenGestionId: '{{ $gestiones->first()?->id }}',
             copiarOrigenPeriodoId: '{{ $periodos->first()?->id }}',
             cargandoCopiar: false,
             cargandoPreview: false,
+            cargandoSolicitar: false,
             previewItems: [],
             mensajeExito: '',
             cargandoGuardar: false,
             docenteActual: null,
             gruposSeleccionados: [],
+            esGestionActual: esGestionActual,
             
             todosDocentes: docentesProcesados,
             todosGrupos: rosterGrupos,
@@ -733,14 +800,15 @@
                 });
             },
 
-            enviarSolicitudVicedecanato() {
-                if (!confirm('¿Deseas enviar las designaciones de esta carrera a revisión por el Vicedecanato?')) return;
+            confirmarEnviarSolicitudVicedecanato() {
+                this.cargandoSolicitar = true;
                 
                 fetch('/revisiones/solicitar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         carrera_id: carreraId,
@@ -750,14 +818,19 @@
                 })
                 .then(r => r.json())
                 .then(res => {
+                    this.cargandoSolicitar = false;
                     if (res.success) {
-                        alert('¡Solicitud enviada a revisión por el Vicedecanato exitosamente!');
-                        window.location.reload();
+                        this.modalSolicitarRevisionOpen = false;
+                        this.mensajeExito = '¡Las designaciones docentes han sido enviadas a revisión por el Vicedecanato exitosamente!';
+                        this.modalExitoOpen = true;
                     } else {
-                        alert(res.error || 'Ocurrió un error al enviar la solicitud.');
+                        alert(res.error || 'Ocurrió un error al enviar la solicitud a revisión.');
                     }
                 })
-                .catch(() => alert('Ocurrió un error inesperado al procesar el envío.'));
+                .catch(() => {
+                    this.cargandoSolicitar = false;
+                    alert('Ocurrió un error inesperado al procesar la solicitud.');
+                });
             }
         };
     }

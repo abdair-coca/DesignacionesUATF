@@ -21,7 +21,7 @@ class RevisionTest extends TestCase
     {
         $usuario = User::factory()->create();
         $carrera = Carrera::factory()->create();
-        $gestion = Gestion::factory()->create();
+        $gestion = Gestion::firstOrCreate(['nombre' => (string) date('Y')]);
         $periodo = Periodo::factory()->create();
 
         $response = $this->actingAs($usuario)
@@ -52,10 +52,30 @@ class RevisionTest extends TestCase
         $this->assertNotNull($revision->solicitado_en);
     }
 
+    public function test_no_permite_solicitar_revision_de_gestion_pasada(): void
+    {
+        $usuario = User::factory()->create();
+        $carrera = Carrera::factory()->create();
+        $gestionPasada = Gestion::firstOrCreate(['nombre' => '2024']);
+        $periodo = Periodo::factory()->create();
+
+        $response = $this->actingAs($usuario)
+            ->postJson('/revisiones/solicitar', [
+                'carrera_id' => $carrera->id,
+                'Id_gestion' => $gestionPasada->id,
+                'Id_periodo' => $periodo->id,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'error' => 'Únicamente se pueden enviar a revisión las designaciones correspondientes a la gestión actual (2026).',
+            ]);
+    }
+
     public function test_no_permite_dos_revisiones_pendientes_misma_carrera(): void
     {
         $carrera = Carrera::factory()->create();
-        $gestion = Gestion::factory()->create();
+        $gestion = Gestion::firstOrCreate(['nombre' => (string) date('Y')]);
         $periodo = Periodo::factory()->create();
         $solicitante = User::factory()->create();
 
