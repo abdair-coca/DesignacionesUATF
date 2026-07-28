@@ -381,6 +381,74 @@ class DesignacionController extends Controller
         ]);
     }
 
+    public function previsualizarCopia(Request $request, Carrera $carrera): JsonResponse
+    {
+        $data = $request->validate([
+            'origen_gestion_id' => ['required', 'exists:gestiones,id'],
+            'origen_periodo_id' => ['required', 'exists:periodos,id'],
+            'destino_gestion_id' => ['required', 'exists:gestiones,id'],
+            'destino_periodo_id' => ['required', 'exists:periodos,id'],
+        ]);
+
+        $designacionesOrigen = Designacion::with(['docente', 'materia', 'grupo'])
+            ->where('Id_gestion', $data['origen_gestion_id'])
+            ->where('Id_periodo', $data['origen_periodo_id'])
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->whereNotNull('Id_docente')
+            ->get();
+
+        if ($designacionesOrigen->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'items' => [],
+                'message' => 'No hay designaciones registradas en el periodo de origen seleccionado.',
+            ]);
+        }
+
+        $designacionesDestino = Designacion::with('docente')
+            ->where('Id_gestion', $data['destino_gestion_id'])
+            ->where('Id_periodo', $data['destino_periodo_id'])
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->get()
+            ->keyBy('Id_grupo');
+
+        $items = [];
+        foreach ($designacionesOrigen as $desig) {
+            $actual = $designacionesDestino->get($desig->Id_grupo);
+
+            $impacto = 'Nueva asignación';
+            $impactoColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+
+            if ($actual && $actual->Id_docente) {
+                if ((int) $actual->Id_docente === (int) $desig->Id_docente) {
+                    $impacto = 'Sin cambios';
+                    $impactoColor = 'bg-gray-100 text-gray-700 border-gray-300';
+                } else {
+                    $impacto = 'Reemplaza a ' . ($actual->docente?->nombre ?? 'Docente previo');
+                    $impactoColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                }
+            }
+
+            $items[] = [
+                'grupo_id' => $desig->Id_grupo,
+                'materia_sigla' => $desig->materia?->sigla,
+                'materia_nombre' => $desig->materia?->nombre,
+                'grupo_codigo' => 'G' . ($desig->grupo?->codigo ?? ''),
+                'docente_id' => $desig->Id_docente,
+                'docente_nombre' => $desig->docente?->nombre ?? 'Sin docente',
+                'horas' => $desig->materia?->horas ?? 0,
+                'impacto' => $impacto,
+                'impactoColor' => $impactoColor,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'total' => count($items),
+            'items' => $items,
+        ]);
+    }
+
     /**
      * Arma una fila por grupo habilitado (tenga o no designación en esta gestión/periodo),
      * para la tabla de asignación rápida de Designaciones/Carrera.

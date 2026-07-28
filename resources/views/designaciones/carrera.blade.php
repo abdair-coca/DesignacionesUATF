@@ -93,7 +93,7 @@
                 </select>
             </form>
 
-            <button @click="modalCopiarOpen = true" 
+            <button @click="abrirModalCopiarAnterior()" 
                     class="bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
@@ -364,28 +364,29 @@
         </div>
     </div>
 
-    <!-- MODAL COPIAR DE GESTIÓN ANTERIOR (COLOR ADMIN V2) -->
+    <!-- MODAL COPIAR DE GESTIÓN ANTERIOR CON PREVISUALIZACIÓN DE DOCENTES -->
     <div x-show="modalCopiarOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
-        <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-lg overflow-hidden">
+        <div @click.away="modalCopiarOpen = false" class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <!-- Header -->
-            <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between">
+            <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="bg-[#348fe2] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Importar</span>
-                    <h3 class="font-bold text-sm tracking-tight">Copiar Designaciones de Gestión Anterior</h3>
+                    <h3 class="font-bold text-sm tracking-tight">Copiar & Previsualizar Designaciones de Gestión Anterior</h3>
                 </div>
                 <button @click="modalCopiarOpen = false" class="text-gray-400 hover:text-white">&times;</button>
             </div>
 
             <!-- Body -->
-            <div class="p-6 space-y-4 text-xs text-gray-700">
+            <div class="p-5 overflow-y-auto flex-1 space-y-4 text-xs text-gray-700">
                 <p class="text-gray-600 font-medium">
-                    Selecciona la gestión y periodo origen desde el cual deseas replicar las materias y docentes hacia la gestión y periodo actual:
+                    Selecciona el periodo de origen para ver la previsualización de docentes que se asignarán a la gestión actual:
                 </p>
 
-                <div class="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <!-- Selectores de Periodo Origen -->
+                <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-lg border border-gray-200">
                     <div>
                         <label class="block font-bold text-gray-700 mb-1">Gestión Origen:</label>
-                        <select x-model="copiarOrigenGestionId" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
+                        <select x-model="copiarOrigenGestionId" @change="cargarPrevisualizacionCopia()" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
                             @foreach($gestiones as $g)
                                 <option value="{{ $g->id }}">Gestión {{ $g->nombre }}</option>
                             @endforeach
@@ -394,7 +395,7 @@
 
                     <div>
                         <label class="block font-bold text-gray-700 mb-1">Periodo Origen:</label>
-                        <select x-model="copiarOrigenPeriodoId" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
+                        <select x-model="copiarOrigenPeriodoId" @change="cargarPrevisualizacionCopia()" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
                             @foreach($periodos as $p)
                                 <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
                             @endforeach
@@ -402,30 +403,84 @@
                     </div>
                 </div>
 
-                <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-800 text-[11px] font-medium flex items-start gap-2">
-                    <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Esta acción actualizará la propuesta del periodo actual con la asignación docente de la gestión seleccionada.</span>
+                <!-- Tabla Previsualización -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-gray-800 text-xs">Previsualización de Cambios:</span>
+                        <template x-if="previewItems.length > 0">
+                            <span class="bg-[#348fe2] text-white text-[10px] font-bold px-2 py-0.5 rounded" x-text="previewItems.length + ' designaciones a importar'"></span>
+                        </template>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="bg-[#f2f4f6] text-gray-800 font-bold border-b border-gray-200 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-3 text-center w-8 border-r border-gray-200">#</th>
+                                    <th class="py-2 px-3 border-r border-gray-200">Materia / Grupo</th>
+                                    <th class="py-2 px-3 border-r border-gray-200">Docente a Asignar</th>
+                                    <th class="py-2 px-3 text-center w-16 border-r border-gray-200">Horas</th>
+                                    <th class="py-2 px-3 text-center border-r border-gray-200">Impacto</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200/70 text-gray-700">
+                                <template x-if="cargandoPreview">
+                                    <tr>
+                                        <td colspan="5" class="py-6 text-center text-gray-500 italic">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <svg class="w-4 h-4 animate-spin text-[#348fe2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <span>Cargando previsualización de docentes...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+
+                                <template x-if="!cargandoPreview && previewItems.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="py-6 text-center text-gray-400 italic">No hay designaciones en la gestión/periodo origen seleccionado.</td>
+                                    </tr>
+                                </template>
+
+                                <template x-if="!cargandoPreview && previewItems.length > 0">
+                                    <template x-for="(item, idx) in previewItems" :key="item.grupo_id">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="py-2 px-3 text-center font-bold text-gray-400 border-r border-gray-200/40" x-text="idx + 1"></td>
+                                            <td class="py-2 px-3 border-r border-gray-200/40">
+                                                <span class="font-bold text-gray-900" x-text="item.materia_sigla + ' (' + item.grupo_codigo + ')'"></span>
+                                                <span class="block text-[10px] text-gray-500" x-text="item.materia_nombre"></span>
+                                            </td>
+                                            <td class="py-2 px-3 font-bold text-gray-900 border-r border-gray-200/40" x-text="item.docente_nombre"></td>
+                                            <td class="py-2 px-3 text-center font-bold text-gray-800 border-r border-gray-200/40 tabular-nums" x-text="item.horas + ' hrs'"></td>
+                                            <td class="py-2 px-3 text-center">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold border" :class="item.impactoColor" x-text="item.impacto"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="bg-gray-100 border-t border-gray-200 px-5 py-3 flex items-center justify-between">
+            <div class="bg-gray-100 border-t border-gray-200 px-5 py-3 flex items-center justify-between shrink-0">
                 <button @click="modalCopiarOpen = false" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-semibold">
                     Cancelar
                 </button>
 
                 <button @click="ejecutarCopiarAnterior()" 
-                        :disabled="cargandoCopiar"
-                        class="px-5 py-2 bg-[#348fe2] hover:bg-[#2a72b5] text-white rounded text-xs font-bold shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                        :disabled="cargandoCopiar || previewItems.length === 0"
+                        class="px-5 py-2 bg-[#348fe2] hover:bg-[#2a72b5] text-white rounded text-xs font-bold shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
                     <svg x-show="!cargandoCopiar" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                     </svg>
                     <svg x-show="cargandoCopiar" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span x-text="cargandoCopiar ? 'Copiando...' : 'Importar Designaciones'"></span>
+                    <span x-text="cargandoCopiar ? 'Importando...' : 'Confirmar e Importar (' + previewItems.length + ')'"></span>
                 </button>
             </div>
         </div>
@@ -479,6 +534,8 @@
             copiarOrigenGestionId: '{{ $gestiones->first()?->id }}',
             copiarOrigenPeriodoId: '{{ $periodos->first()?->id }}',
             cargandoCopiar: false,
+            cargandoPreview: false,
+            previewItems: [],
             mensajeExito: '',
             cargandoGuardar: false,
             docenteActual: null,
@@ -512,6 +569,46 @@
                 this.modalAbierta = false;
                 this.docenteActual = null;
                 this.gruposSeleccionados = [];
+            },
+
+            abrirModalCopiarAnterior() {
+                this.modalCopiarOpen = true;
+                this.cargarPrevisualizacionCopia();
+            },
+
+            cargarPrevisualizacionCopia() {
+                if (!this.copiarOrigenGestionId || !this.copiarOrigenPeriodoId) return;
+
+                this.cargandoPreview = true;
+                this.previewItems = [];
+
+                fetch('/designaciones/carrera/' + carreraId + '/previsualizar-copia', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        origen_gestion_id: this.copiarOrigenGestionId,
+                        origen_periodo_id: this.copiarOrigenPeriodoId,
+                        destino_gestion_id: gestionId,
+                        destino_periodo_id: periodoId
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    this.cargandoPreview = false;
+                    if (res.success) {
+                        this.previewItems = res.items;
+                    } else {
+                        this.previewItems = [];
+                    }
+                })
+                .catch(() => {
+                    this.cargandoPreview = false;
+                    this.previewItems = [];
+                });
             },
 
             get totalHorasSeleccionadas() {
