@@ -163,20 +163,51 @@ class DesignacionController extends Controller
             ->latest('id')
             ->first();
 
+        // Obtener IDs de docentes que han dictado materias en esta carrera alguna vez
+        $docentesHistorialIds = DB::table('designaciones')
+            ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+            ->where('materias.carrera_id', $carrera->id)
+            ->whereNotNull('designaciones.Id_docente')
+            ->pluck('designaciones.Id_docente')
+            ->unique()
+            ->toArray();
+
+        $docentesOrdenados = Docente::with('carreraOrigen:id,sigla')
+            ->get(['id', 'nombre', 'carrera_origen_id'])
+            ->sortBy(function (Docente $d) use ($carrera, $docentesHistorialIds) {
+                $prioridad = 3; // Resto de docentes
+                if ((int) $d->carrera_origen_id === (int) $carrera->id) {
+                    $prioridad = 1; // Prioridad 1: Docentes de la carrera
+                } elseif (in_array($d->id, $docentesHistorialIds)) {
+                    $prioridad = 2; // Prioridad 2: Docentes que dictaron al menos 1 materia en la carrera
+                }
+
+                return sprintf('%d_%s', $prioridad, strtolower($d->nombre));
+            })
+            ->values()
+            ->map(function (Docente $d) use ($carrera, $docentesHistorialIds) {
+                $prioridad = 3;
+                if ((int) $d->carrera_origen_id === (int) $carrera->id) {
+                    $prioridad = 1;
+                } elseif (in_array($d->id, $docentesHistorialIds)) {
+                    $prioridad = 2;
+                }
+
+                return [
+                    'id' => $d->id,
+                    'nombre' => $d->nombre,
+                    'carreraSigla' => $d->carreraOrigen?->sigla,
+                    'prioridad' => $prioridad,
+                ];
+            });
+
         return view('designaciones.carrera', [
             'carrera' => $carrera,
             'materias' => $materias,
             'designaciones' => $designaciones,
             'roster' => $roster,
             'historialPorGrupo' => $historialPorGrupo,
-            'docentes' => Docente::with('carreraOrigen:id,sigla')
-                ->orderBy('nombre')
-                ->get(['id', 'nombre', 'carrera_origen_id'])
-                ->map(fn (Docente $d) => [
-                    'id' => $d->id,
-                    'nombre' => $d->nombre,
-                    'carreraSigla' => $d->carreraOrigen?->sigla,
-                ]),
+            'docentes' => $docentesOrdenados,
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
             'limiteHoras' => CargaAcademicaService::getLimite(),

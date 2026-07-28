@@ -38,6 +38,7 @@
             'estado' => $estadoCarga,
             'estadoEtiqueta' => $estadoEtiqueta,
             'estadoColor' => $estadoColor,
+            'prioridad' => $d['prioridad'] ?? 3,
             'grupos_ids' => $desigDocente->pluck('Id_grupo')->toArray(),
         ];
     }
@@ -164,7 +165,15 @@
                                 <div class="flex items-center gap-3">
                                     <div class="h-8 w-8 rounded-full bg-[#00acac] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm" x-text="d.nombre.charAt(0)"></div>
                                     <div>
-                                        <p class="font-bold text-gray-900" x-text="d.nombre"></p>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <p class="font-bold text-gray-900" x-text="d.nombre"></p>
+                                            <template x-if="d.prioridad === 1">
+                                                <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded">Titular Carrera</span>
+                                            </template>
+                                            <template x-if="d.prioridad === 2">
+                                                <span class="bg-sky-100 text-sky-800 border border-sky-300 text-[9px] font-bold px-1.5 py-0.5 rounded">Histórico Carrera</span>
+                                            </template>
+                                        </div>
                                         <p class="text-[10px] text-gray-400 font-medium uppercase" x-text="'Origen: ' + (d.carreraSigla || 'General')"></p>
                                     </div>
                                 </div>
