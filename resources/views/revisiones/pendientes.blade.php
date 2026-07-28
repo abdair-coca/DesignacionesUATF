@@ -102,7 +102,7 @@
         </div>
 
         <div class="pt-4 border-t border-gray-200/80 text-[11px] text-gray-400 font-medium text-center">
-            UATF &bull; Vicedecanato
+            UATF &bull; Vicerrectorado
         </div>
     </div>
 

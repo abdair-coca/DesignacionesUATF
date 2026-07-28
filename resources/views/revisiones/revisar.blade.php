@@ -107,7 +107,7 @@
             </div>
 
             <div class="text-right text-[11px] text-gray-400">
-                To: <span class="text-gray-700 font-semibold">vicedecanato@uatf.edu.bo</span>
+                To: <span class="text-gray-700 font-semibold">vicerrectorado@uatf.edu.bo</span>
             </div>
         </div>
 

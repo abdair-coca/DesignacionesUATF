@@ -112,7 +112,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
-                    <span>Enviar Propuesta a Vicedecanato</span>
+                    <span>Enviar Propuesta a Vicerrectorado</span>
                 </button>
             </template>
 
@@ -511,7 +511,7 @@
             <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">SOLICITAR REVISIÓN</span>
-                    <span class="font-bold text-xs">Vicedecanato UATF</span>
+                    <span class="font-bold text-xs">Vicerrectorado UATF</span>
                 </div>
                 <button @click="modalSolicitarRevisionOpen = false" class="text-gray-400 hover:text-white">&times;</button>
             </div>
@@ -525,7 +525,7 @@
                 </div>
                 <h3 class="font-bold text-gray-900 text-base">¿Enviar propuesta a revisión?</h3>
                 <p class="text-xs text-gray-600 font-medium">
-                    Se enviarán todas las designaciones docentes de <span class="font-bold text-gray-900">{{ $carrera->nombre }}</span> correspondientes a la <span class="font-bold text-gray-900">Gestión {{ $gestionNombreSeleccionada }}</span> al Vicedecanato para su evaluación.
+                    Se enviarán todas las designaciones docentes de <span class="font-bold text-gray-900">{{ $carrera->nombre }}</span> correspondientes a la <span class="font-bold text-gray-900">Gestión {{ $gestionNombreSeleccionada }}</span> al Vicerrectorado para su evaluación.
                 </p>
             </div>
 
@@ -821,7 +821,7 @@
                     this.cargandoSolicitar = false;
                     if (res.success) {
                         this.modalSolicitarRevisionOpen = false;
-                        this.mensajeExito = '¡Las designaciones docentes han sido enviadas a revisión por el Vicedecanato exitosamente!';
+                        this.mensajeExito = '¡Las designaciones docentes han sido enviadas a revisión por el Vicerrectorado exitosamente!';
                         this.modalExitoOpen = true;
                     } else {
                         alert(res.error || 'Ocurrió un error al enviar la solicitud a revisión.');
