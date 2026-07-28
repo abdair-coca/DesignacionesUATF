@@ -279,33 +279,76 @@
         </div>
     </div>
 
-    <!-- MODAL DE OBSERVACIONES (ACTIVADO POR DOBLE CLIC EN LA FILA DE LA TABLA) -->
+    <!-- MODAL DE DETALLES Y OBSERVACIONES (ACTIVADO POR DOBLE CLIC EN LA FILA) -->
     <div x-show="modalObservacionesOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-xs shadow-2xl border border-gray-300 w-full max-w-lg overflow-hidden text-left">
             <div class="bg-[#2d353c] text-white px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-xs uppercase">OBSERVACIONES</span>
-                    <h3 class="font-bold text-xs tracking-tight">Detalle de Revisión del Vicerrectorado</h3>
+                    <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-xs uppercase">DETALLE Y ESTADO</span>
+                    <h3 class="font-bold text-xs tracking-tight">Estado de la Designación Docente</h3>
                 </div>
                 <button @click="modalObservacionesOpen = false" class="text-gray-400 hover:text-white">&times;</button>
             </div>
 
-            <div class="p-5 space-y-3">
-                <div class="bg-gray-50 p-3 rounded-xs border border-gray-200 flex items-center justify-between">
+            <div class="p-5 space-y-4">
+                <!-- Encabezado del Ítem -->
+                <div class="bg-gray-50 p-3 rounded-xs border border-gray-200 flex items-center justify-between gap-3">
                     <div>
                         <h4 class="font-bold text-gray-900 text-xs" x-text="itemSeleccionado?.descripcion"></h4>
                         <p class="text-[11px] text-gray-500" x-text="'Gestión ' + itemSeleccionado?.gestion + ' - Periodo ' + itemSeleccionado?.periodo"></p>
                     </div>
-                    <span class="bg-rose-100 text-rose-800 text-[10px] font-semibold px-2.5 py-1 rounded-xs">
-                        Con Observaciones
-                    </span>
+                    <div>
+                        <template x-if="itemSeleccionado?.estado === 'propuesta'">
+                            <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2.5 py-1 rounded-xs">
+                                Borrador / Propuesta
+                            </span>
+                        </template>
+                        <template x-if="itemSeleccionado?.estado === 'enviado'">
+                            <span class="bg-cyan-100 text-cyan-800 text-[10px] font-semibold px-2.5 py-1 rounded-xs">
+                                Enviado a Vicerrectorado
+                            </span>
+                        </template>
+                        <template x-if="itemSeleccionado?.estado === 'con_observaciones'">
+                            <span class="bg-rose-100 text-rose-800 text-[10px] font-semibold px-2.5 py-1 rounded-xs">
+                                Con Observaciones
+                            </span>
+                        </template>
+                        <template x-if="itemSeleccionado?.estado === 'oficial'">
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2.5 py-1 rounded-xs">
+                                Oficial
+                            </span>
+                        </template>
+                    </div>
                 </div>
 
+                <!-- Detalle / Dictamen según el estado real -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-gray-800">Dictamen del Vicerrectorado:</label>
-                    <div class="bg-rose-50 border border-rose-200 rounded-xs p-3 text-xs text-rose-900 font-medium leading-relaxed" 
-                         x-text="itemSeleccionado?.observacion || 'Las asignaciones docentes corresponden a materias de especialidad que excede el límite de horas.'">
-                    </div>
+                    <label class="block text-xs font-bold text-gray-800">Información del Estado:</label>
+                    
+                    <template x-if="itemSeleccionado?.estado === 'propuesta'">
+                        <div class="bg-amber-50 border border-amber-200 rounded-xs p-3 text-xs text-amber-900 font-medium leading-relaxed">
+                            Esta propuesta se encuentra actualmente en modo <strong>Borrador / Propuesta</strong>. Todavía no ha sido enviada al Vicerrectorado para su evaluación.
+                        </div>
+                    </template>
+
+                    <template x-if="itemSeleccionado?.estado === 'enviado'">
+                        <div class="bg-cyan-50 border border-cyan-200 rounded-xs p-3 text-xs text-cyan-900 font-medium leading-relaxed">
+                            Esta propuesta fue <strong>Enviada al Vicerrectorado</strong> y se encuentra pendiente de revisión por las autoridades.
+                        </div>
+                    </template>
+
+                    <template x-if="itemSeleccionado?.estado === 'oficial'">
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xs p-3 text-xs text-emerald-900 font-medium leading-relaxed">
+                            Esta designación docente ha sido <strong>Aprobada y Oficializada</strong> por el Vicerrectorado. El registro se encuentra consolidado.
+                        </div>
+                    </template>
+
+                    <template x-if="itemSeleccionado?.estado === 'con_observaciones'">
+                        <div class="bg-rose-50 border border-rose-200 rounded-xs p-3 text-xs text-rose-900 font-medium leading-relaxed">
+                            <span class="font-bold block mb-1">Motivo de la Observación:</span>
+                            <span x-text="itemSeleccionado?.observacion && itemSeleccionado?.observacion.trim() !== '' ? itemSeleccionado?.observacion : 'El Vicerrectorado ha devuelto la propuesta con observaciones en la carga horaria o asignación de docentes.'"></span>
+                        </div>
+                    </template>
                 </div>
             </div>
 
