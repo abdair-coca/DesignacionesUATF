@@ -18,24 +18,35 @@
             </a>
 
             @if($revision['estado'] === 'pendiente')
-                <!-- Botón Aprobar Todo -->
-                <button @click="aprobarTodo()" 
-                        :disabled="cargando"
-                        class="px-3.5 py-1.5 bg-[#00acac] hover:bg-[#008a8a] text-white font-bold rounded text-xs flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-50 cursor-pointer">
+                <!-- Botón Aprobar Todo (Local) -->
+                <button @click="aprobarTodoLocal()" 
+                        class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Aprobar Toda la Solicitud</span>
+                    <span>Aprobar Todo</span>
                 </button>
 
-                <!-- Botón Rechazar / Observar -->
+                <!-- Botón Rechazar / Observar Todo (Local) -->
                 <button @click="abrirModalRechazoGlobal()" 
-                        :disabled="cargando"
-                        class="px-3.5 py-1.5 bg-[#ff5b57] hover:bg-[#e04b48] text-white font-bold rounded text-xs flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-50 cursor-pointer">
+                        class="px-3 py-1.5 bg-[#ff5b57] hover:bg-[#e04b48] text-white font-bold rounded text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span>Observar / Rechazar Con Motivo</span>
+                    <span>Observar Todo</span>
+                </button>
+
+                <!-- Botón Principal: TERMINAR REVISIÓN (Envío en lote al Decanato) -->
+                <button @click="terminarRevision()" 
+                        :disabled="cargando"
+                        class="px-4 py-1.5 bg-[#00acac] hover:bg-[#008a8a] text-white font-extrabold rounded text-xs flex items-center gap-1.5 shadow-md transition-all disabled:opacity-50 cursor-pointer ml-2">
+                    <svg x-show="!cargando" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <svg x-show="cargando" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span x-text="cargando ? 'Guardando Revisión...' : 'Terminar Revisión'"></span>
                 </button>
             @endif
         </div>
@@ -60,7 +71,7 @@
             @if($revision['estado'] === 'pendiente')
                 <span class="bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                    Pendiente de Revisión
+                    En Revisión Decanato
                 </span>
             @else
                 <span class="bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
@@ -104,7 +115,7 @@
         <div class="border border-gray-200 rounded-lg overflow-hidden">
             <div class="bg-[#2d353c] text-white px-4 py-2.5 flex items-center justify-between font-bold text-xs">
                 <span>Detalle de Materias y Docentes Designados</span>
-                <span class="bg-[#00acac] text-white text-[10px] font-bold px-2 py-0.5 rounded" x-text="designaciones.length + ' materias / grupos'"></span>
+                <span class="bg-[#00acac] text-white text-[10px] font-bold px-2 py-0.5 rounded" x-text="itemsModificadosCount > 0 ? itemsModificadosCount + ' evaluadas' : designaciones.length + ' materias'"></span>
             </div>
 
             <div class="overflow-x-auto">
@@ -116,12 +127,12 @@
                             <th class="py-2.5 px-3 text-center w-20 border-r border-gray-200">Grupo</th>
                             <th class="py-2.5 px-4 border-r border-gray-200">Docente Designado</th>
                             <th class="py-2.5 px-3 text-center w-36 border-r border-gray-200">Estado Decanato</th>
-                            <th class="py-2.5 px-3 text-center w-32">Acción</th>
+                            <th class="py-2.5 px-3 text-center w-36">Acción Decanato</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200/70 text-gray-700 font-medium">
                         <template x-for="(d, index) in designaciones" :key="d.id">
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr class="hover:bg-gray-50 transition-colors" :class="d.estado_local === 'aprobada' ? 'bg-emerald-50/40' : (d.estado_local === 'rechazada' ? 'bg-rose-50/40' : '')">
                                 <td class="py-2.5 px-3 text-center font-bold text-gray-400 border-r border-gray-200/40" x-text="index + 1"></td>
                                 
                                 <td class="py-2.5 px-4 border-r border-gray-200/40">
@@ -138,17 +149,17 @@
                                 </td>
 
                                 <td class="py-2.5 px-3 text-center border-r border-gray-200/40">
-                                    <template x-if="d.estado === 'aprobada'">
+                                    <template x-if="d.estado_local === 'aprobada'">
                                         <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                             ✓ Aprobada
                                         </span>
                                     </template>
-                                    <template x-if="d.estado === 'rechazada'">
-                                        <span class="bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1" :title="d.motivo_rechazo">
+                                    <template x-if="d.estado_local === 'rechazada'">
+                                        <span class="bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1" :title="d.motivo_local">
                                             ✕ Rechazada
                                         </span>
                                     </template>
-                                    <template x-if="d.estado !== 'aprobada' && d.estado !== 'rechazada'">
+                                    <template x-if="d.estado_local === 'propuesta' || !d.estado_local">
                                         <span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                             ⏱ Propuesta
                                         </span>
@@ -158,12 +169,14 @@
                                 <td class="py-2.5 px-3 text-center">
                                     @if($revision['estado'] === 'pendiente')
                                         <div class="flex items-center justify-center gap-1">
-                                            <button @click="cambiarEstadoIndividual(d.id, 'aprobar')" 
-                                                    class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 font-bold rounded text-[10px] transition-colors cursor-pointer">
+                                            <button @click="marcarAprobarLocal(d)" 
+                                                    :class="d.estado_local === 'aprobada' ? 'bg-emerald-600 text-white font-black border-emerald-700' : 'bg-white text-emerald-700 border-gray-300 hover:bg-emerald-50'"
+                                                    class="px-2 py-1 border font-bold rounded text-[10px] transition-colors cursor-pointer">
                                                 Aprobar
                                             </button>
                                             <button @click="abrirModalRechazoIndividual(d)" 
-                                                    class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 font-bold rounded text-[10px] transition-colors cursor-pointer">
+                                                    :class="d.estado_local === 'rechazada' ? 'bg-rose-600 text-white font-black border-rose-700' : 'bg-white text-rose-700 border-gray-300 hover:bg-rose-50'"
+                                                    class="px-2 py-1 border font-bold rounded text-[10px] transition-colors cursor-pointer">
                                                 Rechazar
                                             </button>
                                         </div>
@@ -185,6 +198,14 @@
             ← Volver a la Bandeja
         </a>
 
+        @if($revision['estado'] === 'pendiente')
+            <button @click="terminarRevision()" 
+                    :disabled="cargando"
+                    class="px-5 py-2 bg-[#00acac] hover:bg-[#008a8a] text-white font-black rounded text-xs shadow-md transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2">
+                <span>Terminar Revisión y Enviar al Decanato</span>
+            </button>
+        @endif
+
         <div class="flex items-center gap-1">
             <a href="{{ route('revisiones.pendientes') }}" title="Anterior" class="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-100 font-bold rounded text-gray-600 shadow-2xs">↑</a>
             <a href="{{ route('revisiones.pendientes') }}" title="Siguiente" class="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-100 font-bold rounded text-gray-600 shadow-2xs">↓</a>
@@ -196,15 +217,15 @@
     <div x-show="modalRechazoOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden text-left">
             <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between">
-                <h3 class="font-bold text-xs tracking-tight" x-text="esRechazoGlobal ? 'Observar / Rechazar Solicitud Completa' : 'Rechazar Designación'"></h3>
+                <h3 class="font-bold text-xs tracking-tight" x-text="esRechazoGlobal ? 'Observar / Rechazar Solicitud Completa' : 'Motivo del Rechazo de Designación'"></h3>
                 <button @click="modalRechazoOpen = false" class="text-gray-400 hover:text-white">&times;</button>
             </div>
 
             <div class="p-5 space-y-3">
-                <p class="text-xs text-gray-600 font-medium">Por favor especifica el motivo o la observación del rechazo:</p>
+                <p class="text-xs text-gray-600 font-medium">Por favor especifica la observación o motivo del rechazo:</p>
                 <textarea x-model="motivoRechazo" 
                           rows="4" 
-                          placeholder="Escribe el motivo detallado de la observación..." 
+                          placeholder="Escribe el motivo detallado..." 
                           class="w-full border border-gray-300 rounded p-2.5 text-xs text-gray-800 focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"></textarea>
             </div>
 
@@ -212,21 +233,21 @@
                 <button @click="modalRechazoOpen = false" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-semibold">
                     Cancelar
                 </button>
-                <button @click="confirmarRechazo()" 
-                        :disabled="!motivoRechazo.trim() || cargando"
+                <button @click="confirmarRechazoLocal()" 
+                        :disabled="!motivoRechazo.trim()"
                         class="px-5 py-2 bg-[#ff5b57] hover:bg-[#e04b48] text-white font-bold rounded text-xs shadow-md transition-colors disabled:opacity-50 cursor-pointer">
-                    Confirmar Rechazo
+                    Aplicar Rechazo
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE ÉXITO -->
+    <!-- MODAL DE ÉXITO FINALIZAR REVISIÓN -->
     <div x-show="modalExitoOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden text-center">
             <div class="bg-[#2d353c] text-white px-5 py-3 flex items-center justify-between">
                 <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">ÉXITO</span>
-                <span class="font-bold text-xs">Decanato UATF</span>
+                <span class="font-bold text-xs">Vicedecanato UATF</span>
             </div>
 
             <div class="p-6 space-y-4">
@@ -235,14 +256,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h3 class="font-bold text-gray-900 text-base">¡Operación Registrada Exitosamente!</h3>
+                <h3 class="font-bold text-gray-900 text-base">¡Revisión Finalizada Exitosamente!</h3>
                 <p class="text-xs text-gray-600 font-medium" x-text="mensajeExito"></p>
             </div>
 
             <div class="bg-gray-100 border-t border-gray-200 px-5 py-3 flex justify-center">
-                <button @click="modalExitoOpen = false; window.location.reload();" 
+                <button @click="modalExitoOpen = false; window.location.href='{{ route('revisiones.pendientes') }}';" 
                         class="px-6 py-2 bg-[#00acac] hover:bg-[#008a8a] text-white font-bold rounded-lg text-xs shadow-md transition-colors">
-                    Aceptar
+                    Aceptar y Volver a la Bandeja
                 </button>
             </div>
         </div>
@@ -254,24 +275,34 @@
     function revisarSolicitud(revision, designacionesIniciales) {
         return {
             revision: revision,
-            designaciones: designacionesIniciales,
             cargando: false,
             modalRechazoOpen: false,
             modalExitoOpen: false,
             mensajeExito: '',
             motivoRechazo: '',
             esRechazoGlobal: false,
-            designacionSeleccionadaId: null,
+            itemSeleccionado: null,
 
-            aprobarTodo() {
-                if (!confirm('¿Deseas aprobar todas las designaciones de esta carrera?')) return;
-                
-                const acciones = this.designaciones.map(d => ({
-                    id: d.id,
-                    accion: 'aprobar'
-                }));
+            designaciones: designacionesIniciales.map(d => ({
+                ...d,
+                estado_local: d.estado,
+                motivo_local: d.motivo_rechazo || ''
+            })),
 
-                this.enviarProcesamiento(acciones, 'Se han aprobado todas las designaciones de la carrera exitosamente.');
+            get itemsModificadosCount() {
+                return this.designaciones.filter(d => d.estado_local === 'aprobada' || d.estado_local === 'rechazada').length;
+            },
+
+            marcarAprobarLocal(d) {
+                d.estado_local = 'aprobada';
+                d.motivo_local = '';
+            },
+
+            aprobarTodoLocal() {
+                this.designaciones.forEach(d => {
+                    d.estado_local = 'aprobada';
+                    d.motivo_local = '';
+                });
             },
 
             abrirModalRechazoGlobal() {
@@ -282,50 +313,39 @@
 
             abrirModalRechazoIndividual(designacion) {
                 this.esRechazoGlobal = false;
-                this.designacionSeleccionadaId = designacion.id;
-                this.motivoRechazo = '';
+                this.itemSeleccionado = designacion;
+                this.motivoRechazo = designacion.motivo_local || '';
                 this.modalRechazoOpen = true;
             },
 
-            confirmarRechazo() {
+            confirmarRechazoLocal() {
                 if (!this.motivoRechazo.trim()) return;
 
-                let acciones = [];
-                let msg = '';
-
                 if (this.esRechazoGlobal) {
-                    acciones = this.designaciones.map(d => ({
-                        id: d.id,
-                        accion: 'rechazar',
-                        motivo_rechazo: this.motivoRechazo
-                    }));
-                    msg = 'La solicitud completa de esta carrera ha sido observada y rechazada.';
-                } else {
-                    acciones = [{
-                        id: this.designacionSeleccionadaId,
-                        accion: 'rechazar',
-                        motivo_rechazo: this.motivoRechazo
-                    }];
-                    msg = 'La designación seleccionada ha sido rechazada.';
+                    this.designaciones.forEach(d => {
+                        d.estado_local = 'rechazada';
+                        d.motivo_local = this.motivoRechazo;
+                    });
+                } else if (this.itemSeleccionado) {
+                    this.itemSeleccionado.estado_local = 'rechazada';
+                    this.itemSeleccionado.motivo_local = this.motivoRechazo;
                 }
 
                 this.modalRechazoOpen = false;
-                this.enviarProcesamiento(acciones, msg);
             },
 
-            cambiarEstadoIndividual(designacionId, accion) {
-                const acciones = [{
-                    id: designacionId,
-                    accion: accion
-                }];
-                const msg = 'La designación ha sido aprobada.';
-                this.enviarProcesamiento(acciones, msg);
-            },
-
-            enviarProcesamiento(acciones, mensajeExitoCustom) {
+            terminarRevision() {
+                if (!confirm('¿Deseas finalizar la revisión de esta carrera y guardar todas las decisiones en la base de datos?')) return;
+                
                 this.cargando = true;
 
-                fetch('/revisiones/' + this.revision.id + '/procesar', {
+                const acciones = this.designaciones.map(d => ({
+                    id: d.id,
+                    accion: d.estado_local === 'rechazada' ? 'rechazar' : 'aprobar',
+                    motivo_rechazo: d.estado_local === 'rechazada' ? d.motivo_local : null
+                }));
+
+                fetch('/revisiones/' + this.revision.id + '/completar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -338,10 +358,10 @@
                 .then(res => {
                     this.cargando = false;
                     if (res.success) {
-                        this.mensajeExito = mensajeExitoCustom;
+                        this.mensajeExito = `La revisión de la propuesta de la Carrera de ${this.revision.carrera_nombre} fue registrada y finalizada con éxito.`;
                         this.modalExitoOpen = true;
                     } else {
-                        alert(res.error || 'Ocurrió un error al procesar la revisión.');
+                        alert(res.error || 'Ocurrió un error al completar la revisión.');
                     }
                 })
                 .catch(() => {

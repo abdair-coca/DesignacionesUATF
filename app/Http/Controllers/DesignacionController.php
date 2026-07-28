@@ -273,16 +273,10 @@ class DesignacionController extends Controller
                     ->first();
 
                 if ($existente) {
-                    $nuevoEstado = $existente->estado;
-                    if ($existente->estado === 'rechazada') {
-                        $nuevoEstado = 'propuesta';
-                    } elseif ($existente->estado === 'aprobada' && (int) $existente->Id_docente !== (int) $cambio['Id_docente']) {
-                        $nuevoEstado = 'propuesta';
-                    }
-
                     $existente->update([
                         'Id_docente' => $cambio['Id_docente'],
-                        'estado' => $nuevoEstado,
+                        'estado' => 'propuesta',
+                        'motivo_rechazo' => null,
                     ]);
 
                     continue;
