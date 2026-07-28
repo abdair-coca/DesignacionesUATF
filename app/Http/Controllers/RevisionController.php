@@ -158,6 +158,19 @@ class RevisionController extends Controller
                 'motivo_rechazo' => $d->motivo_rechazo,
             ]);
 
+        $totalGrupos = $designaciones->count();
+        $gruposAsignados = $designaciones->filter(fn ($d) => $d['docente_nombre'] !== 'Sin asignar')->count();
+        $docentesAsignados = $designaciones->pluck('docente_nombre')->filter(fn ($n) => $n !== 'Sin asignar')->unique()->count();
+
+        $totalHoras = Designacion::where('Id_gestion', $revision->Id_gestion)
+            ->where('Id_periodo', $revision->Id_periodo)
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+            ->whereNotNull('Id_docente')
+            ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+            ->sum('materias.horas');
+
+        $cobertura = $totalGrupos > 0 ? (int) round(($gruposAsignados / $totalGrupos) * 100) : 0;
+
         return view('revisiones.revisar', [
             'revision' => [
                 'id' => $revision->id,
@@ -170,6 +183,13 @@ class RevisionController extends Controller
                 'estado' => $revision->estado,
             ],
             'designaciones' => $designaciones,
+            'stats' => [
+                'cobertura' => $cobertura,
+                'total_grupos' => $totalGrupos,
+                'grupos_asignados' => $gruposAsignados,
+                'docentes' => $docentesAsignados,
+                'total_horas' => (int) $totalHoras,
+            ],
         ]);
     }
 
