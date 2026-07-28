@@ -41,96 +41,18 @@
             </svg>
         </a>
 
-        <!-- Designaciones (Grupo Desplegable con Alpine.js) -->
-        <div x-data="{ open: {{ request()->routeIs('designaciones*') || request()->routeIs('revisiones*') ? 'true' : 'false' }} }">
-            <button @click="open = !open" 
-                    class="w-full flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('designaciones*') || request()->routeIs('revisiones*') ? 'bg-[#20252a] text-white font-semibold' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
-                <div class="flex items-center gap-3">
-                    <svg class="w-4 h-4 text-[#00acac]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                    <span>Designaciones</span>
-                    <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">NUEVO</span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        <!-- Designaciones -->
+        <a href="{{ route('designaciones.index') }}" 
+           class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('designaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
+            <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 {{ request()->routeIs('designaciones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
-            </button>
-
-            <!-- Submenú Árbol -->
-            <div x-show="open" x-transition class="bg-[#1d2226] py-1.5 pl-6 pr-2 space-y-1">
-                @php
-                    $carreraId = \App\Models\Carrera::first()->id ?? 1;
-                @endphp
-                <a href="{{ route('designaciones.carrera', $carreraId) }}" 
-                   class="flex items-center gap-2.5 px-3 py-2 rounded text-[11px] transition-colors {{ request()->routeIs('designaciones.carrera*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Por Docente (Roster)</span>
-                </a>
-                <a href="{{ route('designaciones.lista') }}" 
-                   class="flex items-center gap-2.5 px-3 py-2 rounded text-[11px] transition-colors {{ request()->routeIs('designaciones.lista*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Lista de Designaciones</span>
-                </a>
-                <a href="{{ route('revisiones.pendientes') }}" 
-                   class="flex items-center justify-between px-3 py-2 rounded text-[11px] transition-colors {{ request()->routeIs('revisiones*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                        <span>Revisiones</span>
-                    </div>
-                    <span class="bg-[#1a2229] text-gray-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">Pendientes</span>
-                </a>
+                <span>Designaciones</span>
             </div>
-        </div>
-
-        <!-- Catálogos (Grupo Desplegable) -->
-        <div x-data="{ open: {{ request()->routeIs('docentes*') || request()->routeIs('materias*') || request()->routeIs('grupos*') || request()->routeIs('carreras*') || request()->routeIs('gestiones*') || request()->routeIs('periodos*') ? 'true' : 'false' }} }">
-            <button @click="open = !open" 
-                    class="w-full flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('docentes*') || request()->routeIs('materias*') || request()->routeIs('grupos*') || request()->routeIs('carreras*') || request()->routeIs('gestiones*') || request()->routeIs('periodos*') ? 'bg-[#20252a] text-white font-semibold' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
-                <div class="flex items-center gap-3">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <span>Catálogos</span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-90': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-
-            <!-- Submenú Árbol Catálogos -->
-            <div x-show="open" x-transition class="bg-[#1d2226] py-1.5 pl-6 pr-2 space-y-1">
-                <a href="{{ route('docentes.index') }}" 
-                   class="flex items-center gap-2.5 px-3 py-1.5 rounded text-[11px] transition-colors {{ request()->routeIs('docentes*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Docentes</span>
-                </a>
-                <a href="{{ route('materias.index') }}" 
-                   class="flex items-center gap-2.5 px-3 py-1.5 rounded text-[11px] transition-colors {{ request()->routeIs('materias*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Materias</span>
-                </a>
-                <a href="{{ route('grupos.index') }}" 
-                   class="flex items-center gap-2.5 px-3 py-1.5 rounded text-[11px] transition-colors {{ request()->routeIs('grupos*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Grupos</span>
-                </a>
-                <a href="{{ route('carreras.index') }}" 
-                   class="flex items-center gap-2.5 px-3 py-1.5 rounded text-[11px] transition-colors {{ request()->routeIs('carreras*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Carreras</span>
-                </a>
-                <a href="{{ route('gestiones.index') }}" 
-                   class="flex items-center gap-2.5 px-3 py-1.5 rounded text-[11px] transition-colors {{ request()->routeIs('gestiones*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Gestiones</span>
-                </a>
-                <a href="{{ route('periodos.index') }}" 
-                   class="flex items-center gap-2.5 px-3 py-1.5 rounded text-[11px] transition-colors {{ request()->routeIs('periodos*') ? 'text-[#00acac] font-bold bg-[#15191c]' : 'text-[#a8b6c1] hover:text-white hover:bg-[#23282c]' }}">
-                    <span class="w-1.5 h-1.5 rounded-full border border-current"></span>
-                    <span>Periodos</span>
-                </a>
-            </div>
-        </div>
+            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </a>
     </nav>
 </aside>

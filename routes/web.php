@@ -1,30 +1,14 @@
 <?php
 
-use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
-use App\Http\Controllers\DocenteController;
-use App\Http\Controllers\GestionController;
-use App\Http\Controllers\GrupoController;
-use App\Http\Controllers\MateriaController;
-use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\RevisionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::redirect('/', '/dashboard');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Catálogos
-    Route::resource('carreras', CarreraController::class)->except('show');
-    Route::resource('materias', MateriaController::class)->except('show');
-    Route::resource('grupos', GrupoController::class)->except('show');
-    Route::resource('docentes', DocenteController::class)->except('show');
-    Route::resource('gestiones', GestionController::class)
-        ->except('show')
-        ->parameters(['gestiones' => 'gestion']);
-    Route::resource('periodos', PeriodoController::class)->except('show');
 
     Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
         ->name('designaciones.lista');
