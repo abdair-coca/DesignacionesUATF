@@ -106,6 +106,33 @@
         } else {
             this.gruposSeleccionados.push(grupoId);
         }
+    },
+
+    enviarSolicitudVicedecanato() {
+        if (!confirm('¿Deseas enviar las designaciones de esta carrera a revisión por el Vicedecanato?')) return;
+        
+        fetch('{{ route("revisiones.solicitar") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                carrera_id: {{ $carrera->id }},
+                Id_gestion: {{ $filtros['gestion_id'] }},
+                Id_periodo: {{ $filtros['periodo_id'] }}
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                alert('¡Solicitud enviada a revisión por el Vicedecanato exitosamente!');
+                window.location.reload();
+            } else {
+                alert(res.error || 'Ocurrió un error al enviar la solicitud.');
+            }
+        })
+        .catch(() => alert('Ocurrió un error inesperado al procesar el envío.'));
     }
 }" class="space-y-4">
 
@@ -119,20 +146,30 @@
             <p class="text-xs text-gray-500 mt-0.5">Asignación de carga horaria docente — {{ $carrera->nombre }}</p>
         </div>
 
-        <form method="GET" action="{{ route('designaciones.carrera', $carrera->id) }}" class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">Periodo:</span>
-            <select name="gestion_id" onchange="this.form.submit()" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
-                @foreach($gestiones as $g)
-                    <option value="{{ $g->id }}" {{ (string)$g->id === (string)$filtros['gestion_id'] ? 'selected' : '' }}>Gestión {{ $g->nombre }}</option>
-                @endforeach
-            </select>
+        <div class="flex items-center gap-3">
+            <form method="GET" action="{{ route('designaciones.carrera', $carrera->id) }}" class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">Periodo:</span>
+                <select name="gestion_id" onchange="this.form.submit()" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
+                    @foreach($gestiones as $g)
+                        <option value="{{ $g->id }}" {{ (string)$g->id === (string)$filtros['gestion_id'] ? 'selected' : '' }}>Gestión {{ $g->nombre }}</option>
+                    @endforeach
+                </select>
 
-            <select name="periodo_id" onchange="this.form.submit()" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
-                @foreach($periodos as $p)
-                    <option value="{{ $p->id }}" {{ (string)$p->id === (string)$filtros['periodo_id'] ? 'selected' : '' }}>Periodo {{ $p->nombre }}</option>
-                @endforeach
-            </select>
-        </form>
+                <select name="periodo_id" onchange="this.form.submit()" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
+                    @foreach($periodos as $p)
+                        <option value="{{ $p->id }}" {{ (string)$p->id === (string)$filtros['periodo_id'] ? 'selected' : '' }}>Periodo {{ $p->nombre }}</option>
+                    @endforeach
+                </select>
+            </form>
+
+            <button @click="enviarSolicitudVicedecanato()" 
+                    class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Enviar Propuesta a Vicedecanato</span>
+            </button>
+        </div>
     </div>
 
     <!-- Contenedor Principal DataTable - Select (Color Admin v2 Style) -->
