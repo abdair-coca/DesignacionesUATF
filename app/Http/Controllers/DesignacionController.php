@@ -298,6 +298,76 @@ class DesignacionController extends Controller
         return redirect()->back()->with('status', 'Cambios guardados.');
     }
 
+    public function copiarAnterior(Request $request, Carrera $carrera): JsonResponse
+    {
+        $data = $request->validate([
+            'origen_gestion_id' => ['required', 'exists:gestiones,id'],
+            'origen_periodo_id' => ['required', 'exists:periodos,id'],
+            'destino_gestion_id' => ['required', 'exists:gestiones,id'],
+            'destino_periodo_id' => ['required', 'exists:periodos,id'],
+        ]);
+
+        if ((int) $data['origen_gestion_id'] === (int) $data['destino_gestion_id'] && (int) $data['origen_periodo_id'] === (int) $data['destino_periodo_id']) {
+            return response()->json([
+                'success' => false,
+                'error' => 'La gestión y periodo de origen deben ser distintos a los de destino.',
+            ], 422);
+        }
+
+        $designacionesOrigen = Designacion::with('materia')
+            ->where('Id_gestion', $data['origen_gestion_id'])
+            ->where('Id_periodo', $data['origen_periodo_id'])
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->whereNotNull('Id_docente')
+            ->get();
+
+        if ($designacionesOrigen->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No se encontraron designaciones registradas en el periodo de origen seleccionado.',
+            ], 404);
+        }
+
+        $copiados = 0;
+
+        DB::transaction(function () use ($designacionesOrigen, $data, $request, &$copiados) {
+            foreach ($designacionesOrigen as $desig) {
+                $existente = Designacion::where('Id_gestion', $data['destino_gestion_id'])
+                    ->where('Id_periodo', $data['destino_periodo_id'])
+                    ->where('Id_grupo', $desig->Id_grupo)
+                    ->first();
+
+                if ($existente) {
+                    $existente->update([
+                        'Id_docente' => $desig->Id_docente,
+                        'estado' => 'propuesta',
+                    ]);
+                } else {
+                    Designacion::create([
+                        'Id_docente' => $desig->Id_docente,
+                        'Id_materia' => $desig->Id_materia,
+                        'Id_grupo' => $desig->Id_grupo,
+                        'Id_gestion' => $data['destino_gestion_id'],
+                        'Id_periodo' => $data['destino_periodo_id'],
+                        'estado' => 'propuesta',
+                        'creado_por' => $request->user()->id,
+                    ]);
+                }
+
+                $copiados++;
+            }
+        });
+
+        $gestionOrigen = Gestion::find($data['origen_gestion_id'])->nombre;
+        $periodoOrigen = Periodo::find($data['origen_periodo_id'])->nombre;
+
+        return response()->json([
+            'success' => true,
+            'copiados' => $copiados,
+            'message' => "Se replicaron exitosamente {$copiados} designaciones desde la Gestión {$gestionOrigen} - Periodo {$periodoOrigen}.",
+        ]);
+    }
+
     /**
      * Arma una fila por grupo habilitado (tenga o no designación en esta gestión/periodo),
      * para la tabla de asignación rápida de Designaciones/Carrera.

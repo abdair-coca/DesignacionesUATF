@@ -18,7 +18,9 @@ class DesignacionSeeder extends Seeder
      * sin cubrir, pendientes, aprobados y rechazados.
      */
     private const ESCENARIOS = [
-        ['gestion' => '2025', 'periodo' => '1', 'cobertura' => 0.9, 'estados' => ['aprobada' => 85, 'rechazada' => 15]],
+        ['gestion' => '2024', 'periodo' => '1', 'cobertura' => 0.95, 'estados' => ['aprobada' => 95, 'rechazada' => 5]],
+        ['gestion' => '2024', 'periodo' => '2', 'cobertura' => 0.90, 'estados' => ['aprobada' => 90, 'rechazada' => 10]],
+        ['gestion' => '2025', 'periodo' => '1', 'cobertura' => 0.90, 'estados' => ['aprobada' => 85, 'rechazada' => 15]],
         ['gestion' => '2025', 'periodo' => '2', 'cobertura' => 0.85, 'estados' => ['aprobada' => 80, 'rechazada' => 20]],
         ['gestion' => '2026', 'periodo' => '1', 'cobertura' => 0.75, 'estados' => ['aprobada' => 55, 'propuesta' => 30, 'rechazada' => 15]],
         ['gestion' => '2026', 'periodo' => '2', 'cobertura' => 0.35, 'estados' => ['propuesta' => 70, 'aprobada' => 20, 'rechazada' => 10]],

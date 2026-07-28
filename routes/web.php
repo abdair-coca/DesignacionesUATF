@@ -16,6 +16,8 @@ Route::middleware('auth')->group(function () {
         ->name('designaciones.carrera');
     Route::post('designaciones/carrera/{carrera}/guardar', [DesignacionController::class, 'guardarRoster'])
         ->name('designaciones.carrera.guardar');
+    Route::post('designaciones/carrera/{carrera}/copiar-anterior', [DesignacionController::class, 'copiarAnterior'])
+        ->name('designaciones.carrera.copiar_anterior');
     Route::post('designaciones/pegar', [DesignacionMasivaController::class, 'pegar'])
         ->name('designaciones.pegar');
     Route::post('designaciones/deshacer-pegado', [DesignacionMasivaController::class, 'deshacerPegado'])
