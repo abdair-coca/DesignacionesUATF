@@ -42,25 +42,23 @@ class DirectorScopeTest extends TestCase
             ->assertRedirect(route('designaciones.carrera', $carreraInf->id));
     }
 
-    public function test_admin_puede_ver_resumen_y_cualquier_carrera(): void
+    public function test_admin_es_redirigido_a_bandeja_de_revisiones(): void
     {
         $carreraCiv = Carrera::where('sigla', 'CIV')->first() ?? Carrera::factory()->create(['sigla' => 'CIV_TEST3', 'nombre' => 'Ingeniería Civil']);
-        $gestion = Gestion::first() ?? Gestion::factory()->create();
-        $periodo = Periodo::where('nombre', '2')->first() ?? Periodo::factory()->create(['nombre' => '2']);
 
         $admin = User::factory()->create([
-            'name' => 'Admin Vicedecano Test',
+            'name' => 'Admin Vicerrector Test',
             'email' => 'admin.test@uatf.edu.bo',
             'is_admin' => true,
             'carrera_id' => null,
         ]);
 
         $this->actingAs($admin)
-            ->get('/designaciones')
-            ->assertOk();
+            ->get('/designaciones/lista')
+            ->assertRedirect(route('revisiones.pendientes'));
 
         $this->actingAs($admin)
             ->get(route('designaciones.carrera', $carreraCiv->id))
-            ->assertOk();
+            ->assertRedirect(route('revisiones.pendientes'));
     }
 }

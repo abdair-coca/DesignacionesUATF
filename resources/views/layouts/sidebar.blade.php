@@ -27,22 +27,8 @@
             Navegación
         </div>
 
-        <!-- Designaciones -->
-        <a href="{{ route('designaciones.lista') }}" 
-           class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('designaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
-            <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 {{ request()->routeIs('designaciones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                <span>Designaciones por Carrera</span>
-            </div>
-            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-        </a>
-
         @if(Auth::user()?->is_admin)
-            <!-- Bandeja de Revisiones (Solo Administrador / Vicedecano) -->
+            <!-- Bandeja de Revisiones (Solo Vicerrectorado) -->
             <a href="{{ route('revisiones.pendientes') }}" 
                class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('revisiones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
                 <div class="flex items-center gap-3">
@@ -54,6 +40,20 @@
                 <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">
                     INBOX
                 </span>
+            </a>
+        @else
+            <!-- Designaciones por Carrera (Solo Director) -->
+            <a href="{{ route('designaciones.lista') }}" 
+               class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('designaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
+                <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 {{ request()->routeIs('designaciones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    <span>Designaciones por Carrera</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
             </a>
         @endif
     </nav>

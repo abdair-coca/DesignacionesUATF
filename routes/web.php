@@ -6,7 +6,12 @@ use App\Http\Controllers\RevisionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::redirect('/', '/designaciones/lista');
+    Route::get('/', function (\Illuminate\Http\Request $request) {
+        if ($request->user()?->is_admin) {
+            return redirect()->route('revisiones.pendientes');
+        }
+        return redirect()->route('designaciones.lista');
+    });
 
     Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
         ->name('designaciones.lista');

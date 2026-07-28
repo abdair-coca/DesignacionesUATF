@@ -10,46 +10,37 @@ use Tests\TestCase;
 
 class PageAccessTest extends TestCase
 {
-    public function test_raiz_redirige_a_designaciones_lista(): void
+    public function test_raiz_redirige_a_designaciones_lista_para_director(): void
     {
-        $this->actingAs(User::factory()->create())
+        $director = User::factory()->create(['is_admin' => false]);
+        $this->actingAs($director)
             ->get('/')
             ->assertRedirect('/designaciones/lista');
     }
 
-    public function test_designaciones_lista_acceso(): void
-    {
-        $this->actingAs(User::factory()->create())
-            ->get('/designaciones/lista')
-            ->assertOk();
-    }
-
-    public function test_designaciones_index(): void
+    public function test_raiz_redirige_a_revisiones_pendientes_para_admin(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
-
         $this->actingAs($admin)
-            ->get('/designaciones')
-            ->assertOk();
+            ->get('/')
+            ->assertRedirect(route('revisiones.pendientes'));
     }
 
-    public function test_designaciones_lista(): void
+    public function test_designaciones_lista_acceso_director(): void
     {
-        $this->actingAs(User::factory()->create())
+        $director = User::factory()->create(['is_admin' => false]);
+        $this->actingAs($director)
             ->get('/designaciones/lista')
             ->assertOk();
     }
 
-    public function test_designaciones_carrera(): void
+    public function test_designaciones_carrera_redirecciona_admin(): void
     {
         $carrera = Carrera::first() ?? Carrera::factory()->create();
-        $gestion = Gestion::first() ?? Gestion::factory()->create();
-        $periodo = Periodo::where('nombre', '2')->first() ?? Periodo::factory()->create(['nombre' => '2']);
-
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-            ->get("/designaciones/carrera/{$carrera->id}?gestion_id={$gestion->id}&periodo_id={$periodo->id}")
-            ->assertOk();
+            ->get("/designaciones/carrera/{$carrera->id}")
+            ->assertRedirect(route('revisiones.pendientes'));
     }
 }

@@ -86,9 +86,13 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function lista(Request $request): View
+    public function lista(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+        if ($user?->is_admin) {
+            return redirect()->route('revisiones.pendientes');
+        }
+
         $carreraId = $user->carrera_id ?? Carrera::first()?->id ?? 1;
         $anioActual = (string) date('Y');
 
@@ -130,6 +134,10 @@ class DesignacionController extends Controller
     public function carrera(Request $request, Carrera $carrera): View|RedirectResponse
     {
         $user = $request->user();
+        if ($user && $user->is_admin) {
+            return redirect()->route('revisiones.pendientes');
+        }
+
         if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
             return redirect()->route('designaciones.carrera', $user->carrera_id);
         }
