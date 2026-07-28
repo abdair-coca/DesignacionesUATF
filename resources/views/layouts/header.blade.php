@@ -25,17 +25,17 @@
         <div class="flex items-center gap-3 border-l border-gray-200 pl-4" x-data="{ open: false }">
             <div class="text-right hidden sm:block">
                 <p class="text-xs font-bold text-gray-800 leading-tight">
-                    {{ Auth::user()->name ?? 'Director de Carrera' }}
+                    {{ Auth::user()?->name ?? 'Usuario' }}
                 </p>
                 <p class="text-[10px] text-gray-500 font-medium">
-                    {{ Auth::user()->email ?? 'director@uatf.edu.bo' }}
+                    {{ Auth::user()?->email ?? '' }}
                 </p>
             </div>
             
             <div class="relative">
                 <button @click="open = !open" class="flex items-center gap-2 focus:outline-none">
                     <div class="h-8 w-8 rounded-full bg-[#2d353c] text-white font-bold text-xs flex items-center justify-center ring-2 ring-[#00acac]/30">
-                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                        {{ strtoupper(substr(Auth::user()?->name ?? 'U', 0, 1)) }}
                     </div>
                 </button>
 
@@ -43,8 +43,8 @@
                 <div x-show="open" @click.away="open = false" x-transition 
                      class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 text-xs text-gray-700 z-50">
                     <div class="px-4 py-2 border-b border-gray-100">
-                        <p class="font-semibold text-gray-900">{{ Auth::user()->name ?? 'Director de Carrera' }}</p>
-                        <p class="text-[11px] text-gray-400">Rol: {{ Auth::user()->is_admin ?? false ? 'Administrador' : 'Director' }}</p>
+                        <p class="font-semibold text-gray-900">{{ Auth::user()?->name ?? 'Usuario' }}</p>
+                        <p class="text-[11px] text-gray-400">Rol: {{ Auth::user()?->is_admin ?? false ? 'Administrador' : 'Director' }}</p>
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

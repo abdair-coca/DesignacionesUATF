@@ -40,45 +40,51 @@
 
     @stack('styles')
 </head>
-<body class="bg-gray-100 font-sans antialiased text-gray-900 min-h-screen flex flex-col">
-    <div class="flex flex-1 min-h-screen">
-        <!-- Sidebar estilo Color Admin v2 -->
-        @include('layouts.sidebar')
+<body class="bg-[#2d353c] font-sans antialiased text-gray-900 min-h-screen flex flex-col">
+    @auth
+        <div class="flex flex-1 min-h-screen bg-gray-100">
+            <!-- Sidebar estilo Color Admin v2 -->
+            @include('layouts.sidebar')
 
-        <!-- Contenedor Principal -->
-        <div class="flex-1 flex flex-col min-w-0">
-            <!-- Header Superior -->
-            @include('layouts.header')
+            <!-- Contenedor Principal -->
+            <div class="flex-1 flex flex-col min-w-0">
+                <!-- Header Superior -->
+                @include('layouts.header')
 
-            <!-- Mensajes Flash de Sesión -->
-            @if(session('success'))
-                <div class="mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center justify-between shadow-sm">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{{ session('success') }}</span>
+                <!-- Mensajes Flash de Sesión -->
+                @if(session('success'))
+                    <div class="mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>{{ session('success') }}</span>
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            @if(session('error'))
-                <div class="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-medium flex items-center justify-between shadow-sm">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <span>{{ session('error') }}</span>
+                @if(session('error'))
+                    <div class="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-medium flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span>{{ session('error') }}</span>
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            <!-- Contenido Dinámico de la Página -->
-            <main class="flex-1 p-6 overflow-y-auto">
-                @yield('content')
-            </main>
+                <!-- Contenido Dinámico de la Página -->
+                <main class="flex-1 p-6 overflow-y-auto">
+                    @yield('content')
+                </main>
+            </div>
         </div>
-    </div>
+    @else
+        <main class="flex-1 flex items-center justify-center min-h-screen bg-[#2d353c] p-4">
+            @yield('content')
+        </main>
+    @endauth
 
     @stack('scripts')
 </body>
