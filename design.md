@@ -114,20 +114,20 @@ decisión de diseño.
 - **Muestra Numérica de Carga Horaria**: Muestra las horas numéricas directamente (`X hrs` de 32 hrs máx), **sin utilizar barra de progreso gráfica**.
 - **Footer de Modal**: `bg-gray-100 border-t border-gray-200 px-5 py-3 flex justify-between`, con botón "Guardar Designación" en `bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-5 py-2 rounded text-xs`.
 
-### Bandeja de Solicitudes & Revisiones (Color Admin v2 Inbox / Gmail Style)
+### Dashboard General (Color Admin v2 Analytics & Stat Tiles)
 
-- **Panel de Navegación Lateral (Carpetas & Etiquetas)**:
-  - Card blanca `w-64 border border-gray-200 shadow-sm p-4`.
-  - Enlaces de Carpetas (`Bandeja de Entrada`, `Pendientes`, `Revisadas`, `Todas las Peticiones`) con badges numéricos. Ítem activo en `bg-[#20252a] text-white font-bold`.
-  - Lista de Etiquetas de Carrera con puntos de color identificadores.
-- **Bandeja Principal estilo Lectura de Correo**:
-  - Toolbar superior con filtros, actualizar, buscador y paginador.
-  - Filas de solicitudes con checkbox, avatar circular con inicial de carrera, emisor en negrita, resumen de designaciones en gris y fecha/hora a la derecha.
-  - Al hacer hover, la fila resalta en amarillo cálido suave `bg-[#fff9d6]/40`.
-- **Lector de Solicitud & Acciones**:
-  - Encabezado con emisor, fecha y badge de estado.
-  - Botonera de acción principal: `Aprobar Toda la Solicitud` en turquesa `#00acac` y `Observar / Rechazar Con Motivo` en tono borgoña/rojo `bg-rose-600`.
-  - Modal de Rechazo para ingresar observaciones o motivos para el Director de Carrera.
+- **Tarjetas Métrica (Stat Tiles)**:
+  - Tarjetas rectangulares de color sólido: Turquesa (`#00acac`), Azul (`#348fe2`), Indigo (`#727cb6`), Naranja (`#f59c1a`).
+  - Cifra principal en `text-3xl font-black tabular-nums`.
+  - Ícono marca de agua vectorial en la esquina superior derecha (`opacity-30`).
+  - **Barra de Progreso Inferior**: Línea horizontal de progreso en blanco semitransparente con texto descriptivo debajo.
+- **Gráficos Analíticos (Analytics Widgets)**:
+  - Tarjetas con cabecera oscura `#2d353c` y controles circulares de ventana (ampliar, refrescar, minimizar, cerrar).
+  - Gráfico de Líneas (`Chart.js`): Evolución de cobertura docente a lo largo de las gestiones.
+  - Gráfico Donut (`Chart.js`): Proporción de distribución de carga docente (Óptimo, Bajo mínimo, Sobrecarga, Sin asignación).
+- **Widgets de Actividad Reciente & Tabla de Cobertura**:
+  - Lista de eventos recientes con avatares circulares estilo Color Admin Message.
+  - Tabla `DataTable - Default` con resumen de cobertura por carrera.
 
 ### Formularios y filtros
 
