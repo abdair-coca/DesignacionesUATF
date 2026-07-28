@@ -41,21 +41,8 @@
             'grupos_ids' => $desigDocente->pluck('Id_grupo')->toArray(),
         ];
     }
-@endphp
 
-<div x-data="{
-    busqueda: '',
-    perPage: 10,
-    currentPage: 1,
-    docenteSeleccionadoId: null,
-    modalAbierta: false,
-    docenteActual: null,
-    gruposSeleccionados: [],
-    
-    // Todos los docentes procesados
-    todosDocentes: {{ json_encode($docentesProcesados) }},
-    // Todos los grupos/materias disponibles para asignar
-    todosGrupos: {{ json_encode($roster->map(fn($r) => [
+    $rosterGrupos = $roster->map(fn($r) => [
         'id' => $r['id'],
         'materia_id' => $r['materia']['id'],
         'materia_nombre' => $r['materia']['nombre'],
@@ -63,78 +50,17 @@
         'codigo' => $r['codigo'],
         'horas' => $r['horas'],
         'docente_actual_id' => $r['designacion']['docente']['id'] ?? null,
-    ])) }},
+    ])->values();
+@endphp
 
-    get docentesFiltrados() {
-        if (!this.busqueda.trim()) return this.todosDocentes;
-        const q = this.busqueda.toLowerCase();
-        return this.todosDocentes.filter(d => d.nombre.toLowerCase().includes(q) || d.carreraSigla.toLowerCase().includes(q));
-    },
-
-    get docentesPaginados() {
-        const start = (this.currentPage - 1) * this.perPage;
-        return this.docentesFiltrados.slice(start, start + parseInt(this.perPage));
-    },
-
-    get totalPages() {
-        return Math.ceil(this.docentesFiltrados.length / parseInt(this.perPage)) || 1;
-    },
-
-    abrirModalAsignacion(docente) {
-        this.docenteActual = docente;
-        // Cargar los grupos asignados a este docente
-        this.gruposSeleccionados = [...docente.grupos_ids];
-        this.modalAbierta = true;
-    },
-
-    cerrarModal() {
-        this.modalAbierta = false;
-        this.docenteActual = null;
-        this.gruposSeleccionados = [];
-    },
-
-    get totalHorasSeleccionadas() {
-        if (!this.gruposSeleccionados.length) return 0;
-        return this.todosGrupos
-            .filter(g => this.gruposSeleccionados.includes(g.id))
-            .reduce((sum, g) => sum + g.horas, 0);
-    },
-
-    toggleGrupo(grupoId) {
-        if (this.gruposSeleccionados.includes(grupoId)) {
-            this.gruposSeleccionados = this.gruposSeleccionados.filter(id => id !== grupoId);
-        } else {
-            this.gruposSeleccionados.push(grupoId);
-        }
-    },
-
-    enviarSolicitudVicedecanato() {
-        if (!confirm('¿Deseas enviar las designaciones de esta carrera a revisión por el Vicedecanato?')) return;
-        
-        fetch('{{ route("revisiones.solicitar") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                carrera_id: {{ $carrera->id }},
-                Id_gestion: {{ $filtros['gestion_id'] }},
-                Id_periodo: {{ $filtros['periodo_id'] }}
-            })
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                alert('¡Solicitud enviada a revisión por el Vicedecanato exitosamente!');
-                window.location.reload();
-            } else {
-                alert(res.error || 'Ocurrió un error al enviar la solicitud.');
-            }
-        })
-        .catch(() => alert('Ocurrió un error inesperado al procesar el envío.'));
-    }
-}" class="space-y-4">
+<div x-data="designacionesCarreraData(
+        {{ json_encode($docentesProcesados) }}, 
+        {{ json_encode($rosterGrupos) }}, 
+        {{ $carrera->id }}, 
+        {{ $filtros['gestion_id'] }}, 
+        {{ $filtros['periodo_id'] }}
+    )" 
+     class="space-y-4">
 
     <!-- Encabezado del Módulo -->
     <div class="flex flex-wrap items-center justify-between gap-4">
@@ -163,7 +89,7 @@
             </form>
 
             <button @click="enviarSolicitudVicedecanato()" 
-                    class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all">
+                    class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
@@ -236,47 +162,43 @@
                             <!-- Docente Profile -->
                             <td class="py-3 px-4 border-r border-gray-200/40">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-9 w-9 rounded-full bg-[#2d353c] text-white font-bold text-xs flex items-center justify-center shrink-0 border border-white shadow-sm">
-                                        <span x-text="d.nombre.charAt(0)"></span>
-                                    </div>
+                                    <div class="h-8 w-8 rounded-full bg-[#00acac] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm" x-text="d.nombre.charAt(0)"></div>
                                     <div>
-                                        <p class="font-bold text-gray-900 text-xs" x-text="d.nombre"></p>
-                                        <p class="text-[10px] text-gray-400 font-normal">Origen: <span x-text="d.carreraSigla"></span></p>
+                                        <p class="font-bold text-gray-900" x-text="d.nombre"></p>
+                                        <p class="text-[10px] text-gray-400 font-medium uppercase" x-text="'Origen: ' + (d.carreraSigla || 'General')"></p>
                                     </div>
                                 </div>
                             </td>
 
-                            <!-- Materias Asignadas -->
+                            <!-- Materias asignadas en badges -->
                             <td class="py-3 px-4 border-r border-gray-200/40">
                                 <div class="flex flex-wrap gap-1">
                                     <template x-if="d.materias.length === 0">
                                         <span class="text-gray-400 italic text-[11px]">Sin materias asignadas</span>
                                     </template>
                                     <template x-for="mat in d.materias" :key="mat">
-                                        <span class="bg-blue-50 text-blue-800 border border-blue-200/80 px-2 py-0.5 rounded text-[10px] font-semibold" x-text="mat"></span>
+                                        <span class="bg-gray-100 text-gray-700 border border-gray-300 font-bold px-2 py-0.5 rounded text-[10px]" x-text="mat"></span>
                                     </template>
                                 </div>
                             </td>
 
-                            <!-- Carga Horaria Numérica Simple (Sin barra de progreso) -->
+                            <!-- Carga Horaria Numérica (Sin barra de progreso) -->
                             <td class="py-3 px-4 text-center border-r border-gray-200/40">
-                                <span class="font-bold text-gray-900 text-sm tabular-nums" x-text="d.horas + ' hrs'"></span>
-                                <span class="text-[10px] text-gray-400 block font-normal">Máx. 32 hrs</span>
+                                <span class="font-black text-gray-900 text-xs tabular-nums" x-text="d.horas + ' hrs'"></span>
                             </td>
 
-                            <!-- Estado Badge -->
+                            <!-- Estado Carga -->
                             <td class="py-3 px-4 text-center border-r border-gray-200/40">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border shadow-xs" :class="d.estadoColor" x-text="d.estadoEtiqueta"></span>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border" 
+                                      :class="d.estadoColor"
+                                      x-text="d.estadoEtiqueta"></span>
                             </td>
 
-                            <!-- Acciones -->
+                            <!-- Botón de Acción -->
                             <td class="py-3 px-4 text-center" @click.stop>
                                 <button @click="abrirModalAsignacion(d)" 
-                                        class="bg-[#00acac] hover:bg-[#008a8a] text-white text-[11px] font-bold px-3 py-1.5 rounded shadow-sm transition-all duration-150 flex items-center justify-center gap-1 mx-auto">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    <span>Asignar</span>
+                                        class="px-3 py-1 bg-[#2d353c] hover:bg-[#20252a] text-white font-bold rounded text-xs transition-colors shadow-xs">
+                                    Asignar
                                 </button>
                             </td>
                         </tr>
@@ -414,4 +336,92 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function designacionesCarreraData(docentesProcesados, rosterGrupos, carreraId, gestionId, periodoId) {
+        return {
+            busqueda: '',
+            perPage: 10,
+            currentPage: 1,
+            docenteSeleccionadoId: null,
+            modalAbierta: false,
+            docenteActual: null,
+            gruposSeleccionados: [],
+            
+            todosDocentes: docentesProcesados,
+            todosGrupos: rosterGrupos,
+
+            get docentesFiltrados() {
+                if (!this.busqueda.trim()) return this.todosDocentes;
+                const q = this.busqueda.toLowerCase();
+                return this.todosDocentes.filter(d => d.nombre.toLowerCase().includes(q) || d.carreraSigla.toLowerCase().includes(q));
+            },
+
+            get docentesPaginados() {
+                const start = (this.currentPage - 1) * this.perPage;
+                return this.docentesFiltrados.slice(start, start + parseInt(this.perPage));
+            },
+
+            get totalPages() {
+                return Math.ceil(this.docentesFiltrados.length / parseInt(this.perPage)) || 1;
+            },
+
+            abrirModalAsignacion(docente) {
+                this.docenteActual = docente;
+                this.gruposSeleccionados = [...docente.grupos_ids];
+                this.modalAbierta = true;
+            },
+
+            cerrarModal() {
+                this.modalAbierta = false;
+                this.docenteActual = null;
+                this.gruposSeleccionados = [];
+            },
+
+            get totalHorasSeleccionadas() {
+                if (!this.gruposSeleccionados.length) return 0;
+                return this.todosGrupos
+                    .filter(g => this.gruposSeleccionados.includes(g.id))
+                    .reduce((sum, g) => sum + g.horas, 0);
+            },
+
+            toggleGrupo(grupoId) {
+                if (this.gruposSeleccionados.includes(grupoId)) {
+                    this.gruposSeleccionados = this.gruposSeleccionados.filter(id => id !== grupoId);
+                } else {
+                    this.gruposSeleccionados.push(grupoId);
+                }
+            },
+
+            enviarSolicitudVicedecanato() {
+                if (!confirm('¿Deseas enviar las designaciones de esta carrera a revisión por el Vicedecanato?')) return;
+                
+                fetch('/revisiones/solicitar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        carrera_id: carreraId,
+                        Id_gestion: gestionId,
+                        Id_periodo: periodoId
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        alert('¡Solicitud enviada a revisión por el Vicedecanato exitosamente!');
+                        window.location.reload();
+                    } else {
+                        alert(res.error || 'Ocurrió un error al enviar la solicitud.');
+                    }
+                })
+                .catch(() => alert('Ocurrió un error inesperado al procesar el envío.'));
+            }
+        };
+    }
+</script>
+@endpush
 @endsection
