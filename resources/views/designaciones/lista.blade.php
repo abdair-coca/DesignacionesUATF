@@ -8,6 +8,7 @@
     $carreraIdUsuario = $user?->carrera_id ?? 1;
     $carreraActual = $carreras->firstWhere('id', $carreraIdUsuario) ?? $carreras->first();
     $anoActual = (string) date('Y');
+    $gestionActualId = $gestiones->firstWhere('nombre', $anoActual)?->id ?? $gestiones->last()?->id ?? 1;
 @endphp
 
 <div x-data="listaDesignacionesApp({{ json_encode($carreraActual) }}, {{ json_encode($gestiones) }}, {{ json_encode($periodos) }}, {{ json_encode($propuestasData ?? []) }})" 
@@ -423,7 +424,7 @@
 
             nuevaForm: {
                 descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — ' + carrera.nombre,
-                gestion_id: gestiones[0]?.id || 1,
+                gestion_id: {{ $gestionActualId }},
                 periodo_id: 1
             },
 
