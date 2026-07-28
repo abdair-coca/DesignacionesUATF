@@ -215,22 +215,54 @@
 
                 <!-- TAB 2: COPIAR DE GESTIÓN ANTERIOR -->
                 <div x-show="tabModal === 'copiar'" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
+                    <!-- Datos Básicos de la Nueva Propuesta a Crear -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">
+                            Descripción de la Nueva Propuesta <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                               x-model="copiaForm.descripcion" 
+                               placeholder="Ej: Propuesta de Designación Copiada I/{{ $anoActual }} — Carrera de {{ $carreraActual->nombre }}"
+                               class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 focus:ring-1 focus:ring-[#348fe2] focus:border-[#348fe2] outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Gestión Origen</label>
-                            <select x-model="copiaForm.origen_gestion_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 bg-white">
-                                @foreach($gestiones as $g)
-                                    <option value="{{ $g->id }}">Gestión {{ $g->nombre }}</option>
-                                @endforeach
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Año / Gestión Actual</label>
+                            <input type="text" 
+                                   value="{{ $anoActual }}" 
+                                   disabled 
+                                   class="w-full bg-gray-100 border border-gray-300 font-extrabold text-gray-800 rounded-xs p-2 text-xs cursor-not-allowed">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Periodo Semestral Destino</label>
+                            <select x-model="copiaForm.periodo_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 focus:ring-1 focus:ring-[#348fe2] outline-none bg-white">
+                                <option value="1">Periodo 1</option>
+                                <option value="2">Periodo 2</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Periodo Origen</label>
-                            <select x-model="copiaForm.origen_periodo_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 bg-white">
-                                @foreach($periodos as $p)
-                                    <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
-                                @endforeach
-                            </select>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-3">
+                        <label class="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wide text-[10px]">Origen de los Datos a Copiar:</label>
+                        <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-xs border border-gray-200">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-700 mb-1">Gestión Origen</label>
+                                <select x-model="copiaForm.origen_gestion_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-1.5 text-xs text-gray-900 bg-white">
+                                    @foreach($gestiones as $g)
+                                        <option value="{{ $g->id }}">Gestión {{ $g->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-700 mb-1">Periodo Origen</label>
+                                <select x-model="copiaForm.origen_periodo_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-1.5 text-xs text-gray-900 bg-white">
+                                    @foreach($periodos as $p)
+                                        <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -445,8 +477,10 @@
             },
 
             copiaForm: {
+                descripcion: 'Propuesta de Designación Docente (Copia) I/' + anoActual + ' — ' + carrera.nombre,
                 origen_gestion_id: gestiones[1]?.id || gestiones[0]?.id || 1,
-                origen_periodo_id: 1
+                origen_periodo_id: 1,
+                periodo_id: 1
             },
 
             cargandoPreview: false,
@@ -469,7 +503,7 @@
                         origen_gestion_id: this.copiaForm.origen_gestion_id,
                         origen_periodo_id: this.copiaForm.origen_periodo_id,
                         destino_gestion_id: {{ $gestionActualId }},
-                        destino_periodo_id: this.nuevaForm.periodo_id || 1
+                        destino_periodo_id: this.copiaForm.periodo_id || 1
                     })
                 })
                 .then(r => r.json())
@@ -544,6 +578,24 @@
 
             guardarNuevaPropuesta() {
                 if (this.tabModal === 'copiar') {
+                    const desc = this.copiaForm.descripcion.trim() || ('Designación Copiada I/' + anoActual);
+                    const pDestino = this.copiaForm.periodo_id || 1;
+
+                    const nueva = {
+                        id: Date.now(),
+                        created_at: Date.now(),
+                        descripcion: desc,
+                        gestion: anoActual,
+                        gestion_id: {{ $gestionActualId }},
+                        periodo: '' + pDestino,
+                        periodo_id: pDestino,
+                        estado: 'propuesta',
+                        observacion: ''
+                    };
+
+                    this.propuestas.push(nueva);
+                    this.modalNuevaOpen = false;
+
                     fetch('/designaciones/carrera/' + this.carrera.id + '/copiar-anterior', {
                         method: 'POST',
                         headers: {
@@ -555,19 +607,15 @@
                             origen_gestion_id: this.copiaForm.origen_gestion_id,
                             origen_periodo_id: this.copiaForm.origen_periodo_id,
                             destino_gestion_id: {{ $gestionActualId }},
-                            destino_periodo_id: this.nuevaForm.periodo_id || 1
+                            destino_periodo_id: pDestino
                         })
                     })
                     .then(r => r.json())
                     .then(res => {
-                        if (res.success) {
-                            window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + (this.nuevaForm.periodo_id || 1);
-                        } else {
-                            alert(res.error || 'No se pudieron copiar las designaciones del periodo seleccionado.');
-                        }
+                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + pDestino;
                     })
                     .catch(() => {
-                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + (this.nuevaForm.periodo_id || 1);
+                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + pDestino;
                     });
                     return;
                 }
