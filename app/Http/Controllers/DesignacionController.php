@@ -28,8 +28,13 @@ class DesignacionController extends Controller
         private DesignacionReportService $reportes,
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        $user = $request->user();
+        if ($user && ! $user->is_admin && $user->carrera_id) {
+            return redirect()->route('designaciones.carrera', $user->carrera_id);
+        }
+
         $filtros = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'gestion_id' => ['nullable', 'exists:gestiones,id'],
@@ -115,8 +120,13 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function carrera(Request $request, Carrera $carrera): View
+    public function carrera(Request $request, Carrera $carrera): View|RedirectResponse
     {
+        $user = $request->user();
+        if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
+            return redirect()->route('designaciones.carrera', $user->carrera_id);
+        }
+
         $filtros = $request->validate([
             'gestion_id' => ['nullable', 'exists:gestiones,id'],
             'periodo_id' => ['nullable', 'exists:periodos,id'],

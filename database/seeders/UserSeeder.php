@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Carrera;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,16 +11,32 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $usuarios = [
-            ['name' => 'Abdair', 'email' => 'abdair@uatf.edu.bo', 'is_admin' => false],
-            ['name' => 'Supervisor', 'email' => 'supervisor@uatf.edu.bo', 'is_admin' => false],
-            ['name' => 'Admin', 'email' => 'admin@uatf.edu.bo', 'is_admin' => true],
-        ];
+        // 1. Crear Administrador / Vicedecano
+        User::firstOrCreate(
+            ['email' => 'admin@uatf.edu.bo'],
+            [
+                'name' => 'Admin Vicedecano',
+                'password' => Hash::make('password'),
+                'is_admin' => true,
+                'carrera_id' => null,
+            ]
+        );
 
-        foreach ($usuarios as $usuario) {
+        // 2. Crear Director de Carrera para cada Carrera existente
+        $carreras = Carrera::all();
+
+        foreach ($carreras as $carrera) {
+            $email = 'director.' . strtolower($carrera->sigla) . '@uatf.edu.bo';
+            $nombre = 'Director ' . $carrera->nombre;
+
             User::firstOrCreate(
-                ['email' => $usuario['email']],
-                ['name' => $usuario['name'], 'password' => Hash::make('password'), 'is_admin' => $usuario['is_admin']]
+                ['email' => $email],
+                [
+                    'name' => $nombre,
+                    'password' => Hash::make('password'),
+                    'is_admin' => false,
+                    'carrera_id' => $carrera->id,
+                ]
             );
         }
     }

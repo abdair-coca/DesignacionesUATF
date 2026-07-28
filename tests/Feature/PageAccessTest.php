@@ -3,11 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Carrera;
-use App\Models\Designacion;
-use App\Models\Docente;
 use App\Models\Gestion;
-use App\Models\Grupo;
-use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\User;
 use Tests\TestCase;
@@ -23,10 +19,6 @@ class PageAccessTest extends TestCase
 
     public function test_dashboard(): void
     {
-        Carrera::factory()->count(2)->create();
-        Gestion::factory()->create();
-        Periodo::factory()->create();
-
         $this->actingAs(User::factory()->create())
             ->get('/dashboard')
             ->assertOk();
@@ -34,8 +26,8 @@ class PageAccessTest extends TestCase
 
     public function test_dashboard_con_filtros(): void
     {
-        $gestion = Gestion::factory()->create();
-        $periodo = Periodo::factory()->create();
+        $gestion = Gestion::first() ?? Gestion::factory()->create();
+        $periodo = Periodo::first() ?? Periodo::factory()->create();
 
         $this->actingAs(User::factory()->create())
             ->get('/dashboard?gestion_id=' . $gestion->id . '&periodo_id=' . $periodo->id)
@@ -44,9 +36,9 @@ class PageAccessTest extends TestCase
 
     public function test_designaciones_index(): void
     {
-        Carrera::factory()->count(2)->create();
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($admin)
             ->get('/designaciones')
             ->assertOk();
     }
@@ -60,11 +52,13 @@ class PageAccessTest extends TestCase
 
     public function test_designaciones_carrera(): void
     {
-        $carrera = Carrera::factory()->create();
-        $gestion = Gestion::factory()->create();
-        $periodo = Periodo::factory()->create(['nombre' => '2']);
+        $carrera = Carrera::first() ?? Carrera::factory()->create();
+        $gestion = Gestion::first() ?? Gestion::factory()->create();
+        $periodo = Periodo::where('nombre', '2')->first() ?? Periodo::factory()->create(['nombre' => '2']);
 
-        $this->actingAs(User::factory()->create())
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)
             ->get("/designaciones/carrera/{$carrera->id}?gestion_id={$gestion->id}&periodo_id={$periodo->id}")
             ->assertOk();
     }
