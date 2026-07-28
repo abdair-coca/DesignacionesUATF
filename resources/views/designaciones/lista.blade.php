@@ -523,11 +523,16 @@
 
             propuestas: propuestasIniciales,
 
-            // ORDENAMIENTO ESTRICTO DE ANTIGUO A NUEVO (ASCENDENTE POR CREACIÓN)
+            // ORDENAMIENTO ESTRICTO DE ANTIGUO A NUEVO (ASCENDENTE POR CREACIÓN: NRO 1 ES EL MÁS ANTIGUO)
             get propuestasOrdenadas() {
                 return this.propuestas
                     .filter(p => (p.gestion === anoActual || p.gestion === '' + (new Date().getFullYear())))
-                    .sort((a, b) => a.created_at - b.created_at);
+                    .sort((a, b) => {
+                        const timeA = typeof a.created_at === 'number' ? a.created_at : (new Date(a.created_at || 0)).getTime();
+                        const timeB = typeof b.created_at === 'number' ? b.created_at : (new Date(b.created_at || 0)).getTime();
+                        if (timeA !== timeB) return timeA - timeB;
+                        return (a.id || 0) - (b.id || 0);
+                    });
             },
 
             abrirModalNuevaPropuesta() {
