@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
 
     // Revisiones
     Route::post('revisiones/solicitar', [RevisionController::class, 'solicitar'])->name('revisiones.solicitar');
+    Route::post('revisiones/{revision}/retirar', [RevisionController::class, 'retirar'])->name('revisiones.retirar');
     Route::get('revisiones/pendientes', [RevisionController::class, 'pendientes'])->name('revisiones.pendientes');
     Route::get('revisiones/{revision}/revisar', [RevisionController::class, 'revisar'])->name('revisiones.revisar');
     Route::post('revisiones/{revision}/procesar', [RevisionController::class, 'procesar'])->name('revisiones.procesar');

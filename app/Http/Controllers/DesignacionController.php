@@ -88,36 +88,42 @@ class DesignacionController extends Controller
 
     public function lista(Request $request): View
     {
-        $filtros = $request->validate([
-            'carrera_id' => ['nullable', 'exists:carreras,id'],
-            'materia_id' => ['nullable', 'exists:materias,id'],
-            'gestion_id' => ['nullable', 'exists:gestiones,id'],
-            'periodo_id' => ['nullable', 'exists:periodos,id'],
-            'estado' => ['nullable', 'in:propuesta,aprobada,rechazada'],
-        ]);
+        $user = $request->user();
+        $carreraId = $user->carrera_id ?? Carrera::first()?->id ?? 1;
+        $anioActual = (string) date('Y');
 
-        $designaciones = Designacion::with(['docente', 'materia', 'grupo', 'gestion', 'periodo'])
-            ->when($filtros['carrera_id'] ?? null, fn ($q, $carreraId) => $q->whereHas('materia', fn ($m) => $m->where('carrera_id', $carreraId)))
-            ->when($filtros['materia_id'] ?? null, fn ($q, $materiaId) => $q->where('Id_materia', $materiaId))
-            ->when($filtros['gestion_id'] ?? null, fn ($q, $gestionId) => $q->where('Id_gestion', $gestionId))
-            ->when($filtros['periodo_id'] ?? null, fn ($q, $periodoId) => $q->where('Id_periodo', $periodoId))
-            ->when($filtros['estado'] ?? null, fn ($q, $estado) => $q->where('estado', $estado))
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+        $revisiones = Revision::with(['carrera', 'gestion', 'periodo'])
+            ->where('carrera_id', $carreraId)
+            ->whereHas('gestion', fn ($q) => $q->where('nombre', $anioActual))
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $propuestasData = $revisiones->map(function ($r) {
+            $estadoStr = match ($r->estado) {
+                'pendiente' => 'enviado',
+                'revisado' => 'oficial',
+                'observado' => 'con_observaciones',
+                default => 'propuesta',
+            };
+
+            return [
+                'id' => $r->id,
+                'descripcion' => $r->descripcion ?: ("Propuesta de Designación Docente — " . $r->carrera->nombre),
+                'gestion' => $r->gestion?->nombre ?? date('Y'),
+                'gestion_id' => $r->Id_gestion,
+                'periodo' => $r->periodo?->nombre ?? '1',
+                'periodo_id' => $r->Id_periodo,
+                'estado' => $estadoStr,
+                'observacion' => $r->observaciones ?: '',
+                'created_at' => $r->created_at?->timestamp ?? 0,
+            ];
+        })->toArray();
 
         return view('designaciones.lista', [
-            'designaciones' => $designaciones,
+            'propuestasData' => $propuestasData,
             'carreras' => Carrera::orderBy('nombre')->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
-            'filtros' => [
-                'carrera_id' => $filtros['carrera_id'] ?? '',
-                'materia_id' => $filtros['materia_id'] ?? '',
-                'gestion_id' => $filtros['gestion_id'] ?? '',
-                'periodo_id' => $filtros['periodo_id'] ?? '',
-                'estado' => $filtros['estado'] ?? '',
-            ],
         ]);
     }
 
@@ -250,6 +256,31 @@ class DesignacionController extends Controller
             'cambios.*.Id_materia' => ['required', 'exists:materias,id'],
             'cambios.*.Id_docente' => ['nullable', 'exists:docentes,id'],
         ]);
+
+        // Bloqueo estricto: Verificar que ningún docente exceda las 32 horas semanales
+        $docentesCambios = collect($data['cambios'])->whereNotNull('Id_docente')->pluck('Id_docente')->unique();
+        foreach ($docentesCambios as $docenteId) {
+            $docente = \App\Models\Docente::find($docenteId);
+            if (! $docente) continue;
+
+            $horasOtrasCarreras = (int) Designacion::forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
+                ->where('Id_docente', $docenteId)
+                ->whereHas('materia', fn ($q) => $q->where('carrera_id', '!=', $carrera->id))
+                ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+                ->sum('materias.horas');
+
+            $gruposDelDocenteEnCambios = collect($data['cambios'])->where('Id_docente', $docenteId)->pluck('Id_grupo');
+            $horasNuevasEnCarrera = (int) \App\Models\Grupo::whereIn('grupos.id', $gruposDelDocenteEnCambios)
+                ->join('materias', 'grupos.materia_id', '=', 'materias.id')
+                ->sum('materias.horas');
+
+            $totalProuesto = $horasOtrasCarreras + $horasNuevasEnCarrera;
+            if ($totalProuesto > 32) {
+                return response()->json([
+                    'error' => "El docente {$docente->nombre} excede el límite máximo de 32 horas semanales permitidas (acumularía {$totalProuesto} hrs). Operación cancelada.",
+                ], 422);
+            }
+        }
 
         $saltados = 0;
 

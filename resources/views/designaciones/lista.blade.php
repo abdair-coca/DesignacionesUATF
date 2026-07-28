@@ -10,7 +10,7 @@
     $anoActual = (string) date('Y');
 @endphp
 
-<div x-data="listaDesignacionesApp({{ json_encode($carreraActual) }}, {{ json_encode($gestiones) }}, {{ json_encode($periodos) }})" 
+<div x-data="listaDesignacionesApp({{ json_encode($carreraActual) }}, {{ json_encode($gestiones) }}, {{ json_encode($periodos) }}, {{ json_encode($propuestasData ?? []) }})" 
      class="space-y-4 text-xs text-gray-800">
     
     <!-- BARRA SUPERIOR DE ACCIONES -->
@@ -320,8 +320,54 @@
 
 @push('scripts')
 <script>
-    function listaDesignacionesApp(carrera, gestiones, periodos) {
+    function listaDesignacionesApp(carrera, gestiones, periodos, propuestasBackend) {
         const anoActual = '{{ $anoActual }}';
+        const propuestasIniciales = (propuestasBackend && propuestasBackend.length > 0) ? propuestasBackend : [
+            {
+                id: 1,
+                created_at: 100,
+                descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — Carrera de ' + carrera.nombre,
+                gestion: anoActual,
+                gestion_id: gestiones[0]?.id || 1,
+                periodo: '1',
+                periodo_id: 1,
+                estado: 'propuesta',
+                observacion: ''
+            },
+            {
+                id: 2,
+                created_at: 200,
+                descripcion: 'Designación Docente Materias de Especialidad II/' + anoActual,
+                gestion: anoActual,
+                gestion_id: gestiones[0]?.id || 1,
+                periodo: '2',
+                periodo_id: 2,
+                estado: 'enviado',
+                observacion: ''
+            },
+            {
+                id: 3,
+                created_at: 300,
+                descripcion: 'Designación Docente Complementaria I/' + anoActual,
+                gestion: anoActual,
+                gestion_id: gestiones[0]?.id || 1,
+                periodo: '1',
+                periodo_id: 1,
+                estado: 'con_observaciones',
+                observacion: 'El docente Ing. Roberto Quispe excede las 32 horas semanales permitidas.'
+            },
+            {
+                id: 4,
+                created_at: 400,
+                descripcion: 'Designación Oficial Consolidada I/' + anoActual,
+                gestion: anoActual,
+                gestion_id: gestiones[0]?.id || 1,
+                periodo: '1',
+                periodo_id: 1,
+                estado: 'oficial',
+                observacion: ''
+            }
+        ];
 
         return {
             carrera: carrera,
@@ -349,58 +395,12 @@
                 { materia_sigla: 'INF-211', grupo_codigo: '1', docente_nombre: 'ING. JAVIER LOZA' }
             ],
 
-            // PROPUESTAS ÚNICAMENTE DEL AÑO ACTUAL (2026) ORDENADAS DE ANTIGUO A NUEVO (id: 1, 2, 3...)
-            propuestas: [
-                {
-                    id: 1,
-                    created_at: 100,
-                    descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — Carrera de ' + carrera.nombre,
-                    gestion: anoActual,
-                    gestion_id: gestiones[0]?.id || 1,
-                    periodo: '1',
-                    periodo_id: 1,
-                    estado: 'propuesta',
-                    observacion: ''
-                },
-                {
-                    id: 2,
-                    created_at: 200,
-                    descripcion: 'Designación Docente Materias de Especialidad II/' + anoActual,
-                    gestion: anoActual,
-                    gestion_id: gestiones[0]?.id || 1,
-                    periodo: '2',
-                    periodo_id: 2,
-                    estado: 'enviado',
-                    observacion: ''
-                },
-                {
-                    id: 3,
-                    created_at: 300,
-                    descripcion: 'Designación Docente Complementaria I/' + anoActual,
-                    gestion: anoActual,
-                    gestion_id: gestiones[0]?.id || 1,
-                    periodo: '1',
-                    periodo_id: 1,
-                    estado: 'con_observaciones',
-                    observacion: 'El docente Ing. Roberto Quispe excede las 32 horas semanales permitidas.'
-                },
-                {
-                    id: 4,
-                    created_at: 400,
-                    descripcion: 'Designación Oficial Consolidada I/' + anoActual,
-                    gestion: anoActual,
-                    gestion_id: gestiones[0]?.id || 1,
-                    periodo: '1',
-                    periodo_id: 1,
-                    estado: 'oficial',
-                    observacion: ''
-                }
-            ],
+            propuestas: propuestasIniciales,
 
             // ORDENAMIENTO ESTRICTO DE ANTIGUO A NUEVO (ASCENDENTE POR CREACIÓN)
             get propuestasOrdenadas() {
                 return this.propuestas
-                    .filter(p => p.gestion === anoActual)
+                    .filter(p => (p.gestion === anoActual || p.gestion === '' + (new Date().getFullYear())))
                     .sort((a, b) => a.created_at - b.created_at);
             },
 
@@ -415,14 +415,38 @@
 
             retirarEnvio(item) {
                 if (item.estado === 'oficial') return;
-                if (confirm('¿Deseas retirar esta solicitud enviada al Vicerrectorado para volver a editarla en modo borrador?')) {
+                if (!confirm('¿Deseas retirar esta solicitud enviada al Vicerrectorado para volver a editarla en modo borrador?')) return;
+
+                if (item.id && typeof item.id === 'number' && item.id < 10000) {
+                    fetch('/revisiones/' + item.id + '/retirar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            item.estado = 'propuesta';
+                            alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
+                        } else {
+                            alert(res.error || 'No se pudo retirar la solicitud.');
+                        }
+                    })
+                    .catch(() => {
+                        item.estado = 'propuesta';
+                        alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
+                    });
+                } else {
                     item.estado = 'propuesta';
                     alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
                 }
             },
 
             imprimirDesignacion(item) {
-                alert('Generando reporte de impresión para: ' + item.descripcion);
+                window.open('/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + item.gestion_id + '&periodo_id=' + item.periodo_id + '&imprimir=1', '_blank');
             },
 
             guardarNuevaPropuesta() {

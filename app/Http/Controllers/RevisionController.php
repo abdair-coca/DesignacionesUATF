@@ -32,6 +32,21 @@ class RevisionController extends Controller
             ], 422);
         }
 
+        // Verificar 100% asignación de grupos en la carrera
+        $gruposTotales = \App\Models\Grupo::whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))->count();
+
+        $gruposAsignados = Designacion::forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
+            ->whereNotNull('Id_docente')
+            ->count();
+
+        if ($gruposTotales > 0 && $gruposAsignados < $gruposTotales) {
+            $pendientes = $gruposTotales - $gruposAsignados;
+            return response()->json([
+                'error' => "No se puede enviar a revisión al Vicerrectorado. Quedan {$pendientes} materias/grupos sin docente asignado.",
+            ], 422);
+        }
+
         // Verificar si ya hay una revision pendiente
         $pendiente = Revision::where('carrera_id', $data['carrera_id'])
             ->where('Id_gestion', $data['Id_gestion'])
@@ -47,6 +62,7 @@ class RevisionController extends Controller
 
         $revision = Revision::create([
             'carrera_id' => $data['carrera_id'],
+            'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
             'Id_gestion' => $data['Id_gestion'],
             'Id_periodo' => $data['Id_periodo'],
             'solicitado_por' => $request->user()->id,
@@ -58,6 +74,23 @@ class RevisionController extends Controller
             'success' => true,
             'revision_id' => $revision->id,
         ]);
+    }
+
+    /**
+     * POST /revisiones/{revision}/retirar
+     * Director cancela/retira envio a revisión pendiente.
+     */
+    public function retirar(Request $request, Revision $revision): JsonResponse
+    {
+        if ($revision->estado !== 'pendiente') {
+            return response()->json([
+                'error' => 'Únicamente se pueden retirar solicitudes enviadas que aún estén pendientes.',
+            ], 422);
+        }
+
+        $revision->delete();
+
+        return response()->json(['success' => true]);
     }
 
     /**

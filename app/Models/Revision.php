@@ -11,6 +11,7 @@ class Revision extends Model
 
     protected $fillable = [
         'carrera_id',
+        'descripcion',
         'Id_gestion',
         'Id_periodo',
         'solicitado_por',
@@ -18,6 +19,7 @@ class Revision extends Model
         'revisado_por',
         'revisado_en',
         'estado',
+        'observaciones',
     ];
 
     protected function casts(): array
