@@ -23,7 +23,7 @@
                 </h1>
             </div>
             <p class="text-[11px] text-gray-500 mt-0.5">
-                Gestión y consulta formal de propuestas de carga horaria docente para el Vicerrectorado.
+                Gestión oficial de propuestas docentes correspondientes al año en curso {{ $anoActual }}.
             </p>
         </div>
 
@@ -37,14 +37,14 @@
         </button>
     </div>
 
-    <!-- PANEL COLOR ADMIN "UI ELEMENTS IN TABLE" -->
+    <!-- PANEL COLOR ADMIN "UI ELEMENTS IN TABLE" (SOLO AÑO ACTUAL, ORDENADO DE ANTIGUO A NUEVO) -->
     <div class="bg-white border border-gray-200 rounded-xs shadow-2xs overflow-hidden">
         
         <!-- Header del Panel Estilo Color Admin -->
         <div class="bg-[#2d353c] text-white px-4 py-2.5 flex items-center justify-between font-bold text-xs">
             <div class="flex items-center gap-2">
                 <span>UI Elements in Table</span>
-                <span class="bg-[#00acac] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-xs tracking-wider uppercase">UATF</span>
+                <span class="bg-[#00acac] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-xs tracking-wider uppercase">Gestión {{ $anoActual }}</span>
             </div>
 
             <!-- Botones de Control de Ventana (Color Admin) -->
@@ -70,13 +70,13 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 text-gray-700 font-medium">
-                    <template x-for="(item, index) in propuestas" :key="item.id">
+                    <template x-for="(item, index) in propuestasOrdenadas" :key="item.id">
                         <tr @dblclick="abrirModalObservaciones(item)" 
-                            title="Haga doble clic para consultar detalles u observaciones del Vicerrectorado"
+                            title="Haga doble clic para consultar observaciones del Vicerrectorado"
                             class="transition-colors cursor-pointer select-none"
                             :class="index % 2 === 0 ? 'bg-[#f2f4f8]' : 'bg-white hover:bg-gray-100/70'">
                             
-                            <!-- 1. # (Nro) -->
+                            <!-- 1. # (Nro correlativo cronológico) -->
                             <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60" x-text="index + 1"></td>
 
                             <!-- 2. Descripción -->
@@ -85,13 +85,13 @@
                                 <span class="text-[11px] text-gray-500 font-normal">Carrera de {{ $carreraActual->nombre }}</span>
                             </td>
 
-                            <!-- 3. Gestión -->
+                            <!-- 3. Gestión (Solo año actual 2026) -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60 font-bold text-gray-800 tabular-nums" x-text="item.gestion"></td>
 
                             <!-- 4. Periodo -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60 font-semibold text-gray-700" x-text="'Periodo ' + item.periodo"></td>
 
-                            <!-- 5. Estado (Estilo Imagen 2: Rectángulos suaves sin estar completamente redondeados, sin emojis) -->
+                            <!-- 5. Estado -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60">
                                 <template x-if="item.estado === 'propuesta'">
                                     <span class="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2.5 py-1 rounded-xs inline-block text-center">
@@ -115,32 +115,36 @@
                                 </template>
                             </td>
 
-                            <!-- 6. Acciones (ÚNICAMENTE 3 BOTONES: Editar, Imprimir, Retirar Envío) -->
+                            <!-- 6. Acciones (SI ESTÁ APROBADA/OFICIAL: SOLO IMPRIMIR) -->
                             <td class="py-3.5 px-4 text-center" @click.stop>
                                 <div class="flex items-center justify-center gap-1.5">
                                     
-                                    <!-- Botón 1: Editar (Botón azul rectangular sólido de la imagen 1) -->
-                                    <a :href="'/designaciones/carrera/{{ $carreraActual->id }}?gestion_id=' + item.gestion_id + '&periodo_id=' + item.periodo_id" 
-                                       title="Editar asignación docente"
-                                       class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors">
-                                        Editar
-                                    </a>
+                                    <!-- Botón Editar (Solo si NO está oficial/aprobada) -->
+                                    <template x-if="item.estado !== 'oficial'">
+                                        <a :href="'/designaciones/carrera/{{ $carreraActual->id }}?gestion_id=' + item.gestion_id + '&periodo_id=' + item.periodo_id" 
+                                           title="Editar asignación docente"
+                                           class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors">
+                                            Editar
+                                        </a>
+                                    </template>
 
-                                    <!-- Botón 2: Imprimir (Botón blanco con borde plano) -->
+                                    <!-- Botón Imprimir (ÚNICA ACCIÓN SI ESTÁ APROBADA/OFICIAL) -->
                                     <button @click="imprimirDesignacion(item)" 
                                             title="Imprimir reporte"
                                             class="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
                                         Imprimir
                                     </button>
 
-                                    <!-- Botón 3: Retirar Envío (Botón plano con borde) -->
-                                    <button @click="retirarEnvio(item)" 
-                                            :disabled="item.estado !== 'enviado'"
-                                            :class="item.estado === 'enviado' ? 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold cursor-pointer' : 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'"
-                                            title="Cancelar el envío a Vicerrectorado"
-                                            class="px-3 py-1.5 rounded-xs text-xs transition-colors">
-                                        Retirar Envío
-                                    </button>
+                                    <!-- Botón Retirar Envío (Solo si NO está oficial y está enviado) -->
+                                    <template x-if="item.estado !== 'oficial'">
+                                        <button @click="retirarEnvio(item)" 
+                                                :disabled="item.estado !== 'enviado'"
+                                                :class="item.estado === 'enviado' ? 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold cursor-pointer' : 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'"
+                                                title="Cancelar el envío a Vicerrectorado"
+                                                class="px-3 py-1.5 rounded-xs text-xs transition-colors">
+                                            Retirar Envío
+                                        </button>
+                                    </template>
                                 </div>
                             </td>
                         </tr>
@@ -317,6 +321,8 @@
 @push('scripts')
 <script>
     function listaDesignacionesApp(carrera, gestiones, periodos) {
+        const anoActual = '{{ $anoActual }}';
+
         return {
             carrera: carrera,
             gestiones: gestiones,
@@ -327,7 +333,7 @@
             itemSeleccionado: null,
 
             nuevaForm: {
-                descripcion: 'Designación Docente I/' + (new Date().getFullYear()) + ' — ' + carrera.nombre,
+                descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — ' + carrera.nombre,
                 gestion_id: gestiones[0]?.id || 1,
                 periodo_id: 1
             },
@@ -343,11 +349,13 @@
                 { materia_sigla: 'INF-211', grupo_codigo: '1', docente_nombre: 'ING. JAVIER LOZA' }
             ],
 
+            // PROPUESTAS ÚNICAMENTE DEL AÑO ACTUAL (2026) ORDENADAS DE ANTIGUO A NUEVO (id: 1, 2, 3...)
             propuestas: [
                 {
                     id: 1,
-                    descripcion: 'Propuesta de Designación Docente I/2026 — Carrera de ' + carrera.nombre,
-                    gestion: '2026',
+                    created_at: 100,
+                    descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — Carrera de ' + carrera.nombre,
+                    gestion: anoActual,
                     gestion_id: gestiones[0]?.id || 1,
                     periodo: '1',
                     periodo_id: 1,
@@ -356,8 +364,9 @@
                 },
                 {
                     id: 2,
-                    descripcion: 'Designación Docente Materias de Especialidad II/2026',
-                    gestion: '2026',
+                    created_at: 200,
+                    descripcion: 'Designación Docente Materias de Especialidad II/' + anoActual,
+                    gestion: anoActual,
                     gestion_id: gestiones[0]?.id || 1,
                     periodo: '2',
                     periodo_id: 2,
@@ -366,25 +375,34 @@
                 },
                 {
                     id: 3,
-                    descripcion: 'Designación Docente Complementaria I/2025',
-                    gestion: '2025',
-                    gestion_id: gestiones[1]?.id || 2,
+                    created_at: 300,
+                    descripcion: 'Designación Docente Complementaria I/' + anoActual,
+                    gestion: anoActual,
+                    gestion_id: gestiones[0]?.id || 1,
                     periodo: '1',
                     periodo_id: 1,
                     estado: 'con_observaciones',
-                    observacion: 'El docente Ing. Roberto Quispe excede las 32 horas semanales permitidas al sumar las clases asignadas en la carrera de Ingeniería Civil.'
+                    observacion: 'El docente Ing. Roberto Quispe excede las 32 horas semanales permitidas.'
                 },
                 {
                     id: 4,
-                    descripcion: 'Designación Oficial Consolidada I/2024',
-                    gestion: '2024',
-                    gestion_id: gestiones[2]?.id || 3,
+                    created_at: 400,
+                    descripcion: 'Designación Oficial Consolidada I/' + anoActual,
+                    gestion: anoActual,
+                    gestion_id: gestiones[0]?.id || 1,
                     periodo: '1',
                     periodo_id: 1,
                     estado: 'oficial',
                     observacion: ''
                 }
             ],
+
+            // ORDENAMIENTO ESTRICTO DE ANTIGUO A NUEVO (ASCENDENTE POR CREACIÓN)
+            get propuestasOrdenadas() {
+                return this.propuestas
+                    .filter(p => p.gestion === anoActual)
+                    .sort((a, b) => a.created_at - b.created_at);
+            },
 
             abrirModalNuevaPropuesta() {
                 this.modalNuevaOpen = true;
@@ -396,6 +414,7 @@
             },
 
             retirarEnvio(item) {
+                if (item.estado === 'oficial') return;
                 if (confirm('¿Deseas retirar esta solicitud enviada al Vicerrectorado para volver a editarla en modo borrador?')) {
                     item.estado = 'propuesta';
                     alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
@@ -403,7 +422,7 @@
             },
 
             imprimirDesignacion(item) {
-                alert('Generando vista previa de impresión para: ' + item.descripcion);
+                alert('Generando reporte de impresión para: ' + item.descripcion);
             },
 
             guardarNuevaPropuesta() {
@@ -411,8 +430,9 @@
 
                 const nueva = {
                     id: Date.now(),
+                    created_at: Date.now(),
                     descripcion: this.nuevaForm.descripcion,
-                    gestion: '2026',
+                    gestion: anoActual,
                     gestion_id: this.nuevaForm.gestion_id,
                     periodo: this.nuevaForm.periodo_id,
                     periodo_id: this.nuevaForm.periodo_id,
@@ -420,7 +440,7 @@
                     observacion: ''
                 };
 
-                this.propuestas.unshift(nueva);
+                this.propuestas.push(nueva);
                 this.modalNuevaOpen = false;
 
                 window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + nueva.gestion_id + '&periodo_id=' + nueva.periodo_id;
