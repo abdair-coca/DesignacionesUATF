@@ -58,27 +58,66 @@ class RevisionController extends Controller
     public function pendientes(Request $request): View
     {
         if (! $request->user()->is_admin) {
-            abort(403, 'Solo administradores pueden ver revisiones pendientes.');
+            abort(403, 'Solo administradores pueden ver la bandeja de revisiones.');
         }
 
-        $revisiones = Revision::with(['carrera:id,sigla,nombre', 'solicitante:id,name', 'gestion:id,nombre', 'periodo:id,nombre'])
-            ->where('estado', 'pendiente')
-            ->latest('solicitado_en')
-            ->get();
+        $folder = $request->query('folder', 'inbox');
+        $q = $request->query('q', '');
 
-        $pendientes = $revisiones->map(fn (Revision $r) => [
-            'id' => $r->id,
-            'carrera_id' => $r->carrera_id,
-            'carrera_nombre' => $r->carrera?->nombre ?? '',
-            'carrera_sigla' => $r->carrera?->sigla ?? '',
-            'gestion_nombre' => $r->gestion?->nombre ?? '',
-            'periodo_nombre' => $r->periodo?->nombre ?? '',
-            'solicitante' => $r->solicitante?->name ?? '',
-            'solicitado_en' => $r->solicitado_en?->format('d/m/Y H:i') ?? '',
-        ]);
+        $query = Revision::with(['carrera:id,sigla,nombre', 'solicitante:id,name', 'gestion:id,nombre', 'periodo:id,nombre']);
+
+        if ($folder === 'pendientes' || $folder === 'inbox') {
+            $query->where('estado', 'pendiente');
+        } elseif ($folder === 'revisadas') {
+            $query->where('estado', 'revisado');
+        }
+
+        if (! empty($q)) {
+            $query->whereHas('carrera', function ($cQuery) use ($q) {
+                $cQuery->where('nombre', 'like', "%{$q}%")
+                    ->orWhere('sigla', 'like', "%{$q}%");
+            })->orWhereHas('solicitante', function ($sQuery) use ($q) {
+                $sQuery->where('name', 'like', "%{$q}%");
+            });
+        }
+
+        $revisionesList = $query->latest('solicitado_en')->get();
+
+        $pendientesCount = Revision::where('estado', 'pendiente')->count();
+        $revisadasCount = Revision::where('estado', 'revisado')->count();
+        $todasCount = Revision::count();
+
+        $pendientes = $revisionesList->map(function (Revision $r) {
+            $cantDesignaciones = Designacion::where('Id_gestion', $r->Id_gestion)
+                ->where('Id_periodo', $r->Id_periodo)
+                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $r->carrera_id))
+                ->count();
+
+            return [
+                'id' => $r->id,
+                'carrera_id' => $r->carrera_id,
+                'carrera_nombre' => $r->carrera?->nombre ?? '',
+                'carrera_sigla' => $r->carrera?->sigla ?? '',
+                'gestion_nombre' => $r->gestion?->nombre ?? '',
+                'periodo_nombre' => $r->periodo?->nombre ?? '',
+                'solicitante' => $r->solicitante?->name ?? 'Director de Carrera',
+                'solicitado_en' => $r->solicitado_en?->format('d/m/Y H:i') ?? '',
+                'hace_tiempo' => $r->solicitado_en?->diffForHumans() ?? '',
+                'estado' => $r->estado,
+                'cant_designaciones' => $cantDesignaciones,
+            ];
+        });
 
         return view('revisiones.pendientes', [
             'pendientes' => $pendientes,
+            'counts' => [
+                'inbox' => $pendientesCount,
+                'pendientes' => $pendientesCount,
+                'revisadas' => $revisadasCount,
+                'todas' => $todasCount,
+            ],
+            'folder' => $folder,
+            'q' => $q,
         ]);
     }
 
