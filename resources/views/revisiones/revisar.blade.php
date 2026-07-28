@@ -48,22 +48,36 @@
         </div>
     </div>
 
-    <!-- MAIN EMAIL CONTAINER ESTILO COLOR ADMIN -->
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden p-6 space-y-6">
+    <!-- MAIN EMAIL CONTAINER MINIMALISTA -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden p-6 space-y-5">
         
         <!-- Mail Subject / Title Header -->
-        <div class="border-b border-gray-200 pb-4">
-            <h1 class="text-xl font-bold text-gray-900 tracking-tight">
-                Propuesta de Designación Docente — Carrera de {{ $revision['carrera_nombre'] }} ({{ $revision['carrera_sigla'] }})
+        <div class="border-b border-gray-200 pb-3 flex items-center justify-between">
+            <h1 class="text-lg font-bold text-gray-900 tracking-tight">
+                Propuesta de Designación Docente — {{ $revision['carrera_nombre'] }} ({{ $revision['carrera_sigla'] }})
             </h1>
+
+            @if($revision['estado'] === 'pendiente')
+                <span class="bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    Pendiente de Revisión
+                </span>
+            @else
+                <span class="bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
+                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Revisión Completada
+                </span>
+            @endif
         </div>
 
         <!-- Mail Sender Header Info (Icono Amarillo Avatar) -->
-        <div class="flex items-start justify-between gap-4">
+        <div class="flex items-center justify-between gap-4 bg-gray-50/70 p-3 rounded-lg border border-gray-200/80">
             <div class="flex items-center gap-3">
-                <!-- Circular Avatar (Estilo Icono Amarillo de la imagen) -->
-                <div class="h-10 w-10 rounded-full bg-[#f59c1a] text-white font-bold text-base flex items-center justify-center shadow-2xs shrink-0">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <!-- Circular Avatar Icono Amarillo -->
+                <div class="h-9 w-9 rounded-full bg-[#f59c1a] text-white font-bold text-sm flex items-center justify-center shadow-2xs shrink-0">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
                     </svg>
                 </div>
@@ -78,99 +92,19 @@
                         </svg>
                         Enviado el {{ $revision['solicitado_en'] }} &bull; Gestión {{ $revision['gestion_nombre'] }} (Periodo {{ $revision['periodo_nombre'] }})
                     </p>
-                    <p class="text-[11px] text-gray-400 font-normal mt-0.5">
-                        To: <span class="text-gray-700 font-medium">vicedecanato@uatf.edu.bo</span>
-                    </p>
                 </div>
             </div>
 
-            <div>
-                @if($revision['estado'] === 'pendiente')
-                    <span class="bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        Pendiente de Revisión
-                    </span>
-                @else
-                    <span class="bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Revisión Completada
-                    </span>
-                @endif
+            <div class="text-right text-[11px] text-gray-400">
+                To: <span class="text-gray-700 font-semibold">vicedecanato@uatf.edu.bo</span>
             </div>
         </div>
 
-        <!-- ATTACHMENTS SECTION (Estilo exacto de las tarjetas PDF/Imagen adjuntas de la imagen) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-            
-            <!-- Attachment Card 1: Cobertura PDF -->
-            <div class="border border-gray-200 rounded overflow-hidden bg-gray-50 flex flex-col justify-between">
-                <div class="p-4 flex items-center justify-center bg-gray-100 border-b border-gray-200 min-h-[5.5rem]">
-                    <div class="text-center space-y-1">
-                        <svg class="w-10 h-10 text-[#348fe2] mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="bg-[#348fe2] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PDF</span>
-                    </div>
-                </div>
-                <div class="p-2.5 bg-gray-50 text-center">
-                    <p class="font-bold text-gray-800 text-xs">Resumen_Cobertura.pdf</p>
-                    <p class="text-[10px] text-gray-500 font-semibold mt-0.5" x-text="stats.cobertura + '% Cobertura (' + stats.grupos_asignados + '/' + stats.total_grupos + ' grupos)'"></p>
-                </div>
-            </div>
-
-            <!-- Attachment Card 2: Carga Horaria JPG/Mockup -->
-            <div class="border border-gray-200 rounded overflow-hidden bg-gray-50 flex flex-col justify-between">
-                <div class="p-4 flex items-center justify-center bg-gray-100 border-b border-gray-200 min-h-[5.5rem]">
-                    <div class="text-center space-y-1">
-                        <svg class="w-10 h-10 text-[#00acac] mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">HOJA</span>
-                    </div>
-                </div>
-                <div class="p-2.5 bg-gray-50 text-center">
-                    <p class="font-bold text-gray-800 text-xs">Carga_Horaria_Total.pdf</p>
-                    <p class="text-[10px] text-gray-500 font-semibold mt-0.5" x-text="stats.total_horas + ' hrs totales (' + stats.docentes + ' docentes)'"></p>
-                </div>
-            </div>
-
-            <!-- Attachment Card 3: Plan Curricular -->
-            <div class="border border-gray-200 rounded overflow-hidden bg-gray-50 flex flex-col justify-between">
-                <div class="p-4 flex items-center justify-center bg-gray-100 border-b border-gray-200 min-h-[5.5rem]">
-                    <div class="text-center space-y-1">
-                        <svg class="w-10 h-10 text-[#727cb6] mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="bg-[#727cb6] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PLAN</span>
-                    </div>
-                </div>
-                <div class="p-2.5 bg-gray-50 text-center">
-                    <p class="font-bold text-gray-800 text-xs">Plan_Estudios_{{ $revision['carrera_sigla'] }}.pdf</p>
-                    <p class="text-[10px] text-gray-500 font-semibold mt-0.5">Gestión {{ $revision['gestion_nombre'] }} - Periodo {{ $revision['periodo_nombre'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mail Text Body -->
-        <div class="space-y-3 text-gray-700 leading-relaxed font-normal pt-2">
-            <p>
-                Estimada Autoridad del Vicedecanato,
-            </p>
-            <p>
-                Se remite para su conocimiento y correspondiente homologación la propuesta oficial de designación de carga horaria docente para la carrera de <strong>{{ $revision['carrera_nombre'] }} ({{ $revision['carrera_sigla'] }})</strong>, correspondiente a la <strong>Gestión {{ $revision['gestion_nombre'] }} — Periodo {{ $revision['periodo_nombre'] }}</strong>.
-            </p>
-            <p>
-                A continuación se detalla la lista de materias y grupos asignados a cada docente para su revisión individual o general:
-            </p>
-        </div>
-
-        <!-- Flat Table of Designaciones (DataTable Select Style) -->
+        <!-- Flat Table of Designaciones (Foco Principal Minimalista) -->
         <div class="border border-gray-200 rounded-lg overflow-hidden">
             <div class="bg-[#2d353c] text-white px-4 py-2.5 flex items-center justify-between font-bold text-xs">
                 <span>Detalle de Materias y Docentes Designados</span>
-                <span class="bg-[#00acac] text-white text-[10px] font-bold px-2 py-0.5 rounded" x-text="designaciones.length + ' grupos en total'"></span>
+                <span class="bg-[#00acac] text-white text-[10px] font-bold px-2 py-0.5 rounded" x-text="designaciones.length + ' materias / grupos'"></span>
             </div>
 
             <div class="overflow-x-auto">
@@ -242,12 +176,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <div class="pt-2 text-xs text-gray-500 font-medium">
-            <p>Atentamente,</p>
-            <p class="font-bold text-gray-900 mt-1">{{ $revision['solicitante'] }}</p>
-            <p class="text-gray-500">Director de Carrera — {{ $revision['carrera_nombre'] }}</p>
         </div>
     </div>
 
@@ -334,7 +262,6 @@
             motivoRechazo: '',
             esRechazoGlobal: false,
             designacionSeleccionadaId: null,
-            stats: {{ json_encode($stats) }},
 
             aprobarTodo() {
                 if (!confirm('¿Deseas aprobar todas las designaciones de esta carrera?')) return;
