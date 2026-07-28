@@ -345,6 +345,12 @@
                     motivo_rechazo: d.estado_local === 'rechazada' ? d.motivo_local : null
                 }));
 
+                const motivos = this.designaciones
+                    .filter(d => d.estado_local === 'rechazada')
+                    .map(d => d.motivo_local)
+                    .filter(Boolean);
+                const obs = [...new Set(motivos)].join('; ');
+
                 fetch('/revisiones/' + this.revision.id + '/completar', {
                     method: 'POST',
                     headers: {
@@ -352,7 +358,10 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ acciones: acciones })
+                    body: JSON.stringify({ 
+                        acciones: acciones,
+                        observaciones: obs
+                    })
                 })
                 .then(r => r.json())
                 .then(res => {

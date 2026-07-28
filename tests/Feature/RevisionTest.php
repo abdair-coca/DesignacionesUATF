@@ -360,7 +360,7 @@ class RevisionTest extends TestCase
 
         $this->assertDatabaseHas('revisiones', [
             'id' => $revision->id,
-            'estado' => 'revisado',
+            'estado' => 'observado',
             'revisado_por' => $admin->id,
         ]);
     }

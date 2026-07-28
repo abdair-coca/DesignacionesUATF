@@ -627,22 +627,32 @@
 
                 if (!this.nuevaForm.descripcion.trim()) return;
 
-                const nueva = {
-                    id: Date.now(),
-                    created_at: Date.now(),
-                    descripcion: this.nuevaForm.descripcion,
-                    gestion: anoActual,
-                    gestion_id: this.nuevaForm.gestion_id,
-                    periodo: this.nuevaForm.periodo_id,
-                    periodo_id: this.nuevaForm.periodo_id,
-                    estado: 'propuesta',
-                    observacion: ''
-                };
+                const desc = this.nuevaForm.descripcion.trim();
+                const gId = this.nuevaForm.gestion_id;
+                const pId = this.nuevaForm.periodo_id;
 
-                this.propuestas.push(nueva);
-                this.modalNuevaOpen = false;
-
-                window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + nueva.gestion_id + '&periodo_id=' + nueva.periodo_id;
+                fetch('/revisiones/crear-propuesta', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        descripcion: desc,
+                        gestion_id: gId,
+                        periodo_id: pId
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    this.modalNuevaOpen = false;
+                    window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + gId + '&periodo_id=' + pId;
+                })
+                .catch(() => {
+                    this.modalNuevaOpen = false;
+                    window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + gId + '&periodo_id=' + pId;
+                });
             }
         };
     }

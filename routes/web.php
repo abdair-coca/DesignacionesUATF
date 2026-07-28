@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
         ->name('designaciones.historial');
 
     // Revisiones
+    Route::post('revisiones/crear-propuesta', [RevisionController::class, 'crearPropuesta'])->name('revisiones.crear_propuesta');
     Route::post('revisiones/solicitar', [RevisionController::class, 'solicitar'])->name('revisiones.solicitar');
     Route::post('revisiones/{revision}/retirar', [RevisionController::class, 'retirar'])->name('revisiones.retirar');
     Route::get('revisiones/pendientes', [RevisionController::class, 'pendientes'])->name('revisiones.pendientes');

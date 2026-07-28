@@ -12,6 +12,36 @@ use Illuminate\View\View;
 class RevisionController extends Controller
 {
     /**
+     * POST /revisiones/crear-propuesta
+     * Director crea un borrador de propuesta con descripcion personalizada.
+     */
+    public function crearPropuesta(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'descripcion' => ['required', 'string', 'max:255'],
+            'gestion_id' => ['required', 'exists:gestiones,id'],
+            'periodo_id' => ['required', 'exists:periodos,id'],
+        ]);
+
+        $user = $request->user();
+        $carreraId = $user->carrera_id ?? \App\Models\Carrera::first()?->id ?? 1;
+
+        $revision = Revision::create([
+            'carrera_id' => $carreraId,
+            'descripcion' => $data['descripcion'],
+            'Id_gestion' => $data['gestion_id'],
+            'Id_periodo' => $data['periodo_id'],
+            'solicitado_por' => $user->id,
+            'estado' => 'propuesta',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'revision' => $revision,
+        ]);
+    }
+
+    /**
      * POST /revisiones/solicitar
      * Usuario normal envia designaciones de una carrera a revision.
      */
@@ -21,6 +51,7 @@ class RevisionController extends Controller
             'carrera_id' => ['required', 'exists:carreras,id'],
             'Id_gestion' => ['required', 'exists:gestiones,id'],
             'Id_periodo' => ['required', 'exists:periodos,id'],
+            'descripcion' => ['nullable', 'string', 'max:255'],
         ]);
 
         $gestion = \App\Models\Gestion::find($data['Id_gestion']);
@@ -47,28 +78,37 @@ class RevisionController extends Controller
             ], 422);
         }
 
-        // Verificar si ya hay una revision pendiente
-        $pendiente = Revision::where('carrera_id', $data['carrera_id'])
+        // Buscar revision borrador o pendiente existente
+        $revision = Revision::where('carrera_id', $data['carrera_id'])
             ->where('Id_gestion', $data['Id_gestion'])
             ->where('Id_periodo', $data['Id_periodo'])
-            ->where('estado', 'pendiente')
-            ->exists();
+            ->latest('id')
+            ->first();
 
-        if ($pendiente) {
-            return response()->json([
-                'error' => 'Ya hay una revisión pendiente para esta carrera.',
-            ], 422);
+        if ($revision) {
+            if ($revision->estado === 'pendiente') {
+                return response()->json([
+                    'error' => 'Ya hay una revisión pendiente para esta carrera.',
+                ], 422);
+            }
+
+            $revision->update([
+                'solicitado_por' => $request->user()->id,
+                'solicitado_en' => now(),
+                'estado' => 'pendiente',
+                'descripcion' => $data['descripcion'] ?? $revision->descripcion ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
+            ]);
+        } else {
+            $revision = Revision::create([
+                'carrera_id' => $data['carrera_id'],
+                'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
+                'Id_gestion' => $data['Id_gestion'],
+                'Id_periodo' => $data['Id_periodo'],
+                'solicitado_por' => $request->user()->id,
+                'solicitado_en' => now(),
+                'estado' => 'pendiente',
+            ]);
         }
-
-        $revision = Revision::create([
-            'carrera_id' => $data['carrera_id'],
-            'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
-            'Id_gestion' => $data['Id_gestion'],
-            'Id_periodo' => $data['Id_periodo'],
-            'solicitado_por' => $request->user()->id,
-            'solicitado_en' => now(),
-            'estado' => 'pendiente',
-        ]);
 
         return response()->json([
             'success' => true,
@@ -295,6 +335,7 @@ class RevisionController extends Controller
             'acciones.*.id' => ['required_with:acciones', 'exists:designaciones,id'],
             'acciones.*.accion' => ['required_with:acciones', 'in:aprobar,rechazar'],
             'acciones.*.motivo_rechazo' => ['nullable', 'string', 'max:500'],
+            'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 
         DB::transaction(function () use ($revision, $data, $request) {
@@ -321,11 +362,34 @@ class RevisionController extends Controller
                 }
             }
 
-            $revision->update([
-                'estado' => 'revisado',
-                'revisado_por' => $request->user()->id,
-                'revisado_en' => now(),
-            ]);
+            // Comprobar si hay designaciones rechazadas en esta propuesta
+            $rechazadas = Designacion::where('Id_gestion', $revision->Id_gestion)
+                ->where('Id_periodo', $revision->Id_periodo)
+                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+                ->where('estado', 'rechazada')
+                ->get();
+
+            if ($rechazadas->isNotEmpty()) {
+                $motivosUnicos = $rechazadas->pluck('motivo_rechazo')->filter()->unique()->values()->toArray();
+                $textoObservacion = $data['observaciones'] ?? (count($motivosUnicos) > 0 ? implode('; ', $motivosUnicos) : null);
+                if (empty($textoObservacion)) {
+                    $textoObservacion = 'La propuesta fue devuelta por el Vicerrectorado con observaciones en la asignación de docentes.';
+                }
+
+                $revision->update([
+                    'estado' => 'observado',
+                    'observaciones' => $textoObservacion,
+                    'revisado_por' => $request->user()->id,
+                    'revisado_en' => now(),
+                ]);
+            } else {
+                $revision->update([
+                    'estado' => 'revisado',
+                    'observaciones' => null,
+                    'revisado_por' => $request->user()->id,
+                    'revisado_en' => now(),
+                ]);
+            }
         });
 
         return response()->json(['success' => true]);
