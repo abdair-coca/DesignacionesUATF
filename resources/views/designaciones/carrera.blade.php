@@ -8,22 +8,24 @@
     $docentesProcesados = [];
     foreach ($docentes as $d) {
         $desigDocente = $designaciones->filter(fn($des) => (string)$des->Id_docente === (string)$d['id']);
-        $horasTotal = $desigDocente->sum(fn($des) => $des->materia?->horas ?? 0);
+        $horasLocal = $desigDocente->sum(fn($des) => $des->materia?->horas ?? 0);
+        $horasOtrasCarreras = (int)($d['horasOtrasCarreras'] ?? 0);
+        $horasTotalGlobal = $horasLocal + $horasOtrasCarreras;
         $materiasSiglas = $desigDocente->map(fn($des) => ($des->materia?->sigla ?? '') . ' (G' . ($des->grupo?->codigo ?? '') . ')')->filter()->values()->all();
 
         $estadoCarga = 'optimo';
         $estadoEtiqueta = 'Óptimo';
         $estadoColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
 
-        if ($horasTotal == 0) {
+        if ($horasTotalGlobal == 0) {
             $estadoCarga = 'sin_asignacion';
             $estadoEtiqueta = 'Sin asignación';
             $estadoColor = 'bg-gray-100 text-gray-700 border-gray-200';
-        } elseif ($horasTotal < 6) {
+        } elseif ($horasTotalGlobal < 6) {
             $estadoCarga = 'bajo_minimo';
             $estadoEtiqueta = 'Bajo mínimo (< 6h)';
             $estadoColor = 'bg-amber-100 text-amber-800 border-amber-200';
-        } elseif ($horasTotal > 32) {
+        } elseif ($horasTotalGlobal > 32) {
             $estadoCarga = 'sobrecarga';
             $estadoEtiqueta = 'Sobrecarga (> 32h)';
             $estadoColor = 'bg-rose-100 text-rose-800 border-rose-200';
@@ -33,7 +35,9 @@
             'id' => $d['id'],
             'nombre' => $d['nombre'],
             'carreraSigla' => $d['carreraSigla'] ?? $carrera->sigla,
-            'horas' => $horasTotal,
+            'horasLocal' => $horasLocal,
+            'horasOtrasCarreras' => $horasOtrasCarreras,
+            'horas' => $horasTotalGlobal,
             'materias' => $materiasSiglas,
             'estado' => $estadoCarga,
             'estadoEtiqueta' => $estadoEtiqueta,
@@ -199,9 +203,12 @@
                                 </div>
                             </td>
 
-                            <!-- Carga Horaria Numérica (Sin barra de progreso) -->
+                            <!-- Carga Horaria Numérica Global -->
                             <td class="py-3 px-4 text-center border-r border-gray-200/40">
                                 <span class="font-black text-gray-900 text-xs tabular-nums" x-text="d.horas + ' hrs'"></span>
+                                <template x-if="d.horasOtrasCarreras > 0">
+                                    <span class="block text-[9px] text-sky-700 font-bold mt-0.5" x-text="'(' + d.horasLocal + 'h local + ' + d.horasOtrasCarreras + 'h en otras carreras)'"></span>
+                                </template>
                             </td>
 
                             <!-- Estado Carga -->
@@ -265,11 +272,14 @@
                 </button>
             </div>
 
-            <!-- Modal Subheader: Muestra de Carga Horaria Numérica (Sin barra de progreso) -->
+            <!-- Modal Subheader: Muestra de Carga Horaria Numérica Global -->
             <div class="bg-gray-50 border-b border-gray-200 px-5 py-3 flex items-center justify-between text-xs shrink-0">
                 <div>
-                    <span class="text-gray-500 font-medium">Carga horaria seleccionada:</span>
+                    <span class="text-gray-500 font-medium">Carga horaria global seleccionada:</span>
                     <span class="font-bold text-gray-900 text-sm ml-1 tabular-nums" x-text="totalHorasSeleccionadas + ' hrs'"></span>
+                    <template x-if="docenteActual?.horasOtrasCarreras > 0">
+                        <span class="text-sky-700 font-bold text-[11px] ml-1" x-text="'(incluye ' + (docenteActual?.horasOtrasCarreras || 0) + 'h en otras carreras)'"></span>
+                    </template>
                     <span class="text-gray-400 text-[11px] font-normal ml-1">(Límite máximo: 32 hrs)</span>
                 </div>
                 <div>
@@ -505,10 +515,12 @@
             },
 
             get totalHorasSeleccionadas() {
-                if (!this.gruposSeleccionados.length) return 0;
-                return this.todosGrupos
-                    .filter(g => this.gruposSeleccionados.includes(g.id))
-                    .reduce((sum, g) => sum + g.horas, 0);
+                const horasLocales = this.gruposSeleccionados.length
+                    ? this.todosGrupos
+                        .filter(g => this.gruposSeleccionados.includes(g.id))
+                        .reduce((sum, g) => sum + g.horas, 0)
+                    : 0;
+                return horasLocales + (this.docenteActual?.horasOtrasCarreras || 0);
             },
 
             toggleGrupo(grupoId) {

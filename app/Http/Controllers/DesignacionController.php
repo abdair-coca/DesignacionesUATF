@@ -172,6 +172,18 @@ class DesignacionController extends Controller
             ->unique()
             ->toArray();
 
+        // Obtener horas asignadas en OTRAS carreras para cada docente en la misma gestion y periodo
+        $horasOtrasCarrerasPorDocente = DB::table('designaciones')
+            ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+            ->where('designaciones.Id_gestion', $gestionId)
+            ->where('designaciones.Id_periodo', $periodoId)
+            ->where('materias.carrera_id', '!=', $carrera->id)
+            ->whereNotNull('designaciones.Id_docente')
+            ->groupBy('designaciones.Id_docente')
+            ->select('designaciones.Id_docente', DB::raw('SUM(materias.horas) as total_horas'))
+            ->pluck('total_horas', 'designaciones.Id_docente')
+            ->toArray();
+
         $docentesOrdenados = Docente::with('carreraOrigen:id,sigla')
             ->get(['id', 'nombre', 'carrera_origen_id'])
             ->sortBy(function (Docente $d) use ($carrera, $docentesHistorialIds) {
@@ -185,7 +197,7 @@ class DesignacionController extends Controller
                 return sprintf('%d_%s', $prioridad, strtolower($d->nombre));
             })
             ->values()
-            ->map(function (Docente $d) use ($carrera, $docentesHistorialIds) {
+            ->map(function (Docente $d) use ($carrera, $docentesHistorialIds, $horasOtrasCarrerasPorDocente) {
                 $prioridad = 3;
                 if ((int) $d->carrera_origen_id === (int) $carrera->id) {
                     $prioridad = 1;
@@ -198,6 +210,7 @@ class DesignacionController extends Controller
                     'nombre' => $d->nombre,
                     'carreraSigla' => $d->carreraOrigen?->sigla,
                     'prioridad' => $prioridad,
+                    'horasOtrasCarreras' => (int) ($horasOtrasCarrerasPorDocente[$d->id] ?? 0),
                 ];
             });
 
