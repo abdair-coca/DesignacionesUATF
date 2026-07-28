@@ -8,7 +8,7 @@
     $docentesProcesados = [];
     foreach ($docentes as $d) {
         $desigDocente = $designaciones->filter(fn($des) => (string)$des->Id_docente === (string)$d['id']);
-        $horasTotal = $desigDocente->sum(fn($des) => $des->grupo?->horas ?? 0);
+        $horasTotal = $desigDocente->sum(fn($des) => $des->materia?->horas ?? 0);
         $materiasSiglas = $desigDocente->map(fn($des) => ($des->materia?->sigla ?? '') . ' (G' . ($des->grupo?->codigo ?? '') . ')')->filter()->values()->all();
 
         $estadoCarga = 'optimo';
