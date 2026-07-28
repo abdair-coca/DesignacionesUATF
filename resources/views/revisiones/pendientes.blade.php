@@ -10,12 +10,12 @@
         <div class="space-y-6">
             <!-- Top Dark Action Button (Compose Style) -->
             <div class="pb-2">
-                <a href="{{ route('designaciones.index') }}" 
+                <a href="{{ route('designaciones.lista') }}" 
                    class="w-full bg-[#2d353c] hover:bg-[#20252a] text-white font-bold py-2.5 px-4 rounded text-xs flex items-center justify-center gap-2 shadow-xs transition-all tracking-tight">
                     <svg class="w-4 h-4 text-[#00acac]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M9 4v16m6-16v16" />
                     </svg>
-                    <span>Dashboard General</span>
+                    <span>Designaciones por Carrera</span>
                 </a>
             </div>
 

@@ -10,27 +10,17 @@ use Tests\TestCase;
 
 class PageAccessTest extends TestCase
 {
-    public function test_raiz_redirige_al_dashboard(): void
+    public function test_raiz_redirige_a_designaciones_lista(): void
     {
         $this->actingAs(User::factory()->create())
             ->get('/')
-            ->assertRedirect('/dashboard');
+            ->assertRedirect('/designaciones/lista');
     }
 
-    public function test_dashboard(): void
+    public function test_designaciones_lista_acceso(): void
     {
         $this->actingAs(User::factory()->create())
-            ->get('/dashboard')
-            ->assertOk();
-    }
-
-    public function test_dashboard_con_filtros(): void
-    {
-        $gestion = Gestion::first() ?? Gestion::factory()->create();
-        $periodo = Periodo::first() ?? Periodo::factory()->create();
-
-        $this->actingAs(User::factory()->create())
-            ->get('/dashboard?gestion_id=' . $gestion->id . '&periodo_id=' . $periodo->id)
+            ->get('/designaciones/lista')
             ->assertOk();
     }
 

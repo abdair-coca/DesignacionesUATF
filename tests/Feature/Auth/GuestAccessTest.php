@@ -12,7 +12,6 @@ class GuestAccessTest extends TestCase
     {
         return [
             'raiz' => ['/'],
-            'dashboard' => ['/dashboard'],
             'designaciones.index' => ['/designaciones'],
             'designaciones.lista' => ['/designaciones/lista'],
             'revisiones.pendientes' => ['/revisiones/pendientes'],

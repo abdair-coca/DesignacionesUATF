@@ -9,17 +9,17 @@ use Tests\TestCase;
 class DashboardTest extends TestCase
 {
     
-    public function test_usuario_autenticado_ve_el_dashboard(): void
+    public function test_usuario_autenticado_ve_designaciones_lista(): void
     {
         $this->actingAs(User::factory()->create())
-            ->get('/dashboard')
+            ->get('/designaciones/lista')
             ->assertOk();
     }
 
-    public function test_raiz_redirige_al_dashboard_para_usuario_autenticado(): void
+    public function test_raiz_redirige_a_designaciones_lista_para_usuario_autenticado(): void
     {
         $this->actingAs(User::factory()->create())
             ->get('/')
-            ->assertRedirect('/dashboard');
+            ->assertRedirect('/designaciones/lista');
     }
 }
