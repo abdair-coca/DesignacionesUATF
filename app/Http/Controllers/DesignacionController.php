@@ -14,6 +14,7 @@ use App\Models\Periodo;
 use App\Models\Revision;
 use App\Support\CargaAcademicaService;
 use App\Support\DesignacionReportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -195,7 +196,7 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function guardarRoster(Request $request, Carrera $carrera): RedirectResponse
+    public function guardarRoster(Request $request, Carrera $carrera): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'Id_gestion' => ['required', 'exists:gestiones,id'],
