@@ -34,6 +34,7 @@ Este documento define las reglas de diseño de interfaz (UI), componentes, palet
   - Filas impares: `bg-white`
   - Efecto Hover: `hover:bg-gray-100/70`
 - **Bordes Internos**: Separadores verticales de celda sutiles (`border-r border-gray-200/60`).
+- **Ordenamiento Cronológico Ascendente**: La primera columna `#` de la lista de propuestas asigna **Nro 1 a la propuesta más antigua** creada en la gestión actual y se incrementa secuencialmente.
 
 ### 3. Distintivos de Estado (Badges)
 - **Forma**: Rectangulares con esquinas levemente suavizadas (`rounded-xs`). **Queda prohibido el uso de ovoides totalmente redondeados (`rounded-full`)**.
@@ -48,3 +49,35 @@ Este documento define las reglas de diseño de interfaz (UI), componentes, palet
 - Esquinas rectangulares suavizadas (`rounded-xs`).
 - **Botón Azul Sólido**: `bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold px-3 py-1.5 rounded-xs text-xs`
 - **Botón Blanco con Borde**: `bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold px-3 py-1.5 rounded-xs text-xs`
+- **Botón Dinámico de Envío**:
+  - Estado `Borrador`: `Enviar Propuesta a Vicerrectorado` (`bg-[#00acac]`)
+  - Estado `Pendiente`: `Retirar Envío` (`bg-amber-600`), permitiendo cancelar la solicitud y volver a modo editable.
+
+---
+
+## 👥 Permisos y Navegación por Rol
+
+1. **Director de Carrera**:
+   - **Inicio de Sesión**: Redirige directamente a la **Lista de Designaciones** (`/designaciones/lista`).
+   - **Ruta Raíz (`/`)**: Redirige a la Lista de Designaciones.
+   - **Acciones Permitidas**: Crear propuestas, asignar docentes a materias (evitando choques/colisiones de grupos), copiar de gestiones anteriores, enviar a revisión y retirar envíos pendientes.
+
+2. **Vicerrectorado (Admin)**:
+   - **Inicio de Sesión**: Redirige directamente a la **Bandeja de Revisiones** (`/revisiones/pendientes`).
+   - **Ruta Raíz (`/`)**: Redirige a la Bandeja de Revisiones.
+   - **Acciones Permitidas**: Revisar propuestas en lote o individualmente, aprobar o rechazar con justificación/observación, y concluir la revisión. No edita materias directamente.
+
+---
+
+## 🔄 Ciclo de Vida de una Propuesta
+
+```mermaid
+stateDiagram-v2
+    [*] --> Borrador: Crear Propuesta / Copiar Gestión
+    Borrador --> Enviado: Enviar a Vicerrectorado (100% Carga)
+    Enviado --> Borrador: Retirar Envío (Director)
+    Enviado --> ConObservaciones: Vicerrector Rechaza (con justificación)
+    Enviado --> Oficial: Vicerrector Aprueba Todo
+    ConObservaciones --> Enviado: Re-enviar corregido
+    Oficial --> [*]: Solo Imprimir (Modo Lectura)
+```
