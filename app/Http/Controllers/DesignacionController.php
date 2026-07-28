@@ -29,61 +29,14 @@ class DesignacionController extends Controller
         private DesignacionReportService $reportes,
     ) {}
 
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request): RedirectResponse
     {
         $user = $request->user();
-        if ($user && ! $user->is_admin && $user->carrera_id) {
-            return redirect()->route('designaciones.carrera', $user->carrera_id);
+        if ($user?->is_admin) {
+            return redirect()->route('revisiones.pendientes');
         }
 
-        $filtros = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'gestion_id' => ['nullable', 'exists:gestiones,id'],
-            'periodo_id' => ['nullable', 'exists:periodos,id'],
-            'estado' => ['nullable', 'in:activas,pendientes,sin'],
-        ]);
-
-        $gestionId = (int) ($filtros['gestion_id'] ?? Gestion::max('id') ?? 0);
-        $periodoId = (int) ($filtros['periodo_id'] ?? Periodo::where('nombre', '2')->value('id') ?? 0);
-
-        $todas = $this->reportes->resumenPorCarrera($gestionId, $periodoId);
-
-        $resumen = [
-            'total' => $todas->count(),
-            'activas' => $todas->where('situacion', 'activas')->count(),
-            'pendientes' => $todas->where('situacion', 'pendientes')->count(),
-            'sin' => $todas->where('situacion', 'sin')->count(),
-        ];
-
-        $filtradas = $todas
-            ->when($filtros['q'] ?? null, fn ($carreras, $q) => $carreras->filter(
-                fn ($fila) => stripos($fila['nombre'], $q) !== false || stripos($fila['sigla'], $q) !== false
-            ))
-            ->when($filtros['estado'] ?? null, fn ($carreras, $estado) => $carreras->where('situacion', $estado))
-            ->values();
-
-        $porPagina = 10;
-        $paginaActual = LengthAwarePaginator::resolveCurrentPage();
-        $carreras = new LengthAwarePaginator(
-            $filtradas->forPage($paginaActual, $porPagina)->values(),
-            $filtradas->count(),
-            $porPagina,
-            $paginaActual,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        return view('designaciones.por-carrera', [
-            'carreras' => $carreras,
-            'resumen' => $resumen,
-            'gestiones' => Gestion::orderBy('nombre')->get(),
-            'periodos' => Periodo::orderBy('nombre')->get(),
-            'filtros' => [
-                'q' => $filtros['q'] ?? '',
-                'gestion_id' => (string) $gestionId,
-                'periodo_id' => (string) $periodoId,
-                'estado' => $filtros['estado'] ?? '',
-            ],
-        ]);
+        return redirect()->route('designaciones.lista');
     }
 
     public function lista(Request $request): View|RedirectResponse

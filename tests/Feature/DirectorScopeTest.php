@@ -22,7 +22,7 @@ class DirectorScopeTest extends TestCase
 
         $this->actingAs($directorInf)
             ->get('/designaciones')
-            ->assertRedirect(route('designaciones.carrera', $carreraInf->id));
+            ->assertRedirect(route('designaciones.lista'));
     }
 
     public function test_director_no_puede_acceder_a_otra_carrera(): void

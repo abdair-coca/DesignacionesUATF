@@ -46,7 +46,7 @@ class GuestAccessTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'secret',
-        ])->assertRedirect('/designaciones');
+        ])->assertRedirect('/designaciones/lista');
 
         $this->assertAuthenticated();
     }
