@@ -47,11 +47,23 @@ class DesignacionController extends Controller
         }
 
         $carreraId = $user->carrera_id ?? Carrera::first()?->id ?? 1;
-        $anioActual = (string) date('Y');
+        $carreraActual = Carrera::find($carreraId) ?? Carrera::first();
+        if (! $carreraActual) {
+            abort(404, 'No hay carreras registradas en el sistema.');
+        }
+
+        $gestionParam = $request->query('gestion_id');
+        if ($gestionParam) {
+            $gestionActual = Gestion::find($gestionParam) ?? Gestion::where('nombre', date('Y'))->first() ?? Gestion::latest('id')->first();
+        } else {
+            $gestionActual = Gestion::where('nombre', date('Y'))->first() ?? Gestion::latest('id')->first();
+        }
 
         $revisiones = Revision::with(['carrera', 'gestion', 'periodo'])
-            ->where('carrera_id', $carreraId)
-            ->whereHas('gestion', fn ($q) => $q->where('nombre', $anioActual))
+            ->where('carrera_id', $carreraActual->id)
+            ->when($gestionActual, function ($q) use ($gestionActual) {
+                $q->where('Id_gestion', $gestionActual->id);
+            })
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -78,6 +90,8 @@ class DesignacionController extends Controller
 
         return view('designaciones.lista', [
             'propuestasData' => $propuestasData,
+            'carreraActual' => $carreraActual,
+            'gestionActual' => $gestionActual,
             'carreras' => Carrera::orderBy('nombre')->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
@@ -236,9 +250,9 @@ class DesignacionController extends Controller
                 ->sum('materias.horas');
 
             $totalProuesto = $horasOtrasCarreras + $horasNuevasEnCarrera;
-            if ($totalProuesto > 32) {
+            if ($totalProuesto > \App\Support\CargaAcademicaService::MAXIMO_HORAS) {
                 return response()->json([
-                    'error' => "El docente {$docente->nombre} excede el límite máximo de 32 horas semanales permitidas (acumularía {$totalProuesto} hrs). Operación cancelada.",
+                    'error' => "El docente {$docente->nombre} excede el límite máximo de " . \App\Support\CargaAcademicaService::MAXIMO_HORAS . " horas semanales permitidas (acumularía {$totalProuesto} hrs). Operación cancelada.",
                 ], 422);
             }
         }
@@ -304,6 +318,7 @@ class DesignacionController extends Controller
             'origen_periodo_id' => ['required', 'exists:periodos,id'],
             'destino_gestion_id' => ['required', 'exists:gestiones,id'],
             'destino_periodo_id' => ['required', 'exists:periodos,id'],
+            'descripcion' => ['nullable', 'string', 'max:255'],
         ]);
 
         if ((int) $data['origen_gestion_id'] === (int) $data['destino_gestion_id'] && (int) $data['origen_periodo_id'] === (int) $data['destino_periodo_id']) {
@@ -329,7 +344,7 @@ class DesignacionController extends Controller
 
         $copiados = 0;
 
-        DB::transaction(function () use ($designacionesOrigen, $data, $request, &$copiados) {
+        DB::transaction(function () use ($designacionesOrigen, $data, $request, $carrera, &$copiados) {
             foreach ($designacionesOrigen as $desig) {
                 $existente = Designacion::where('Id_gestion', $data['destino_gestion_id'])
                     ->where('Id_periodo', $data['destino_periodo_id'])
@@ -355,6 +370,21 @@ class DesignacionController extends Controller
 
                 $copiados++;
             }
+
+            // Crear la entrada de la nueva propuesta independiente en la tabla revisiones
+            $gestionDestino = Gestion::find($data['destino_gestion_id']);
+            $periodoDestino = Periodo::find($data['destino_periodo_id']);
+            $descDefault = 'Propuesta de Designación Copiada — Carrera de ' . $carrera->nombre;
+            $desc = ! empty($data['descripcion']) ? trim($data['descripcion']) : $descDefault;
+
+            Revision::create([
+                'carrera_id' => $carrera->id,
+                'descripcion' => $desc,
+                'Id_gestion' => $data['destino_gestion_id'],
+                'Id_periodo' => $data['destino_periodo_id'],
+                'solicitado_por' => $request->user()->id,
+                'estado' => 'propuesta',
+            ]);
         });
 
         $gestionOrigen = Gestion::find($data['origen_gestion_id'])->nombre;

@@ -63,8 +63,10 @@ class RevisionController extends Controller
             ], 422);
         }
 
-        // Verificar 100% asignación de grupos en la carrera
-        $gruposTotales = \App\Models\Grupo::whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))->count();
+        // Verificar 100% asignación de grupos HABILITADOS en la carrera
+        $gruposTotales = \App\Models\Grupo::where('estado', 'habilitado')
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
+            ->count();
 
         $gruposAsignados = Designacion::forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
             ->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
@@ -128,7 +130,11 @@ class RevisionController extends Controller
             ], 422);
         }
 
-        $revision->delete();
+        $revision->update([
+            'estado' => 'propuesta',
+            'solicitado_en' => null,
+            'observaciones' => null,
+        ]);
 
         return response()->json(['success' => true]);
     }
@@ -393,5 +399,25 @@ class RevisionController extends Controller
         });
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * DELETE /revisiones/{revision}
+     * Eliminar propuesta no oficial.
+     */
+    public function destroy(Request $request, Revision $revision): JsonResponse
+    {
+        if ($revision->estado === 'revisado') {
+            return response()->json([
+                'error' => 'No se pueden eliminar propuestas que ya han sido aprobadas y oficializadas por el Vicerrectorado.',
+            ], 422);
+        }
+
+        $revision->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'La propuesta fue eliminada correctamente.',
+        ]);
     }
 }
