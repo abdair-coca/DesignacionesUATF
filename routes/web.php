@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::get('revisiones/{revision}/revisar', [RevisionController::class, 'revisar'])->name('revisiones.revisar');
     Route::post('revisiones/{revision}/procesar', [RevisionController::class, 'procesar'])->name('revisiones.procesar');
     Route::post('revisiones/{revision}/completar', [RevisionController::class, 'completar'])->name('revisiones.completar');
+    Route::delete('revisiones/{revision}', [RevisionController::class, 'destroy'])->name('revisiones.destroy');
 });
 
 require __DIR__.'/auth.php';

@@ -4,11 +4,10 @@
 
 @section('content')
 @php
-    $user = Auth::user();
-    $carreraIdUsuario = $user?->carrera_id ?? 1;
-    $carreraActual = $carreras->firstWhere('id', $carreraIdUsuario) ?? $carreras->first();
-    $anoActual = (string) date('Y');
-    $gestionActualId = $gestiones->firstWhere('nombre', $anoActual)?->id ?? $gestiones->last()?->id ?? 1;
+    $carreraActual = $carreraActual ?? $carreras->firstWhere('id', Auth::user()?->carrera_id) ?? $carreras->first();
+    $gestionActual = $gestionActual ?? $gestiones->firstWhere('nombre', date('Y')) ?? $gestiones->last();
+    $anoActual = (string) ($gestionActual?->nombre ?? date('Y'));
+    $gestionActualId = $gestionActual?->id ?? 1;
 @endphp
 
 <div x-data="listaDesignacionesApp({{ json_encode($carreraActual) }}, {{ json_encode($gestiones) }}, {{ json_encode($periodos) }}, {{ json_encode($propuestasData ?? []) }})" 
@@ -23,9 +22,21 @@
                     Designaciones Docentes &mdash; {{ $carreraActual->nombre }} ({{ $carreraActual->sigla }})
                 </h1>
             </div>
-            <p class="text-[11px] text-gray-500 mt-0.5">
-                Gestión oficial de propuestas docentes correspondientes al año en curso {{ $anoActual }}.
-            </p>
+            <div class="flex flex-wrap items-center gap-3 mt-1">
+                <p class="text-[11px] text-gray-500">
+                    Gestión oficial de propuestas docentes correspondientes al año {{ $anoActual }}.
+                </p>
+                <div class="flex items-center gap-1.5 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                    <label class="text-[11px] font-bold text-gray-700">Filtrar Gestión:</label>
+                    <select onchange="window.location.href='?gestion_id='+this.value" class="bg-white border border-gray-300 text-gray-900 text-xs rounded-xs px-1.5 py-0.5 font-bold cursor-pointer outline-none">
+                        @foreach($gestiones as $g)
+                            <option value="{{ $g->id }}" {{ (int) $g->id === (int) $gestionActualId ? 'selected' : '' }}>
+                                Gestión {{ $g->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
         </div>
 
         <!-- Botón + Nueva Propuesta de Designación -->
@@ -38,7 +49,7 @@
         </button>
     </div>
 
-    <!-- PANEL COLOR ADMIN "UI ELEMENTS IN TABLE" (SOLO AÑO ACTUAL, ORDENADO DE ANTIGUO A NUEVO) -->
+    <!-- PANEL COLOR ADMIN "UI ELEMENTS IN TABLE" -->
     <div class="bg-white border border-gray-200 rounded-xs shadow-2xs overflow-hidden">
         
         <!-- Header del Panel Estilo Color Admin -->
@@ -71,6 +82,14 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 text-gray-700 font-medium">
+                    <template x-if="propuestasOrdenadas.length === 0">
+                        <tr>
+                            <td colspan="6" class="py-8 px-4 text-center text-gray-500 italic">
+                                No existen propuestas de designación registradas para la Gestión {{ $anoActual }}.
+                            </td>
+                        </tr>
+                    </template>
+
                     <template x-for="(item, index) in propuestasOrdenadas" :key="item.id">
                         <tr @dblclick="abrirModalObservaciones(item)" 
                             title="Haga doble clic para consultar observaciones del Vicerrectorado"
@@ -86,7 +105,7 @@
                                 <span class="text-[11px] text-gray-500 font-normal">Carrera de {{ $carreraActual->nombre }}</span>
                             </td>
 
-                            <!-- 3. Gestión (Solo año actual 2026) -->
+                            <!-- 3. Gestión -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60 font-bold text-gray-800 tabular-nums" x-text="item.gestion"></td>
 
                             <!-- 4. Periodo -->
@@ -129,7 +148,7 @@
                                         </a>
                                     </template>
 
-                                    <!-- Botón Imprimir (ÚNICA ACCIÓN SI ESTÁ APROBADA/OFICIAL) -->
+                                    <!-- Botón Imprimir -->
                                     <button @click="imprimirDesignacion(item)" 
                                             title="Imprimir reporte"
                                             class="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
@@ -144,6 +163,15 @@
                                                 title="Cancelar el envío a Vicerrectorado"
                                                 class="px-3 py-1.5 rounded-xs text-xs transition-colors">
                                             Retirar Envío
+                                        </button>
+                                    </template>
+
+                                    <!-- Botón Eliminar (Solo si NO está oficial) -->
+                                    <template x-if="item.estado !== 'oficial'">
+                                        <button @click="eliminarPropuesta(item)" 
+                                                title="Eliminar esta propuesta de designación"
+                                                class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
+                                            Eliminar
                                         </button>
                                     </template>
                                 </div>
@@ -190,7 +218,7 @@
                         </label>
                         <input type="text" 
                                x-model="nuevaForm.descripcion" 
-                               placeholder="Ej: Designación Docente I/2026 — Carrera de {{ $carreraActual->nombre }}"
+                               placeholder="Ej: Propuesta de Designación Docente I/{{ $anoActual }} — Carrera de {{ $carreraActual->nombre }}"
                                class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 focus:ring-1 focus:ring-[#348fe2] focus:border-[#348fe2] outline-none">
                     </div>
 
@@ -206,8 +234,9 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Periodo Semestral</label>
                             <select x-model="nuevaForm.periodo_id" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 focus:ring-1 focus:ring-[#348fe2] outline-none bg-white">
-                                <option value="1">Periodo 1</option>
-                                <option value="2">Periodo 2</option>
+                                @foreach($periodos as $p)
+                                    <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -238,8 +267,9 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Periodo Semestral Destino</label>
                             <select x-model="copiaForm.periodo_id" @change="cargarPrevisualizacionCopia()" class="w-full border border-gray-300 rounded-xs p-2 text-xs text-gray-900 focus:ring-1 focus:ring-[#348fe2] outline-none bg-white">
-                                <option value="1">Periodo 1</option>
-                                <option value="2">Periodo 2</option>
+                                @foreach($periodos as $p)
+                                    <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -320,15 +350,14 @@
                     Cancelar
                 </button>
                 <button @click="guardarNuevaPropuesta()" 
-                        :disabled="!nuevaForm.descripcion.trim()"
-                        class="px-4 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors disabled:opacity-50 cursor-pointer">
+                        class="px-4 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
                     Crear e Iniciar Asignación
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE DETALLES Y OBSERVACIONES (ACTIVADO POR DOBLE CLIC EN LA FILA) -->
+    <!-- MODAL DE DETALLES Y OBSERVACIONES -->
     <div x-show="modalObservacionesOpen" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-xs shadow-2xl border border-gray-300 w-full max-w-lg overflow-hidden text-left">
             <div class="bg-[#2d353c] text-white px-4 py-3 flex items-center justify-between">
@@ -414,52 +443,7 @@
 <script>
     function listaDesignacionesApp(carrera, gestiones, periodos, propuestasBackend) {
         const anoActual = '{{ $anoActual }}';
-        const propuestasIniciales = (propuestasBackend && propuestasBackend.length > 0) ? propuestasBackend : [
-            {
-                id: 1,
-                created_at: 100,
-                descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — Carrera de ' + carrera.nombre,
-                gestion: anoActual,
-                gestion_id: gestiones[0]?.id || 1,
-                periodo: '1',
-                periodo_id: 1,
-                estado: 'propuesta',
-                observacion: ''
-            },
-            {
-                id: 2,
-                created_at: 200,
-                descripcion: 'Designación Docente Materias de Especialidad II/' + anoActual,
-                gestion: anoActual,
-                gestion_id: gestiones[0]?.id || 1,
-                periodo: '2',
-                periodo_id: 2,
-                estado: 'enviado',
-                observacion: ''
-            },
-            {
-                id: 3,
-                created_at: 300,
-                descripcion: 'Designación Docente Complementaria I/' + anoActual,
-                gestion: anoActual,
-                gestion_id: gestiones[0]?.id || 1,
-                periodo: '1',
-                periodo_id: 1,
-                estado: 'con_observaciones',
-                observacion: 'El docente Ing. Roberto Quispe excede las 32 horas semanales permitidas.'
-            },
-            {
-                id: 4,
-                created_at: 400,
-                descripcion: 'Designación Oficial Consolidada I/' + anoActual,
-                gestion: anoActual,
-                gestion_id: gestiones[0]?.id || 1,
-                periodo: '1',
-                periodo_id: 1,
-                estado: 'oficial',
-                observacion: ''
-            }
-        ];
+        const propuestasIniciales = propuestasBackend || [];
 
         return {
             carrera: carrera,
@@ -471,16 +455,16 @@
             itemSeleccionado: null,
 
             nuevaForm: {
-                descripcion: 'Propuesta de Designación Docente I/' + anoActual + ' — ' + carrera.nombre,
+                descripcion: '',
                 gestion_id: {{ $gestionActualId }},
-                periodo_id: 1
+                periodo_id: periodos[0]?.id || 1
             },
 
             copiaForm: {
-                descripcion: 'Propuesta de Designación Docente (Copia) I/' + anoActual + ' — ' + carrera.nombre,
+                descripcion: '',
                 origen_gestion_id: gestiones[1]?.id || gestiones[0]?.id || 1,
-                origen_periodo_id: 1,
-                periodo_id: 1
+                origen_periodo_id: periodos[0]?.id || 1,
+                periodo_id: periodos[0]?.id || 1
             },
 
             cargandoPreview: false,
@@ -523,10 +507,9 @@
 
             propuestas: propuestasIniciales,
 
-            // ORDENAMIENTO ESTRICTO DE ANTIGUO A NUEVO (ASCENDENTE POR CREACIÓN: NRO 1 ES EL MÁS ANTIGUO)
             get propuestasOrdenadas() {
                 return this.propuestas
-                    .filter(p => (p.gestion === anoActual || p.gestion === '' + (new Date().getFullYear())))
+                    .slice()
                     .sort((a, b) => {
                         const timeA = typeof a.created_at === 'number' ? a.created_at : (new Date(a.created_at || 0)).getTime();
                         const timeB = typeof b.created_at === 'number' ? b.created_at : (new Date(b.created_at || 0)).getTime();
@@ -536,6 +519,8 @@
             },
 
             abrirModalNuevaPropuesta() {
+                this.nuevaForm.descripcion = '';
+                this.copiaForm.descripcion = '';
                 this.modalNuevaOpen = true;
                 this.cargarPrevisualizacionCopia();
             },
@@ -549,57 +534,66 @@
                 if (item.estado === 'oficial') return;
                 if (!confirm('¿Deseas retirar esta solicitud enviada al Vicerrectorado para volver a editarla en modo borrador?')) return;
 
-                if (item.id && typeof item.id === 'number' && item.id < 10000) {
-                    fetch('/revisiones/' + item.id + '/retirar', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.success) {
-                            item.estado = 'propuesta';
-                            alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
-                        } else {
-                            alert(res.error || 'No se pudo retirar la solicitud.');
-                        }
-                    })
-                    .catch(() => {
+                fetch('/revisiones/' + item.id + '/retirar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
                         item.estado = 'propuesta';
                         alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
-                    });
-                } else {
-                    item.estado = 'propuesta';
-                    alert('La solicitud ha sido retirada y ha vuelto al estado Borrador / Propuesta.');
-                }
+                    } else {
+                        alert(res.error || 'No se pudo retirar la solicitud.');
+                    }
+                })
+                .catch(() => {
+                    alert('Error al conectar con el servidor al intentar retirar la solicitud.');
+                });
             },
 
             imprimirDesignacion(item) {
                 window.open('/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + item.gestion_id + '&periodo_id=' + item.periodo_id + '&imprimir=1', '_blank');
             },
 
+            eliminarPropuesta(item) {
+                if (item.estado === 'oficial') {
+                    alert('No se pueden eliminar propuestas oficializadas.');
+                    return;
+                }
+
+                if (!confirm('¿Estás seguro de eliminar la propuesta "' + item.descripcion + '"? Esta acción la removerá de la lista.')) return;
+
+                fetch('/revisiones/' + item.id, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        this.propuestas = this.propuestas.filter(p => p.id !== item.id);
+                        alert(res.message || 'La propuesta fue eliminada correctamente.');
+                    } else {
+                        alert(res.error || 'No se pudo eliminar la propuesta.');
+                    }
+                })
+                .catch(() => {
+                    alert('Error de conexión al intentar eliminar la propuesta.');
+                });
+            },
+
             guardarNuevaPropuesta() {
                 if (this.tabModal === 'copiar') {
-                    const desc = this.copiaForm.descripcion.trim() || ('Designación Copiada I/' + anoActual);
+                    const desc = this.copiaForm.descripcion.trim() || ('Propuesta de Designación Copiada I/' + anoActual + ' — ' + this.carrera.nombre);
                     const pDestino = this.copiaForm.periodo_id || 1;
-
-                    const nueva = {
-                        id: Date.now(),
-                        created_at: Date.now(),
-                        descripcion: desc,
-                        gestion: anoActual,
-                        gestion_id: {{ $gestionActualId }},
-                        periodo: '' + pDestino,
-                        periodo_id: pDestino,
-                        estado: 'propuesta',
-                        observacion: ''
-                    };
-
-                    this.propuestas.push(nueva);
-                    this.modalNuevaOpen = false;
 
                     fetch('/designaciones/carrera/' + this.carrera.id + '/copiar-anterior', {
                         method: 'POST',
@@ -612,22 +606,25 @@
                             origen_gestion_id: this.copiaForm.origen_gestion_id,
                             origen_periodo_id: this.copiaForm.origen_periodo_id,
                             destino_gestion_id: {{ $gestionActualId }},
-                            destino_periodo_id: pDestino
+                            destino_periodo_id: pDestino,
+                            descripcion: desc
                         })
                     })
                     .then(r => r.json())
                     .then(res => {
-                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + pDestino;
+                        if (res.success) {
+                            window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + pDestino;
+                        } else {
+                            alert(res.error || 'Error al copiar las designaciones.');
+                        }
                     })
                     .catch(() => {
-                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id={{ $gestionActualId }}&periodo_id=' + pDestino;
+                        alert('Error de conexión al intentar copiar la gestión anterior.');
                     });
                     return;
                 }
 
-                if (!this.nuevaForm.descripcion.trim()) return;
-
-                const desc = this.nuevaForm.descripcion.trim();
+                const desc = this.nuevaForm.descripcion.trim() || ('Propuesta de Designación Docente I/' + anoActual + ' — ' + this.carrera.nombre);
                 const gId = this.nuevaForm.gestion_id;
                 const pId = this.nuevaForm.periodo_id;
 
@@ -646,12 +643,15 @@
                 })
                 .then(r => r.json())
                 .then(res => {
-                    this.modalNuevaOpen = false;
-                    window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + gId + '&periodo_id=' + pId;
+                    if (res.success) {
+                        this.modalNuevaOpen = false;
+                        window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + gId + '&periodo_id=' + pId;
+                    } else {
+                        alert(res.error || 'Error al crear la propuesta.');
+                    }
                 })
                 .catch(() => {
-                    this.modalNuevaOpen = false;
-                    window.location.href = '/designaciones/carrera/' + this.carrera.id + '?gestion_id=' + gId + '&periodo_id=' + pId;
+                    alert('Error de conexión al intentar crear la propuesta.');
                 });
             }
         };
