@@ -24,7 +24,10 @@ class RevisionController extends Controller
         ]);
 
         $user = $request->user();
-        $carreraId = $user->carrera_id ?? \App\Models\Carrera::first()?->id ?? 1;
+        $carreraId = $user->carrera_id ?? \App\Models\Carrera::first()?->id;
+        if (! $carreraId) {
+            return response()->json(['error' => 'No hay carreras registradas en el sistema.'], 404);
+        }
 
         $revision = Revision::create([
             'carrera_id' => $carreraId,
@@ -214,12 +217,11 @@ class RevisionController extends Controller
         }
 
         if (! empty($q)) {
-            $qSanitized = str_replace(['%', '_'], ['\%', '\_'], substr($q, 0, 100));
-            $query->whereHas('carrera', function ($cQuery) use ($qSanitized) {
-                $cQuery->where('nombre', 'like', "%{$qSanitized}%")
-                    ->orWhere('sigla', 'like', "%{$qSanitized}%");
-            })->orWhereHas('solicitante', function ($sQuery) use ($qSanitized) {
-                $sQuery->where('name', 'like', "%{$qSanitized}%");
+            $query->whereHas('carrera', function ($cQuery) use ($q) {
+                $cQuery->where('nombre', 'like', "%{$q}%")
+                    ->orWhere('sigla', 'like', "%{$q}%");
+            })->orWhereHas('solicitante', function ($sQuery) use ($q) {
+                $sQuery->where('name', 'like', "%{$q}%");
             });
         }
 
