@@ -51,6 +51,7 @@ class RevisionController extends Controller
             'carrera_id' => ['required', 'exists:carreras,id'],
             'Id_gestion' => ['required', 'exists:gestiones,id'],
             'Id_periodo' => ['required', 'exists:periodos,id'],
+            'revision_id' => ['nullable', 'exists:revisiones,id'],
             'descripcion' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -80,20 +81,68 @@ class RevisionController extends Controller
             ], 422);
         }
 
-        // Buscar revision borrador o pendiente existente
+        if (! empty($data['revision_id'])) {
+            $revision = Revision::find($data['revision_id']);
+            if ($revision) {
+                if ($revision->estado === 'pendiente') {
+                    return response()->json([
+                        'error' => 'Esta propuesta ya se encuentra pendiente de revisión por el Vicerrectorado.',
+                    ], 422);
+                }
+                if ($revision->estado === 'revisado') {
+                    return response()->json([
+                        'error' => 'Esta propuesta ya fue aprobada y oficializada por el Vicerrectorado.',
+                    ], 422);
+                }
+
+                $yaPendiente = Revision::where('carrera_id', $revision->carrera_id)
+                    ->where('Id_gestion', $revision->Id_gestion)
+                    ->where('Id_periodo', $revision->Id_periodo)
+                    ->where('estado', 'pendiente')
+                    ->where('id', '!=', $revision->id)
+                    ->exists();
+
+                if ($yaPendiente) {
+                    return response()->json([
+                        'error' => 'Ya hay una revisión pendiente para esta carrera.',
+                    ], 422);
+                }
+
+                $revision->update([
+                    'solicitado_por' => $request->user()->id,
+                    'solicitado_en' => now(),
+                    'estado' => 'pendiente',
+                    'descripcion' => ! empty($data['descripcion']) ? trim($data['descripcion']) : $revision->descripcion,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'revision_id' => $revision->id,
+                ]);
+            }
+        }
+
+        $yaPendiente = Revision::where('carrera_id', $data['carrera_id'])
+            ->where('Id_gestion', $data['Id_gestion'])
+            ->where('Id_periodo', $data['Id_periodo'])
+            ->where('estado', 'pendiente')
+            ->exists();
+
+        if ($yaPendiente) {
+            return response()->json([
+                'error' => 'Ya hay una revisión pendiente para esta carrera.',
+            ], 422);
+        }
+
+        // Fallback: Buscar propuesta borrador existente o crear una nueva
         $revision = Revision::where('carrera_id', $data['carrera_id'])
             ->where('Id_gestion', $data['Id_gestion'])
             ->where('Id_periodo', $data['Id_periodo'])
+            ->where('estado', 'propuesta')
             ->latest('id')
             ->first();
 
         if ($revision) {
-            if ($revision->estado === 'pendiente') {
-                return response()->json([
-                    'error' => 'Ya hay una revisión pendiente para esta carrera.',
-                ], 422);
-            }
-
             $revision->update([
                 'solicitado_por' => $request->user()->id,
                 'solicitado_en' => now(),
@@ -192,6 +241,7 @@ class RevisionController extends Controller
                 'solicitado_en' => $r->solicitado_en?->format('d/m/Y H:i') ?? '',
                 'hace_tiempo' => $r->solicitado_en?->diffForHumans() ?? '',
                 'estado' => $r->estado,
+                'descripcion' => $r->descripcion,
                 'cant_designaciones' => $cantDesignaciones,
             ];
         });
@@ -219,23 +269,40 @@ class RevisionController extends Controller
             abort(403);
         }
 
-        $revision->load(['carrera:id,sigla,nombre', 'solicitante:id,name', 'gestion:id,nombre', 'periodo:id,nombre']);
+        $revision->load(['carrera:id,sigla,nombre', 'solicitante:id,name', 'revisor:id,name', 'gestion:id,nombre', 'periodo:id,nombre']);
 
-        $designaciones = Designacion::with(['docente:id,nombre', 'materia:id,sigla,nombre', 'grupo:id,codigo'])
+        $designacionesRaw = Designacion::with(['docente:id,nombre', 'materia:id,sigla,nombre,horas', 'grupo:id,codigo'])
             ->where('Id_gestion', $revision->Id_gestion)
             ->where('Id_periodo', $revision->Id_periodo)
             ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
             ->orderBy('Id_materia')
-            ->get()
-            ->map(fn (Designacion $d) => [
-                'id' => $d->id,
-                'docente_nombre' => $d->docente?->nombre ?? 'Sin asignar',
-                'materia_sigla' => $d->materia->sigla,
-                'materia_nombre' => $d->materia->nombre,
-                'grupo_codigo' => $d->grupo->codigo,
-                'estado' => $d->estado,
-                'motivo_rechazo' => $d->motivo_rechazo,
-            ]);
+            ->get();
+
+        // Calcular carga total docente global para detectar sobrecargas
+        $docentesIds = $designacionesRaw->pluck('Id_docente')->filter()->unique()->toArray();
+        $cargasGlobales = [];
+        foreach ($docentesIds as $docId) {
+            $totalHorasGlobal = Designacion::where('Id_gestion', $revision->Id_gestion)
+                ->where('Id_periodo', $revision->Id_periodo)
+                ->where('Id_docente', $docId)
+                ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+                ->sum('materias.horas');
+            $cargasGlobales[$docId] = (int) $totalHorasGlobal;
+        }
+
+        $designaciones = $designacionesRaw->map(fn (Designacion $d) => [
+            'id' => $d->id,
+            'docente_id' => $d->Id_docente,
+            'docente_nombre' => $d->docente?->nombre ?? 'Sin asignar',
+            'materia_sigla' => $d->materia->sigla,
+            'materia_nombre' => $d->materia->nombre,
+            'materia_horas' => $d->materia->horas ?? 0,
+            'grupo_codigo' => $d->grupo->codigo,
+            'estado' => $d->estado,
+            'motivo_rechazo' => $d->motivo_rechazo,
+            'carga_global' => $d->Id_docente ? ($cargasGlobales[$d->Id_docente] ?? 0) : 0,
+            'es_sobrecarga' => $d->Id_docente && (($cargasGlobales[$d->Id_docente] ?? 0) > 32),
+        ]);
 
         $totalGrupos = $designaciones->count();
         $gruposAsignados = $designaciones->filter(fn ($d) => $d['docente_nombre'] !== 'Sin asignar')->count();
@@ -250,9 +317,28 @@ class RevisionController extends Controller
 
         $cobertura = $totalGrupos > 0 ? (int) round(($gruposAsignados / $totalGrupos) * 100) : 0;
 
+        // Historial de revisiones previas para esta misma carrera y gestión/periodo
+        $historialPrevio = Revision::with(['solicitante:id,name', 'revisor:id,name'])
+            ->where('carrera_id', $revision->carrera_id)
+            ->where('Id_gestion', $revision->Id_gestion)
+            ->where('Id_periodo', $revision->Id_periodo)
+            ->where('id', '!=', $revision->id)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(fn (Revision $r) => [
+                'id' => $r->id,
+                'descripcion' => $r->descripcion,
+                'estado' => $r->estado,
+                'observaciones' => $r->observaciones,
+                'solicitado_en' => $r->solicitado_en?->format('d/m/Y H:i') ?? '—',
+                'revisado_en' => $r->revisado_en?->format('d/m/Y H:i') ?? '—',
+                'revisor_nombre' => $r->revisor?->name ?? 'Vicerrectorado',
+            ]);
+
         return view('revisiones.revisar', [
             'revision' => [
                 'id' => $revision->id,
+                'descripcion' => $revision->descripcion ?? ('Propuesta — Carrera de ' . $revision->carrera->nombre),
                 'carrera_nombre' => $revision->carrera->nombre,
                 'carrera_sigla' => $revision->carrera->sigla,
                 'gestion_nombre' => $revision->gestion->nombre,
@@ -260,8 +346,10 @@ class RevisionController extends Controller
                 'solicitante' => $revision->solicitante->name,
                 'solicitado_en' => $revision->solicitado_en?->format('d/m/Y H:i'),
                 'estado' => $revision->estado,
+                'observaciones' => $revision->observaciones,
             ],
             'designaciones' => $designaciones,
+            'historialPrevio' => $historialPrevio,
             'stats' => [
                 'cobertura' => $cobertura,
                 'total_grupos' => $totalGrupos,
@@ -324,7 +412,7 @@ class RevisionController extends Controller
 
     /**
      * POST /revisiones/{revision}/completar
-     * Admin marca la revision como completada y opcionalmente procesa acciones pendientes.
+     * Admin toma una decisión explícita sobre la propuesta.
      */
     public function completar(Request $request, Revision $revision): JsonResponse
     {
@@ -333,10 +421,11 @@ class RevisionController extends Controller
         }
 
         if ($revision->estado !== 'pendiente') {
-            return response()->json(['error' => 'Esta revisión ya fue completada.'], 422);
+            return response()->json(['error' => 'Esta revisión ya fue procesada anteriormente.'], 422);
         }
 
         $data = $request->validate([
+            'decision' => ['nullable', 'in:aprobar_todo,observar,lote'],
             'acciones' => ['nullable', 'array'],
             'acciones.*.id' => ['required_with:acciones', 'exists:designaciones,id'],
             'acciones.*.accion' => ['required_with:acciones', 'in:aprobar,rechazar'],
@@ -344,11 +433,36 @@ class RevisionController extends Controller
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        DB::transaction(function () use ($revision, $data, $request) {
+        $decision = $data['decision'] ?? null;
+
+        DB::transaction(function () use ($revision, $data, $decision, $request) {
+            $designacionesCarrera = Designacion::where('Id_gestion', $revision->Id_gestion)
+                ->where('Id_periodo', $revision->Id_periodo)
+                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+                ->get();
+
+            if ($decision === 'aprobar_todo') {
+                foreach ($designacionesCarrera as $desig) {
+                    $desig->update([
+                        'estado' => 'aprobada',
+                        'aprobado_por' => $request->user()->id,
+                        'motivo_rechazo' => null,
+                    ]);
+                }
+
+                $revision->update([
+                    'estado' => 'revisado',
+                    'observaciones' => null,
+                    'revisado_por' => $request->user()->id,
+                    'revisado_en' => now(),
+                ]);
+
+                return;
+            }
+
             if (! empty($data['acciones'])) {
                 foreach ($data['acciones'] as $accion) {
                     $designacion = Designacion::find($accion['id']);
-
                     if (! $designacion) {
                         continue;
                     }
@@ -368,19 +482,18 @@ class RevisionController extends Controller
                 }
             }
 
-            // Comprobar si hay designaciones rechazadas en esta propuesta
+            // Si hay designaciones rechazadas o la decisión fue observar explícitamente
             $rechazadas = Designacion::where('Id_gestion', $revision->Id_gestion)
                 ->where('Id_periodo', $revision->Id_periodo)
                 ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
                 ->where('estado', 'rechazada')
                 ->get();
 
-            if ($rechazadas->isNotEmpty()) {
+            if ($decision === 'observar' || $rechazadas->isNotEmpty()) {
                 $motivosUnicos = $rechazadas->pluck('motivo_rechazo')->filter()->unique()->values()->toArray();
-                $textoObservacion = $data['observaciones'] ?? (count($motivosUnicos) > 0 ? implode('; ', $motivosUnicos) : null);
-                if (empty($textoObservacion)) {
-                    $textoObservacion = 'La propuesta fue devuelta por el Vicerrectorado con observaciones en la asignación de docentes.';
-                }
+                $textoObservacion = ! empty($data['observaciones'])
+                    ? trim($data['observaciones'])
+                    : (count($motivosUnicos) > 0 ? implode('; ', $motivosUnicos) : 'Devuelto con observaciones por el Vicerrectorado.');
 
                 $revision->update([
                     'estado' => 'observado',

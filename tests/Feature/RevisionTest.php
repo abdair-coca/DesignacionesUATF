@@ -539,4 +539,79 @@ class RevisionTest extends TestCase
         $response->assertStatus(422);
         $this->assertDatabaseHas('revisiones', ['id' => $revision->id]);
     }
+
+    public function test_solicitar_por_revision_id_especifico(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $usuario = User::factory()->create(['carrera_id' => $carrera->id]);
+        $gestion = Gestion::firstOrCreate(['nombre' => (string) date('Y')]);
+        $periodo = Periodo::factory()->create();
+
+        $rev1 = Revision::create([
+            'carrera_id' => $carrera->id,
+            'descripcion' => 'Propuesta Nro 1',
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $usuario->id,
+            'estado' => 'propuesta',
+        ]);
+
+        $rev2 = Revision::create([
+            'carrera_id' => $carrera->id,
+            'descripcion' => 'Propuesta Nro 2',
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $usuario->id,
+            'estado' => 'propuesta',
+        ]);
+
+        $response = $this->actingAs($usuario)->postJson('/revisiones/solicitar', [
+            'carrera_id' => $carrera->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'revision_id' => $rev2->id,
+            'descripcion' => 'Propuesta Nro 2 Enviada',
+        ]);
+
+        $response->assertStatus(200)->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'id' => $rev2->id,
+            'estado' => 'pendiente',
+            'descripcion' => 'Propuesta Nro 2 Enviada',
+        ]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'id' => $rev1->id,
+            'estado' => 'propuesta',
+        ]);
+    }
+
+    public function test_completar_requiere_decision_explicita_para_aprobar_o_devolver(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $revision = Revision::create([
+            'carrera_id' => $carrera->id,
+            'descripcion' => 'Propuesta a Evaluar',
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $admin->id,
+            'estado' => 'pendiente',
+        ]);
+
+        $responseAprobar = $this->actingAs($admin)->postJson("/revisiones/{$revision->id}/completar", [
+            'decision' => 'aprobar_todo',
+        ]);
+
+        $responseAprobar->assertStatus(200)->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'id' => $revision->id,
+            'estado' => 'revisado',
+        ]);
+    }
 }
