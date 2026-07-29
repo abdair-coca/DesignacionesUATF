@@ -1,4 +1,4 @@
-<aside className="sidebar" class="w-64 bg-[#2d353c] text-[#a8b6c1] flex flex-col min-h-screen shrink-0 font-sans shadow-xl select-none">
+<aside class="w-64 bg-[#2d353c] text-[#a8b6c1] flex flex-col min-h-screen shrink-0 font-sans shadow-xl select-none">
     <!-- Header de Perfil / Universidad estilo Color Admin v2 -->
     <div class="relative p-4 bg-cover bg-center border-b border-black/20" style="background-image: linear-gradient(rgba(45, 53, 60, 0.75), rgba(45, 53, 60, 0.95)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80');">
         <div class="flex items-center justify-between">
