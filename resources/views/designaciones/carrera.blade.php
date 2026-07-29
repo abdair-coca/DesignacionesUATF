@@ -99,6 +99,18 @@
                 </select>
             </form>
 
+            <button @click="guardarCambiosGeneral()" 
+                    :disabled="cargandoGuardar"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer disabled:opacity-50">
+                <svg x-show="!cargandoGuardar" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                <svg x-show="cargandoGuardar" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span x-text="cargandoGuardar ? 'Guardando...' : 'Guardar Cambios'"></span>
+            </button>
+
             <button @click="abrirModalCopiarAnterior()" 
                     class="bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -834,6 +846,15 @@
                     this.cargandoGuardar = false;
                     alert('Ocurrió un error inesperado al guardar.');
                 });
+            },
+
+            guardarCambiosGeneral() {
+                if (this.docenteActual) {
+                    this.guardarDesignacionDocente();
+                } else {
+                    this.mensajeExito = 'Las asignaciones de docentes para esta carrera están guardadas y al día en la base de datos.';
+                    this.modalExitoOpen = true;
+                }
             },
 
             ejecutarCopiarAnterior() {
