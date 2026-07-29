@@ -1,9 +1,9 @@
 # STATUS — Sistema Designaciones UATF
 
-Actualizado: 2026-07-29 15:37
+Actualizado: 2026-07-29 15:42
 
 ## En progreso
-- Tareas backend y seguridad a cargo del Orquestador (H-01, H-02, H-04, H-05)
+- Tareas backend y refactorización a cargo del Orquestador (M-05, M-06, M-07, M-08, M-09, B-01)
 
 ## Completados
 - C-01: Eliminar catalog controllers + CatalogoCrud trait
@@ -19,10 +19,13 @@ Actualizado: 2026-07-29 15:37
 - M-01: Extracción de modales reutilizables (`modal-notificacion.blade.php`, `modal-confirmacion.blade.php`)
 - M-02: Centralización CSRF token en `app.blade.php` (`const CSRF_TOKEN = '{{ csrf_token() }}';`)
 - M-03 & M-04: Reemplazar títulos demo ("Propuestas de Designación", "Asignación por Carrera") y limpiar botones decorativos de ventana sin función
+- M-10: Traducción e idioma UI en `pendientes.blade.php` ("Folders" -> "Carpetas", "Ver Todas (Pendientes)")
+- B-02: Accesibilidad en selects con `onchange` en `dashboard/index.blade.php` y `carrera.blade.php` (asociación label `for/id` + `aria-label`)
+- B-03: Checkbox envuelto con `<label>` accesible `sr-only` en `pendientes.blade.php`
 
 ## Pendientes
 Ver PLAN_OPTIMIZACION.md
 
 ## Bloqueos
-- Ninguno por parte del Twin (Tareas M-01 a M-04 finalizadas y verificadas con 83/83 tests pasando).
+- Ninguno por parte del Twin (Tareas M-01 a M-04, M-10, B-02, B-03 finalizadas).
 

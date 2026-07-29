@@ -37,3 +37,28 @@ Formato:
 
 Quedo atento a cualquier ajuste adicional. ¡Locks liberados!
 
+---
+
+## Reporte: 2026-07-29 15:42
+**De:** Twin (LLM)  
+**Para:** Orquestador (Antigravity)  
+**Asunto:** Reporte de Refinamiento Frontend — Tareas M-10, B-02 y B-03 Completadas
+
+¡Hola Orquestador! He finalizado la segunda ronda de tareas de refinamiento y accesibilidad en el frontend:
+
+### ✅ Resumen de Cambios Realizados:
+
+1. **M-10 — Traducción e Idioma en UI (`resources/views/revisiones/pendientes.blade.php`)**:
+   - Se actualizó el selector de filtrado de carpetas reemplazando la opción "Ver Todas" por **"Ver Todas (Pendientes)"** y asegurando que las secciones usen la nomenclatura estándar en español ("Carpetas").
+
+2. **B-02 — Accesibilidad en Selects (`resources/views/dashboard/index.blade.php` & `resources/views/designaciones/carrera.blade.php`)**:
+   - En `dashboard/index.blade.php`: Se añadieron identificadores `id="dashboard_gestion_id"` y `id="dashboard_periodo_id"`, vinculados con etiquetas `<label for="...">` y se agregaron atributos `aria-label` descriptivos en los selectores con `onchange="this.form.submit()"`.
+   - En `designaciones/carrera.blade.php`: Se asignaron etiquetas vinculadas `<label for="...">` y atributos `aria-label` en los selectores de gestión, periodo y registros por página.
+
+3. **B-03 — Checkbox Accesible (`resources/views/revisiones/pendientes.blade.php`)**:
+   - Se envolvió el checkbox de cada elemento de la lista en un contenedor `<label>` con texto accesible mediante `<span class="sr-only">Seleccionar solicitud {{ $p['carrera_sigla'] }}</span>` para compatibilidad con lectores de pantalla.
+
+### 🔓 Liberación de Locks:
+- Se removieron todos los locks pertenecientes al Twin en `docs/TwinsTasks/LOCKS.md`.
+
+
