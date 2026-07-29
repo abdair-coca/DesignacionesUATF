@@ -155,6 +155,15 @@
                                         Imprimir
                                     </button>
 
+                                    <!-- Botón Enviar a Vicerrectorado (Solo si está en borrador o con observaciones) -->
+                                    <template x-if="item.estado === 'propuesta' || item.estado === 'con_observaciones'">
+                                        <button @click="solicitarRevisionEspecifica(item)" 
+                                                title="Enviar esta propuesta al Vicerrectorado"
+                                                class="px-2.5 py-1.5 bg-[#00acac] hover:bg-[#008a8a] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
+                                            Enviar
+                                        </button>
+                                    </template>
+
                                     <!-- Botón Retirar Envío (Solo si NO está oficial y está enviado) -->
                                     <template x-if="item.estado !== 'oficial'">
                                         <button @click="retirarEnvio(item)" 
@@ -650,6 +659,44 @@
                 if (typeof cb === 'function') {
                     cb();
                 }
+            },
+
+            solicitarRevisionEspecifica(item) {
+                this.mostrarConfirmacion(
+                    'Enviar Propuesta a Vicerrectorado',
+                    '¿Deseas enviar la propuesta "' + item.descripcion + '" al Vicerrectorado para su evaluación y aprobación?',
+                    'Enviar Propuesta',
+                    'bg-[#00acac] hover:bg-[#008a8a]',
+                    () => {
+                        fetch('/revisiones/solicitar', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                carrera_id: this.carrera.id,
+                                Id_gestion: item.gestion_id,
+                                Id_periodo: item.periodo_id,
+                                revision_id: item.id,
+                                descripcion: item.descripcion
+                            })
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                item.estado = 'enviado';
+                                this.mostrarNotificacion('Propuesta Enviada', '¡La propuesta fue enviada al Vicerrectorado exitosamente para su revisión!', 'exito');
+                            } else {
+                                this.mostrarNotificacion('No se Pudo Enviar', res.error || 'Ocurrió un problema al enviar la propuesta.', 'error');
+                            }
+                        })
+                        .catch(() => {
+                            this.mostrarNotificacion('Error de Conexión', 'Ocurrió un problema de conexión al intentar enviar la propuesta.', 'error');
+                        });
+                    }
+                );
             },
 
             retirarEnvio(item) {
