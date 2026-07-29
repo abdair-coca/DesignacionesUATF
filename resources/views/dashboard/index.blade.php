@@ -318,15 +318,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // 1. Gráfico de Líneas: Evolución de Cobertura
+        // 1. Gráfico de Líneas: Evolución de Designaciones
+        const evolucionLabels = @json(array_column($evolucion ?? [], 'label'));
+        const evolucionData = @json(array_column($evolucion ?? [], 'valor'));
         const ctxEvolucion = document.getElementById('chartEvolucion').getContext('2d');
         new Chart(ctxEvolucion, {
             type: 'line',
             data: {
-                labels: ['Gestión 2024-1', 'Gestión 2024-2', 'Gestión 2025-1', 'Gestión 2025-2', 'Gestión 2026-1', 'Gestión 2026-2'],
+                labels: evolucionLabels.length > 0 ? evolucionLabels : ['Sin datos'],
                 datasets: [{
-                    label: 'Grupos Designados',
-                    data: [45, 58, 62, 75, 82, {{ $designacionesActivas ?? 85 }}],
+                    label: 'Designaciones Acumuladas',
+                    data: evolucionData.length > 0 ? evolucionData : [0],
                     borderColor: '#00acac',
                     backgroundColor: 'rgba(0, 172, 172, 0.1)',
                     fill: true,
@@ -350,14 +352,17 @@
         });
 
         // 2. Gráfico Donut: Distribución Carga Docente
+        const donutOptimo = @json(count($docentesBajoLimite ?? [])) > 0 ? 0 : 100;
+        const donutBajo = @json(count($docentesBajoLimite ?? []));
+        const donutSinAsignar = @json($gruposSinDesignar ?? 0);
         const ctxDonut = document.getElementById('chartDonutCarga').getContext('2d');
         new Chart(ctxDonut, {
             type: 'doughnut',
             data: {
-                labels: ['Carga Óptima (6h-32h)', 'Bajo Mínimo (<6h)', 'Sobrecarga (>32h)', 'Sin Asignación'],
+                labels: ['Carga Óptima', 'Bajo Mínimo (< ' + @json($minimoHoras ?? 6) + 'h)', 'Grupos Sin Asignar'],
                 datasets: [{
-                    data: [65, 15, 5, 15],
-                    backgroundColor: ['#00acac', '#f59c1a', '#ff5b57', '#e2e8f0'],
+                    data: [donutOptimo, donutBajo, donutSinAsignar].filter(v => v > 0),
+                    backgroundColor: ['#00acac', '#f59c1a', '#e2e8f0'],
                     borderWidth: 0
                 }]
             },
