@@ -1,4 +1,4 @@
-@extends('app')
+@extends('layouts.app')
 @section('content')
 <h1>Designaciones</h1>
 @foreach($designaciones as $d)
