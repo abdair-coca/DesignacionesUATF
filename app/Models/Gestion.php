@@ -12,7 +12,14 @@ class Gestion extends Model
 
     protected $table = 'gestiones';
 
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombre', 'es_actual'];
+
+    protected function casts(): array
+    {
+        return [
+            'es_actual' => 'boolean',
+        ];
+    }
 
     public function designaciones(): HasMany
     {

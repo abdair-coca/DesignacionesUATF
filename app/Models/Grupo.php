@@ -11,11 +11,16 @@ class Grupo extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['materia_id', 'codigo', 'estado'];
+    protected $fillable = ['materia_id', 'malla_curricular_id', 'codigo', 'estado'];
 
     public function materia(): BelongsTo
     {
         return $this->belongsTo(Materia::class);
+    }
+
+    public function mallaCurricular(): BelongsTo
+    {
+        return $this->belongsTo(MallaCurricular::class);
     }
 
     public function designaciones(): HasMany
