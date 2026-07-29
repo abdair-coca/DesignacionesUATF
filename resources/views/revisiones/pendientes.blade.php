@@ -77,26 +77,20 @@
                 </nav>
             </div>
 
-            <!-- LABELS (Etiquetas por Carrera) -->
+            <!-- LABELS (Carreras) -->
             <div class="pt-4 border-t border-gray-200/80">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-2">Label</h3>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-2">Carreras</h3>
                 <div class="space-y-2 text-xs text-gray-700 font-medium px-2">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#00acac]"></span>
-                        <span>Informática (INF)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#348fe2]"></span>
-                        <span>Ingeniería Civil (CIV)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#727cb6]"></span>
-                        <span>Medicina (MED)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#f59c1a]"></span>
-                        <span>Otras Carreras</span>
-                    </div>
+                    @php
+                        $coloresCarrera = ['#00acac', '#348fe2', '#727cb6', '#f59c1a', '#ff5b57', '#2d353c'];
+                        $carrerasLista = \App\Models\Carrera::orderBy('sigla')->get();
+                    @endphp
+                    @foreach($carrerasLista as $c)
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $coloresCarrera[$loop->index % count($coloresCarrera)] }}"></span>
+                            <span>{{ $c->nombre }} ({{ $c->sigla }})</span>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
