@@ -258,21 +258,17 @@ class DesignacionController extends Controller
             $docente = \App\Models\Docente::find($docenteId);
             if (! $docente) continue;
 
-            $horasOtrasCarreras = (int) Designacion::forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
-                ->where('Id_docente', $docenteId)
-                ->whereHas('materia', fn ($q) => $q->where('carrera_id', '!=', $carrera->id))
-                ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
-                ->sum('materias.horas');
+            $horasBase = $this->cargaAcademica->horasAsignadas($docenteId, $data['Id_gestion'], $data['Id_periodo']);
 
             $gruposDelDocenteEnCambios = collect($data['cambios'])->where('Id_docente', $docenteId)->pluck('Id_grupo');
-            $horasNuevasEnCarrera = (int) \App\Models\Grupo::whereIn('grupos.id', $gruposDelDocenteEnCambios)
+            $horasNuevas = (int) \App\Models\Grupo::whereIn('grupos.id', $gruposDelDocenteEnCambios)
                 ->join('materias', 'grupos.materia_id', '=', 'materias.id')
                 ->sum('materias.horas');
 
-            $totalProuesto = $horasOtrasCarreras + $horasNuevasEnCarrera;
-            if ($totalProuesto > \App\Support\CargaAcademicaService::MAXIMO_HORAS) {
+            $totalProyectado = $horasBase + $horasNuevas;
+            if ($totalProyectado > \App\Support\CargaAcademicaService::MAXIMO_HORAS) {
                 return response()->json([
-                    'error' => "El docente {$docente->nombre} excede el límite máximo de " . \App\Support\CargaAcademicaService::MAXIMO_HORAS . " horas semanales permitidas (acumularía {$totalProuesto} hrs). Operación cancelada.",
+                    'error' => "El docente {$docente->nombre} excede el límite máximo de " . \App\Support\CargaAcademicaService::MAXIMO_HORAS . " horas semanales permitidas (acumularía {$totalProyectado} hrs). Operación cancelada.",
                 ], 422);
             }
         }
@@ -352,13 +348,7 @@ class DesignacionController extends Controller
             ], 422);
         }
 
-        $designacionesOrigen = Designacion::with('materia')
-            ->where('Id_gestion', $data['origen_gestion_id'])
-            ->where('Id_periodo', $data['origen_periodo_id'])
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
-            ->whereNotNull('Id_docente')
-            ->get();
-
+        $designacionesOrigen = $this->designacionesEnOrigen($data, $carrera);
         if ($designacionesOrigen->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -430,12 +420,7 @@ class DesignacionController extends Controller
             'destino_periodo_id' => ['required', 'exists:periodos,id'],
         ]);
 
-        $designacionesOrigen = Designacion::with(['docente', 'materia', 'grupo'])
-            ->where('Id_gestion', $data['origen_gestion_id'])
-            ->where('Id_periodo', $data['origen_periodo_id'])
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
-            ->whereNotNull('Id_docente')
-            ->get();
+        $designacionesOrigen = $this->designacionesEnOrigen($data, $carrera, ['docente', 'materia', 'grupo']);
 
         if ($designacionesOrigen->isEmpty()) {
             return response()->json([
@@ -619,6 +604,19 @@ class DesignacionController extends Controller
         $historial = $designacion->historial()->orderByDesc('fecha')->get();
 
         return view('designaciones.historial', compact('designacion', 'historial'));
+    }
+
+    /**
+     * Designaciones activas con docente en origen, para copiar/previsualizar.
+     */
+    private function designacionesEnOrigen(array $data, Carrera $carrera, array $with = ['materia']): \Illuminate\Support\Collection
+    {
+        return Designacion::with($with)
+            ->where('Id_gestion', $data['origen_gestion_id'])
+            ->where('Id_periodo', $data['origen_periodo_id'])
+            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->whereNotNull('Id_docente')
+            ->get();
     }
 
     private function catalogos(int $gestionId = 0, int $periodoId = 0): array
