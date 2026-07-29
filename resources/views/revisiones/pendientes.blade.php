@@ -21,7 +21,7 @@
 
             <!-- FOLDERS (Carpetas Inbox) -->
             <div>
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-2">Folders</h3>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 px-2">Carpetas</h3>
                 <nav class="space-y-1">
                     <a href="{{ route('revisiones.pendientes', ['folder' => 'inbox']) }}" 
                        class="flex items-center justify-between px-3 py-2 rounded transition-colors font-semibold {{ $folder === 'inbox' ? 'bg-[#d9e0e7] text-gray-900 font-bold' : 'text-gray-700 hover:bg-gray-200/60' }}">
@@ -105,11 +105,14 @@
         <!-- Top Toolbar estilo Color Admin Email Toolbar -->
         <div class="bg-[#f0f3f8] border-b border-gray-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-2">
-                <input type="checkbox" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                    <span class="sr-only">Seleccionar todo</span>
+                </label>
 
-                <!-- Selector View All -->
+                <!-- Selector de filtro -->
                 <select onchange="window.location.href=this.value" class="border border-gray-300 rounded px-3 py-1 bg-white text-gray-700 font-bold focus:outline-none text-xs shadow-2xs">
-                    <option value="{{ route('revisiones.pendientes', ['folder' => 'inbox']) }}" {{ $folder === 'inbox' ? 'selected' : '' }}>View All (Pendientes)</option>
+                    <option value="{{ route('revisiones.pendientes', ['folder' => 'inbox']) }}" {{ $folder === 'inbox' ? 'selected' : '' }}>Bandeja (Pendientes)</option>
                     <option value="{{ route('revisiones.pendientes', ['folder' => 'revisadas']) }}" {{ $folder === 'revisadas' ? 'selected' : '' }}>Ver Revisadas</option>
                     <option value="{{ route('revisiones.pendientes', ['folder' => 'todas']) }}" {{ $folder === 'todas' ? 'selected' : '' }}>Ver Todas</option>
                 </select>

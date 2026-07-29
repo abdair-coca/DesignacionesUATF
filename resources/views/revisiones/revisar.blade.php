@@ -353,7 +353,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({ 
@@ -391,7 +391,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({ 
