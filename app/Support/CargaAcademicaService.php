@@ -7,6 +7,7 @@ use App\Models\Designacion;
 class CargaAcademicaService
 {
     public const MINIMO_HORAS = 6;
+    public const MAXIMO_HORAS = 32;
 
     public static function getMinimo(): int
     {
@@ -14,7 +15,9 @@ class CargaAcademicaService
     }
 
     /**
-     * Mantiene compatibilidad regresiva devolviendo el mínimo de horas.
+     * Obtiene el mínimo de horas requeridas por docente (6h por defecto).
+     * El nombre "limite" se mantiene por compatibilidad con código existente.
+     * @deprecated Usar getMinimo() para claridad semántica.
      */
     public static function getLimite(): int
     {
