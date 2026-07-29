@@ -34,9 +34,9 @@
                     Correo Electrónico
                 </label>
                 <div class="relative">
-                    <input type="email" id="email" name="email" value="{{ old('email', 'director.inf@uatf.edu.bo') }}" required autofocus
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
                            class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00acac] focus:border-[#00acac] transition-all"
-                           placeholder="director.inf@uatf.edu.bo">
+                           placeholder="correo@uatf.edu.bo">
                 </div>
             </div>
 
@@ -64,25 +64,6 @@
                 Ingresar al Sistema
             </button>
         </form>
-
-        <!-- Cuentas de Acceso Rápido (Ayuda para el usuario) -->
-        <div class="pt-4 border-t border-gray-200 text-xs">
-            <p class="font-bold text-gray-600 mb-2">Cuentas de Acceso Rápido:</p>
-            <div class="space-y-1.5 text-[11px] text-gray-500">
-                <div class="p-2 bg-gray-50 rounded border border-gray-200">
-                    <span class="font-bold text-gray-800">Director Informática:</span>
-                    <code class="bg-gray-200 px-1 py-0.5 rounded text-gray-800">director.inf@uatf.edu.bo</code> / password
-                </div>
-                <div class="p-2 bg-gray-50 rounded border border-gray-200">
-                    <span class="font-bold text-gray-800">Director Civil:</span>
-                    <code class="bg-gray-200 px-1 py-0.5 rounded text-gray-800">director.civ@uatf.edu.bo</code> / password
-                </div>
-                <div class="p-2 bg-gray-50 rounded border border-gray-200">
-                    <span class="font-bold text-gray-800">Admin Vicedecano:</span>
-                    <code class="bg-gray-200 px-1 py-0.5 rounded text-gray-800">admin@uatf.edu.bo</code> / password
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 @endsection
