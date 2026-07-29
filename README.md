@@ -26,6 +26,23 @@ php artisan key:generate
 php artisan migrate --seed
 ```
 
+## Pruebas
+
+Las pruebas deben ejecutarse en PostgreSQL, en una base aislada de desarrollo y produccion.
+Por convencion se usa `designaciones_uatf_testing`.
+
+```bash
+cp .env.testing.example .env.testing
+# editar .env.testing con usuario y contrasena locales de PostgreSQL
+# crear la base con un usuario PostgreSQL que tenga permiso CREATEDB
+createdb -h 127.0.0.1 -p 5432 -U postgres designaciones_uatf_testing
+php artisan migrate:fresh --seed --env=testing
+php artisan test
+```
+
+`phpunit.xml` no debe contener usuarios ni contrasenas reales. Las credenciales locales viven
+solo en `.env` o `.env.testing`, que no se versionan.
+
 Iniciar servidor:
 
 ```bash
