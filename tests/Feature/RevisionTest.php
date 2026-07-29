@@ -364,4 +364,179 @@ class RevisionTest extends TestCase
             'revisado_por' => $admin->id,
         ]);
     }
+
+    public function test_usuario_retira_revision_y_vuelve_a_estado_propuesta(): void
+    {
+        $usuario = User::factory()->create(['is_admin' => false]);
+        $carrera = Carrera::factory()->create();
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $revision = Revision::create([
+            'carrera_id' => $carrera->id,
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $usuario->id,
+            'solicitado_en' => now(),
+            'estado' => 'pendiente',
+        ]);
+
+        $response = $this->actingAs($usuario)
+            ->postJson("/revisiones/{$revision->id}/retirar");
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'id' => $revision->id,
+            'estado' => 'propuesta',
+            'solicitado_en' => null,
+        ]);
+    }
+
+    public function test_crear_propuesta_crea_registro_nuevo_independiente(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $usuario = User::factory()->create(['carrera_id' => $carrera->id]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $borradorInicial = Revision::create([
+            'carrera_id' => $carrera->id,
+            'descripcion' => 'Propuesta inicial',
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $usuario->id,
+            'estado' => 'propuesta',
+        ]);
+
+        $response = $this->actingAs($usuario)
+            ->postJson('/revisiones/crear-propuesta', [
+                'descripcion' => 'Propuesta segunda',
+                'gestion_id' => $gestion->id,
+                'periodo_id' => $periodo->id,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'id' => $borradorInicial->id,
+            'descripcion' => 'Propuesta inicial',
+        ]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'descripcion' => 'Propuesta segunda',
+        ]);
+
+        $this->assertEquals(2, Revision::where('carrera_id', $carrera->id)->count());
+    }
+
+    public function test_copiar_anterior_guarda_descripcion_personalizada(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $usuario = User::factory()->create(['carrera_id' => $carrera->id]);
+        $gestionOrigen = Gestion::factory()->create();
+        $gestionDestino = Gestion::factory()->create();
+        $periodoOrigen = Periodo::factory()->create();
+        $periodoDestino = Periodo::factory()->create();
+
+        $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+        $docente = Docente::factory()->create();
+
+        Designacion::factory()->create([
+            'Id_materia' => $materia->id,
+            'Id_grupo' => $grupo->id,
+            'Id_docente' => $docente->id,
+            'Id_gestion' => $gestionOrigen->id,
+            'Id_periodo' => $periodoOrigen->id,
+        ]);
+
+        $response = $this->actingAs($usuario)
+            ->postJson("/designaciones/carrera/{$carrera->id}/copiar-anterior", [
+                'origen_gestion_id' => $gestionOrigen->id,
+                'origen_periodo_id' => $periodoOrigen->id,
+                'destino_gestion_id' => $gestionDestino->id,
+                'destino_periodo_id' => $periodoDestino->id,
+                'descripcion' => 'Propuesta Copiada Mi Personalizada',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('revisiones', [
+            'carrera_id' => $carrera->id,
+            'Id_gestion' => $gestionDestino->id,
+            'Id_periodo' => $periodoDestino->id,
+            'descripcion' => 'Propuesta Copiada Mi Personalizada',
+            'estado' => 'propuesta',
+        ]);
+    }
+
+    public function test_crear_multiples_propuestas_genera_registros_independientes(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $usuario = User::factory()->create(['carrera_id' => $carrera->id]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $this->actingAs($usuario)->postJson('/revisiones/crear-propuesta', [
+            'descripcion' => 'Propuesta Nro 1',
+            'gestion_id' => $gestion->id,
+            'periodo_id' => $periodo->id,
+        ])->assertStatus(200);
+
+        $this->actingAs($usuario)->postJson('/revisiones/crear-propuesta', [
+            'descripcion' => 'Propuesta Nro 2',
+            'gestion_id' => $gestion->id,
+            'periodo_id' => $periodo->id,
+        ])->assertStatus(200);
+
+        $this->assertEquals(2, Revision::where('carrera_id', $carrera->id)->count());
+    }
+
+    public function test_eliminar_propuesta_no_oficial_exitoso(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $usuario = User::factory()->create(['carrera_id' => $carrera->id]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $revision = Revision::create([
+            'carrera_id' => $carrera->id,
+            'descripcion' => 'Propuesta a eliminar',
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $usuario->id,
+            'estado' => 'propuesta',
+        ]);
+
+        $response = $this->actingAs($usuario)->deleteJson("/revisiones/{$revision->id}");
+
+        $response->assertStatus(200)->assertJson(['success' => true]);
+        $this->assertDatabaseMissing('revisiones', ['id' => $revision->id]);
+    }
+
+    public function test_eliminar_propuesta_oficial_falla(): void
+    {
+        $carrera = Carrera::factory()->create();
+        $usuario = User::factory()->create(['carrera_id' => $carrera->id]);
+        $gestion = Gestion::factory()->create();
+        $periodo = Periodo::factory()->create();
+
+        $revision = Revision::create([
+            'carrera_id' => $carrera->id,
+            'descripcion' => 'Propuesta oficial',
+            'Id_gestion' => $gestion->id,
+            'Id_periodo' => $periodo->id,
+            'solicitado_por' => $usuario->id,
+            'estado' => 'revisado',
+        ]);
+
+        $response = $this->actingAs($usuario)->deleteJson("/revisiones/{$revision->id}");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('revisiones', ['id' => $revision->id]);
+    }
 }
