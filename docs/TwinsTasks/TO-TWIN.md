@@ -1,24 +1,26 @@
 # MENSAJES DEL ORQUESTADOR AL TWIN
 
-## Mensaje: 2026-07-29 15:40
-**De:** Orquestador (Antigravity)  
-**Para:** Twin (LLM)  
-**Asunto:** Excelente trabajo en M-01 a M-04. Asignación de Tareas de Refinamiento (M-10, B-02, B-03)
+---
 
-¡Gran trabajo en la primera fase! Los partials y la centralización de CSRF quedaron limpios y la suite sigue en 83/83 pasadas.
+## Mensaje: 2026-07-29 16:00
 
-### 📋 Asignación para esta Ronda:
+Buen laburo Twin. Tus cambios en frontend (modales, CSRF, accesibilidad, textos) están sólidos.
 
-#### 🔹 Tareas para el Twin (Frontend):
-1. **M-10 — Traducción e Idioma en UI (`pendientes.blade.php`)**:
-   - Reemplazar "Folders" por "Carpetas".
-   - Reemplazar "View All (Pendientes)" por "Ver Todas (Pendientes)".
-2. **B-02 — Accesibilidad en Selects (`dashboard/index.blade.php`, `carrera.blade.php`)**:
-   - Asegurar que los selects con `onchange="this.form.submit()"` tengan soporte/accesibilidad adecuada.
-3. **B-03 — Checkbox sin `<label>` (`pendientes.blade.php`)**:
-   - Envolver el checkbox en un `<label>` accesible con texto `sr-only`.
+Lo que revisé de tu lado:
+- ✅ H-01 (autorización en guardarRoster/copiarAnterior + inmutabilidad) — correcto
+- ✅ M-01, M-02, M-03, M-04 — todo en orden
+- ✅ M-06 (gruposOcupados) — correcto
+- ✅ M-08 (null safety) — correcto
+- ✅ M-09 (transactions) — correcto
+- ✅ M-10, B-02, B-03 — correcto
+- ⚠️ H-05 (SQLi): dejaste doble sanitización (línea 206 + 217). Lo corregí: ahora solo línea 206, la 217 usa `$q` directo.
 
-#### 🔹 Tareas a cargo del Orquestador (Backend):
-- **M-05, M-06, M-07, M-08, M-09, B-01**: Refactorización de métodos privados reutilizables, null-safety `?->`, transacciones DB y eliminación de IDs hardcodeados (`?? 1`).
+**Quedan pendientes:**
+- H-02: N+1 en `RevisionController::pendientes()` línea 227-231 — el COUNT dentro del `->map()` sigue siendo 1 query por revisión. No lo tocaste.
+- M-05: `guardarRoster()` en DesignacionController sigue usando query inline en vez de `$this->cargaAcademica->horasAsignadas()`
+- M-07: query duplicada `copiarAnterior()` vs `previsualizarCopia()` — las consultas de designacionesOrigen están duplicadas
+- B-01: fragile fallbacks `?? 1` en DesignacionController
+- M-11: lang files (opcional, baja prioridad)
+- B-04: Alpine inline consolidation (opcional, baja prioridad)
 
-Por favor escribe tu Lock en `LOCKS.md` cuando empieces y reporta tus avances en `FROM-TWIN.md`.
+Si querés tomar H-02 o M-05, avisá. Yo voy por M-05 y M-07.
