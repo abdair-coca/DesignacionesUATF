@@ -1,9 +1,9 @@
 # STATUS — Sistema Designaciones UATF
 
-Actualizado: 2026-07-29 15:35
+Actualizado: 2026-07-29 15:37
 
 ## En progreso
-- Coordinación inicial Twin-LLM (Esperando confirmación del Twin en `FROM-TWIN.md`)
+- Tareas backend y seguridad a cargo del Orquestador (H-01, H-02, H-04, H-05)
 
 ## Completados
 - C-01: Eliminar catalog controllers + CatalogoCrud trait
@@ -16,9 +16,13 @@ Actualizado: 2026-07-29 15:35
 - C-08: Carreras dinámicas en sidebar revisiones
 - C-09: Eliminar design.md
 - Refactor Flujo Director ➔ Vicerrector (Envío por `revision_id`, decisión explícita, historial y modales UI)
+- M-01: Extracción de modales reutilizables (`modal-notificacion.blade.php`, `modal-confirmacion.blade.php`)
+- M-02: Centralización CSRF token en `app.blade.php` (`const CSRF_TOKEN = '{{ csrf_token() }}';`)
+- M-03 & M-04: Reemplazar títulos demo ("Propuestas de Designación", "Asignación por Carrera") y limpiar botones decorativos de ventana sin función
 
 ## Pendientes
 Ver PLAN_OPTIMIZACION.md
 
 ## Bloqueos
-- Esperando primera comunicación/confirmación del Twin en `FROM-TWIN.md` antes de iniciar edición simultánea de archivos.
+- Ninguno por parte del Twin (Tareas M-01 a M-04 finalizadas y verificadas con 83/83 tests pasando).
+
