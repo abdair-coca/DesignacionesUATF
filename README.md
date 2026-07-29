@@ -6,13 +6,12 @@ Tomás Frías (UATF). Reemplaza el sistema antiguo, que no tenía control de rol
 ## Stack técnico
 
 - Laravel (última LTS estable) — monolito, sin API REST separada.
-- Inertia.js + React para las vistas (reemplaza Blade en las páginas de la app).
+- **Blade + Alpine.js** para las vistas (diseño inspirado en Color Admin v2).
 - PostgreSQL (desarrollo y producción usan el mismo motor).
-- Tailwind CSS v4.
+- Tailwind CSS v4 (CDN).
 
-> El proyecto está pensado para usar el template **Color Admin v2 (SeanTheme)**, pero los
-> archivos del template todavía no están disponibles en este equipo. Mientras tanto, las
-> vistas usan Tailwind con un layout propio simple. Ver `CLAUDE.md` para más detalle.
+> El diseño de interfaz replica el estilo **Color Admin v2 (SeanTheme)** implementado
+> completamente con Tailwind. No se requieren npm, Vite ni node_modules.
 
 ## Instalación
 
@@ -21,18 +20,16 @@ Requiere PostgreSQL corriendo localmente y una base de datos creada para el proy
 
 ```bash
 composer install
-npm install
 cp .env.example .env
 php artisan key:generate
 # editar .env con las credenciales reales de tu Postgres local
 php artisan migrate --seed
 ```
 
-En dos terminales (o con `composer run dev`, que levanta ambos):
+Iniciar servidor:
 
 ```bash
 php artisan serve
-npm run dev
 ```
 
 ## Documentación del proyecto

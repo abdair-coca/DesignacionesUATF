@@ -1,8 +1,8 @@
 # design.md — Sistema de diseño (UATF Designaciones)
 
 Guía obligatoria para TODA pantalla nueva o modificada. Si una vista se aparta de esto,
-es un bug de diseño. Referencias vivas: `resources/js/Pages/Designaciones/PorCarrera.jsx`
-y `resources/js/Pages/Designaciones/Carrera.jsx` son la implementación canónica.
+es un bug de diseño. Referencias vivas: `resources/views/designaciones/carrera.blade.php`
+y `resources/views/designaciones/por-carrera.blade.php` son la implementación canónica.
 
 ## Principios
 
@@ -194,26 +194,15 @@ hover:border-gray-200 hover:text-gray-700`.
 
 Prohibido: parallax, bounce, spinners decorativos, animaciones de más de 600ms.
 
-## Patrones de datos (Inertia)
-
-- **Listas no acotadas** (crecen con el uso): paginación y filtros **server-side**,
-  `->paginate(N)->withQueryString()`, visitas con
-  `{ preserveState: true, preserveScroll: true, replace: true, only: [props que cambian] }`.
-- **Conjuntos acotados por entidad** (ej. materias de una carrera): enviar todo y
-  tabs/búsqueda/paginación **client-side** (instantáneo, sin round-trips).
-- Búsqueda server-side: debounce 350ms.
-- Los catálogos estáticos (gestiones, periodos) se excluyen del `only` para no
-  re-serializarlos en cada filtro.
-
 ## Layout
 
 - Página = contenido principal (`min-w-0 flex-1`) + aside opcional (`xl:w-80`),
   `flex flex-col gap-6 xl:flex-row`.
 - Pantallas de detalle: breadcrumb (`Sección › Detalle`) arriba a la izquierda +
   botón "← Volver" outline arriba a la derecha.
-- El título de página vive dentro del contenido (AppLayout sin prop `title`);
-  el chip de usuario/cerrar sesión queda arriba a la derecha (lo da AppLayout).
-- Sidebar oscuro (`bg-gray-900`): agrupado por secciones (`navGroups` en `AppLayout.jsx`).
+- El título de página vive dentro del contenido (`layouts/app.blade.php` sin variable `$title`);
+  el chip de usuario/cerrar sesión queda arriba a la derecha (lo da `layouts/header.blade.php`).
+- Sidebar oscuro (`bg-gray-900`): agrupado por secciones en `layouts/sidebar.blade.php`.
   Título de sección: `text-[11px] font-semibold uppercase tracking-wider text-gray-500`.
   No agregar secciones o ítems nuevos sin pedido explícito del dueño (la sección
   "Catálogos" con sus 6 entidades fue pedida en el roadmap de fase 2; el ítem

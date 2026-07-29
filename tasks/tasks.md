@@ -41,9 +41,9 @@ graph TD
     T4[Config: limite_horas]
     T5[Controller RevisionController]
     T6[Routes revisiones]
-    T7[Página: Pendientes.jsx Admin]
-    T8[Página: Revisar.jsx Admin]
-    T9[Carrera.jsx: botón Enviar revisión + badge estado]
+    T7[Vista: pendientes.blade.php Admin]
+    T8[Vista: revisar.blade.php Admin]
+    T9[carrera.blade.php: botón Enviar revisión + badge estado]
     T10[PasteModal: previsualización]
     T11[Tests]
     T12[UserSeeder: admin]
@@ -166,11 +166,11 @@ return [
 2. **`pendientes()`** — GET, lista carreras con revisiones pendientes (solo admin)
    - Cargar revisiones con estado `pendiente`, con relación `carrera`, `solicitante`
    - Agrupar por carrera para mostrar una fila por carrera
-   - Retornar Inertia: `Revisiones/Pendientes`
+   - Retornar view: `revisiones.pendientes`
 
 3. **`revisar(Revision)`** — GET, tabla con todas las designaciones de esa carrera+gestion+periodo
    - Cargar designaciones con docente, materia, grupo
-   - Retornar Inertia: `Revisiones/Revisar`
+   - Retornar view: `revisiones.revisar`
 
 4. **`procesar(Revision, Request)`** — POST, procesa batch de aprobar/rechazar
    - Validación: `acciones` array de `{id: designacion_id, accion: "aprobar"|"rechazar"}`
@@ -204,36 +204,35 @@ Route::post('revisiones/{revision}/completar', [RevisionController::class, 'comp
 
 ---
 
-### T7 — Página `Revisiones/Pendientes.jsx`
-**Archivos**: `resources/js/Pages/Revisiones/Pendientes.jsx` (nuevo)
+### T7 — Vista `revisiones.pendientes`
+**Archivos**: `resources/views/revisiones/pendientes.blade.php` (nuevo)
 
 **Funcionalidad**:
 - Tabla con carreras pendientes de revisión
 - Columnas: Carrera (nombre+sigla), Gestión/Periodo, Solicitante, Solicitado el, Acciones (botón "Revisar" → link a route revisiones.revisar)
 - Si no hay pendientes, mostrar EmptyState
-- Usar AppLayout
+- Usa layout app.blade.php
 - Solo accesible por admin (validar en backend ya)
 
 ---
 
-### T8 — Página `Revisiones/Revisar.jsx`
-**Archivos**: `resources/js/Pages/Revisiones/Revisar.jsx` (nuevo)
+### T8 — Vista `revisiones.revisar`
+**Archivos**: `resources/views/revisiones/revisar.blade.php` (nuevo)
 
 **Funcionalidad**:
-- Breadcrumb: Revisiones pendientes > Carrera X
 - Info bar: Carrera, Gestión/Periodo, Solicitado por, Estado
 - Tabla con todas las designaciones de esa carrera+gestion+periodo
-- Columnas: Checkbox, Docente, Materia, Grupo, Estado actual, Acción
+- Columnas: Docente, Materia, Grupo, Estado actual, Acción
 - En columna "Acción": botones "Aprobar" (verde) y "Rechazar" (rojo) por fila
-- Botón "Aprobar seleccionadas" y "Rechazar seleccionadas" en toolbar
-- Botón "Completar revisión" (solo visible si hay al menos una designación procesada)
+- Botón "Aprobar Todo" y "Observar Todo" en toolbar
+- Botón "Terminar Revisión" (envía todas las decisiones)
 - Al completar, redirigir a revisiones.pendientes
 - Estados: mostrar badge con color (verde=aprobada, rojo=rechazada, ambar=propuesta)
 
 ---
 
-### T9 — Carrera.jsx: botón "Enviar a revisión" + badge estado
-**Archivos**: `resources/js/Pages/Designaciones/Carrera.jsx` (modificar)
+### T9 — carrera.blade.php: botón "Enviar a revisión" + badge estado
+**Archivos**: `resources/views/designaciones/carrera.blade.php` (modificar)
 
 **Cambios**:
 - Recibir nueva prop `revision` (objeto con estado de revisión actual o null)
@@ -244,28 +243,23 @@ Route::post('revisiones/{revision}/completar', [RevisionController::class, 'comp
 - Botón "Enviar a revisión" hace POST a route revisiones.solicitar con carrera_id, gestion_id, periodo_id
 - Al éxito, recargar página con router.reload
 
-**IMPORTANTE**: La prop `revision` la debe enviar el `DesignacionController::carrera()` — buscar la última revision para esa carrera+gestion+periodo y pasarla a la vista.
+**IMPORTANTE**: La variable `revision` la debe enviar el `DesignacionController::carrera()` — buscar la última revision para esa carrera+gestion+periodo y pasarla a la vista.
 
 ---
 
-### T10 — PasteModal: previsualización de filas a saltar
+### T10 — Previsualización de pegado
 **Archivos**:
 - `app/Http/Controllers/DesignacionMasivaController.php` (modificar - agregar método previsualizar)
-- `resources/js/Components/PasteModal.jsx` (modificar)
+- `resources/views/designaciones/carrera.blade.php` (integración con Alpine.js)
 
 **Backend** — nuevo método `previsualizar(Request)`:
 - Misma validación que `pegar()` pero sin crear nada
 - Retorna JSON con array de filas, cada una con: `{ id, Id_docente, Id_materia, Id_grupo, materia_sigla, materia_nombre, docente_nombre, grupo_codigo, estado: "ok"|"grupo_ocupado"|"excede_horas"|"sin_docente" }`
 - Reutilizar lógica de validación del método pegar
 
-**Frontend — PasteModal.jsx**:
-- Al abrirse, llamar a `previsualizar` endpoint con las filas del clipboard + destino gestion/periodo
-- Mostrar columna extra "Estado" con icono:
-  - ✅ Listo (verde) para filas OK
-  - ⚠️ Grupo ocupado (ambar) para saltadas
-  - ⚠️ Excede horas (ambar) para saltadas
-  - ❌ Sin docente (rojo) para inválidas
-- Deshabilitar checkbox de filas que serán saltadas
+**Frontend**:
+- Al abrir modal de pegar, llamar a `previsualizar` endpoint con las filas del clipboard + destino gestion/periodo
+- Mostrar columna extra "Estado" con indicador visual
 - En barra inferior mostrar "N de M filas se pegarán, X se omitirán"
 
 ---
@@ -306,11 +300,11 @@ Route::post('revisiones/{revision}/completar', [RevisionController::class, 'comp
 - [x] T4: config limite_horas ✔️
 - [x] T5: RevisionController con 5 métodos ✔️
 - [x] T6: rutas agregadas ✔️
-- [x] T7: Pendientes.jsx página ✔️
-- [x] T8: Revisar.jsx página ✔️
-- [x] T9: Carrera.jsx con botón enviar/revisión ✔️
-- [x] T10: PasteModal previsualización ✔️
+- [x] T7: pendientes.blade.php vista ✔️
+- [x] T8: revisar.blade.php vista ✔️
+- [x] T9: carrera.blade.php con botón enviar/revisión ✔️
+- [x] T10: Previsualización de pegado ✔️
 - [x] T11: UserSeeder con admin ✔️
 - [x] T12: Tests pasando ✔️
-- [x] `npm run build` exitoso ✔️
+- [x] Migración completa a Blade ✔️
 - [x] Bitácora actualizada ✔️
