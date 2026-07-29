@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Carrera;
 use App\Models\Designacion;
+use App\Models\Gestion;
+use App\Models\Grupo;
 use App\Models\Revision;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +27,7 @@ class RevisionController extends Controller
         ]);
 
         $user = $request->user();
-        $carreraId = $user->carrera_id ?? \App\Models\Carrera::first()?->id;
+        $carreraId = $user->carrera_id ?? Carrera::first()?->id;
         if (! $carreraId) {
             return response()->json(['error' => 'No hay carreras registradas en el sistema.'], 404);
         }
@@ -58,7 +61,7 @@ class RevisionController extends Controller
             'descripcion' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $gestion = \App\Models\Gestion::find($data['Id_gestion']);
+        $gestion = Gestion::find($data['Id_gestion']);
         $anioActual = (string) date('Y');
 
         if ($gestion && (string) $gestion->nombre !== $anioActual) {
@@ -68,7 +71,7 @@ class RevisionController extends Controller
         }
 
         // Verificar 100% asignación de grupos HABILITADOS en la carrera
-        $gruposTotales = \App\Models\Grupo::where('estado', 'habilitado')
+        $gruposTotales = Grupo::where('estado', 'habilitado')
             ->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
             ->count();
 
@@ -79,6 +82,7 @@ class RevisionController extends Controller
 
         if ($gruposTotales > 0 && $gruposAsignados < $gruposTotales) {
             $pendientes = $gruposTotales - $gruposAsignados;
+
             return response()->json([
                 'error' => "No se puede enviar a revisión al Vicerrectorado. Quedan {$pendientes} materias/grupos sin docente asignado.",
             ], 422);
@@ -153,12 +157,12 @@ class RevisionController extends Controller
                     'solicitado_por' => $request->user()->id,
                     'solicitado_en' => now(),
                     'estado' => 'pendiente',
-                    'descripcion' => $data['descripcion'] ?? $revision->descripcion ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
+                    'descripcion' => $data['descripcion'] ?? $revision->descripcion ?? ('Propuesta de Designación — '.($gestion->nombre ?? date('Y'))),
                 ]);
             } else {
                 $revision = Revision::create([
                     'carrera_id' => $data['carrera_id'],
-                    'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
+                    'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — '.($gestion->nombre ?? date('Y'))),
                     'Id_gestion' => $data['Id_gestion'],
                     'Id_periodo' => $data['Id_periodo'],
                     'solicitado_por' => $request->user()->id,
@@ -366,7 +370,7 @@ class RevisionController extends Controller
         return view('revisiones.revisar', [
             'revision' => [
                 'id' => $revision->id,
-                'descripcion' => $revision->descripcion ?? ('Propuesta — Carrera de ' . $revision->carrera->nombre),
+                'descripcion' => $revision->descripcion ?? ('Propuesta — Carrera de '.$revision->carrera->nombre),
                 'carrera_nombre' => $revision->carrera->nombre,
                 'carrera_sigla' => $revision->carrera->sigla,
                 'gestion_nombre' => $revision->gestion->nombre,

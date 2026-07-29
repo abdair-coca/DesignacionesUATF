@@ -11,12 +11,10 @@ use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\Revision;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class RevisionTest extends TestCase
 {
-    
     public function test_usuario_envia_revision_con_exito(): void
     {
         $usuario = User::factory()->create();

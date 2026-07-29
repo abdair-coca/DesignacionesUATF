@@ -5,10 +5,10 @@ namespace App\Support;
 use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
-use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
+use Illuminate\Support\Collection;
 
 class DesignacionReportService
 {
@@ -56,7 +56,7 @@ class DesignacionReportService
         ];
     }
 
-    public function resumenPorCarrera(int $gestionId, int $periodoId): \Illuminate\Support\Collection
+    public function resumenPorCarrera(int $gestionId, int $periodoId): Collection
     {
         $rows = Carrera::selectRaw('
                 carreras.id, carreras.nombre, carreras.sigla,
@@ -67,12 +67,12 @@ class DesignacionReportService
             ->leftJoin('materias', 'materias.carrera_id', '=', 'carreras.id')
             ->leftJoin('grupos', function ($j) {
                 $j->on('grupos.materia_id', '=', 'materias.id')
-                  ->where('grupos.estado', 'habilitado');
+                    ->where('grupos.estado', 'habilitado');
             })
             ->leftJoin('designaciones', function ($j) use ($gestionId, $periodoId) {
                 $j->on('designaciones.Id_grupo', '=', 'grupos.id')
-                  ->where('designaciones.Id_gestion', $gestionId)
-                  ->where('designaciones.Id_periodo', $periodoId);
+                    ->where('designaciones.Id_gestion', $gestionId)
+                    ->where('designaciones.Id_periodo', $periodoId);
             })
             ->groupBy('carreras.id', 'carreras.nombre', 'carreras.sigla')
             ->orderBy('carreras.sigla')

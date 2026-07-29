@@ -9,12 +9,10 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class DesignacionMasivaTest extends TestCase
 {
-    
     public function test_previsualizar_pegado_retorna_filas_ok_cuando_no_hay_conflictos(): void
     {
         $usuario = User::factory()->create();

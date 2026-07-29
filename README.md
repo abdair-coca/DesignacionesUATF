@@ -40,8 +40,21 @@ php artisan migrate:fresh --seed --env=testing
 php artisan test
 ```
 
-`phpunit.xml` no debe contener usuarios ni contrasenas reales. Las credenciales locales viven
+`phpunit.xml` no debe contener usuarios ni contraseñas reales. Las credenciales locales viven
 solo en `.env` o `.env.testing`, que no se versionan.
+
+## Calidad
+
+Antes de integrar cambios, ejecutar:
+
+```bash
+composer audit --locked
+vendor/bin/pint --test
+php artisan test
+```
+
+GitHub Actions ejecuta los mismos controles en una instancia efímera de PostgreSQL: instala
+dependencias bloqueadas, audita Composer, prepara el esquema con seeders, corre pruebas y verifica Pint.
 
 Iniciar servidor:
 

@@ -26,8 +26,8 @@ class UserSeeder extends Seeder
         $carreras = Carrera::all();
 
         foreach ($carreras as $carrera) {
-            $email = 'director.' . strtolower($carrera->sigla) . '@uatf.edu.bo';
-            $nombre = 'Director ' . $carrera->nombre;
+            $email = 'director.'.strtolower($carrera->sigla).'@uatf.edu.bo';
+            $nombre = 'Director '.$carrera->nombre;
 
             User::firstOrCreate(
                 ['email' => $email],

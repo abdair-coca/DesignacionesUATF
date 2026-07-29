@@ -9,12 +9,10 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class DesignacionValidationTest extends TestCase
 {
-    
     public function test_store_requiere_campos_obligatorios(): void
     {
         $this->actingAs(User::factory()->create())

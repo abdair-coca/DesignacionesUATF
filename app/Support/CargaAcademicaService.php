@@ -7,6 +7,7 @@ use App\Models\Designacion;
 class CargaAcademicaService
 {
     public const MINIMO_HORAS = 6;
+
     public const MAXIMO_HORAS = 32;
 
     public static function getMinimo(): int

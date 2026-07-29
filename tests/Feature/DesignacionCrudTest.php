@@ -9,12 +9,10 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class DesignacionCrudTest extends TestCase
 {
-    
     public function test_usuario_autenticado_crea_una_designacion_y_queda_registrado_como_creador(): void
     {
         $docente = Docente::factory()->create();

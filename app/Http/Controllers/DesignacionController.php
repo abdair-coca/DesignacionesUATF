@@ -17,7 +17,6 @@ use App\Support\DesignacionReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -77,7 +76,7 @@ class DesignacionController extends Controller
 
             return [
                 'id' => $r->id,
-                'descripcion' => $r->descripcion ?: ("Propuesta de Designación Docente — " . $r->carrera->nombre),
+                'descripcion' => $r->descripcion ?: ('Propuesta de Designación Docente — '.$r->carrera->nombre),
                 'gestion' => $r->gestion?->nombre ?? date('Y'),
                 'gestion_id' => $r->Id_gestion,
                 'periodo' => $r->periodo?->nombre ?? '1',
@@ -255,20 +254,22 @@ class DesignacionController extends Controller
         // Bloqueo estricto: Verificar que ningún docente exceda las 32 horas semanales
         $docentesCambios = collect($data['cambios'])->whereNotNull('Id_docente')->pluck('Id_docente')->unique();
         foreach ($docentesCambios as $docenteId) {
-            $docente = \App\Models\Docente::find($docenteId);
-            if (! $docente) continue;
+            $docente = Docente::find($docenteId);
+            if (! $docente) {
+                continue;
+            }
 
             $horasBase = $this->cargaAcademica->horasAsignadas($docenteId, $data['Id_gestion'], $data['Id_periodo']);
 
             $gruposDelDocenteEnCambios = collect($data['cambios'])->where('Id_docente', $docenteId)->pluck('Id_grupo');
-            $horasNuevas = (int) \App\Models\Grupo::whereIn('grupos.id', $gruposDelDocenteEnCambios)
+            $horasNuevas = (int) Grupo::whereIn('grupos.id', $gruposDelDocenteEnCambios)
                 ->join('materias', 'grupos.materia_id', '=', 'materias.id')
                 ->sum('materias.horas');
 
             $totalProyectado = $horasBase + $horasNuevas;
-            if ($totalProyectado > \App\Support\CargaAcademicaService::MAXIMO_HORAS) {
+            if ($totalProyectado > CargaAcademicaService::MAXIMO_HORAS) {
                 return response()->json([
-                    'error' => "El docente {$docente->nombre} excede el límite máximo de " . \App\Support\CargaAcademicaService::MAXIMO_HORAS . " horas semanales permitidas (acumularía {$totalProyectado} hrs). Operación cancelada.",
+                    'error' => "El docente {$docente->nombre} excede el límite máximo de ".CargaAcademicaService::MAXIMO_HORAS." horas semanales permitidas (acumularía {$totalProyectado} hrs). Operación cancelada.",
                 ], 422);
             }
         }
@@ -388,7 +389,7 @@ class DesignacionController extends Controller
             // Crear la entrada de la nueva propuesta independiente en la tabla revisiones
             $gestionDestino = Gestion::find($data['destino_gestion_id']);
             $periodoDestino = Periodo::find($data['destino_periodo_id']);
-            $descDefault = 'Propuesta de Designación Copiada — Carrera de ' . $carrera->nombre;
+            $descDefault = 'Propuesta de Designación Copiada — Carrera de '.$carrera->nombre;
             $desc = ! empty($data['descripcion']) ? trim($data['descripcion']) : $descDefault;
 
             Revision::create([
@@ -449,7 +450,7 @@ class DesignacionController extends Controller
                     $impacto = 'Sin cambios';
                     $impactoColor = 'bg-gray-100 text-gray-700 border-gray-300';
                 } else {
-                    $impacto = 'Reemplaza a ' . ($actual->docente?->nombre ?? 'Docente previo');
+                    $impacto = 'Reemplaza a '.($actual->docente?->nombre ?? 'Docente previo');
                     $impactoColor = 'bg-amber-100 text-amber-800 border-amber-300';
                 }
             }
@@ -458,7 +459,7 @@ class DesignacionController extends Controller
                 'grupo_id' => $desig->Id_grupo,
                 'materia_sigla' => $desig->materia?->sigla,
                 'materia_nombre' => $desig->materia?->nombre,
-                'grupo_codigo' => 'G' . ($desig->grupo?->codigo ?? ''),
+                'grupo_codigo' => 'G'.($desig->grupo?->codigo ?? ''),
                 'docente_id' => $desig->Id_docente,
                 'docente_nombre' => $desig->docente?->nombre ?? 'Sin docente',
                 'horas' => $desig->materia?->horas ?? 0,
@@ -609,7 +610,7 @@ class DesignacionController extends Controller
     /**
      * Designaciones activas con docente en origen, para copiar/previsualizar.
      */
-    private function designacionesEnOrigen(array $data, Carrera $carrera, array $with = ['materia']): \Illuminate\Support\Collection
+    private function designacionesEnOrigen(array $data, Carrera $carrera, array $with = ['materia']): Collection
     {
         return Designacion::with($with)
             ->where('Id_gestion', $data['origen_gestion_id'])
@@ -632,6 +633,7 @@ class DesignacionController extends Controller
         if ($gestionId && $periodoId) {
             $docentes = $docentes->filter(function (Docente $docente) use ($gestionId, $periodoId) {
                 $horas = $this->cargaAcademica->horasAsignadas($docente->id, $gestionId, $periodoId);
+
                 return $horas < CargaAcademicaService::getMinimo();
             })->values();
         }
@@ -645,6 +647,7 @@ class DesignacionController extends Controller
 
         $docentes = $docentes->map(function (Docente $docente) use ($historialRows) {
             $docente->historial_materias = $historialRows[$docente->id] ?? [];
+
             return $docente;
         });
 

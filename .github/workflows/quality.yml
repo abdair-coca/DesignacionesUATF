@@ -1,0 +1,61 @@
+name: Quality
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: designaciones_uatf_testing
+          POSTGRES_PASSWORD: testing
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d designaciones_uatf_testing"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      APP_ENV: testing
+      APP_KEY: 'base64:KkAFgDIlBKdrWzqVk7V9co1a0o4lkDMDQnBvdBrlWg4='
+      DB_CONNECTION: pgsql
+      DB_DATABASE: designaciones_uatf_testing
+      DB_HOST: 127.0.0.1
+      DB_PASSWORD: testing
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_pgsql
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction
+
+      - name: Prepare test database
+        run: php artisan migrate:fresh --seed --env=testing
+
+      - name: Run tests
+        run: php artisan test
+
+      - name: Check code style
+        run: vendor/bin/pint --test

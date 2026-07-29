@@ -3,13 +3,15 @@
 use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
 use App\Http\Controllers\RevisionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', function (\Illuminate\Http\Request $request) {
+    Route::get('/', function (Request $request) {
         if ($request->user()?->is_admin) {
             return redirect()->route('revisiones.pendientes');
         }
+
         return redirect()->route('designaciones.lista');
     });
 

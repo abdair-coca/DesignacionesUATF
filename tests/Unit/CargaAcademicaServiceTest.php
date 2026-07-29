@@ -9,12 +9,10 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 use App\Support\CargaAcademicaService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class CargaAcademicaServiceTest extends TestCase
 {
-    
     private CargaAcademicaService $servicio;
 
     protected function setUp(): void

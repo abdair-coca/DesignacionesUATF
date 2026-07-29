@@ -10,12 +10,10 @@ use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\Periodo;
 use App\Support\DesignacionReportService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class DesignacionReportServiceTest extends TestCase
 {
-    
     private DesignacionReportService $servicio;
 
     protected function setUp(): void

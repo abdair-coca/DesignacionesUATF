@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Carrera;
 use App\Models\Designacion;
-use App\Models\Docente;
 use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Materia;

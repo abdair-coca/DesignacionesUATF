@@ -6,12 +6,10 @@ use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Materia;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class DesignacionObserverTest extends TestCase
 {
-    
     public function test_registra_historial_al_cambiar_estado(): void
     {
         $designacion = Designacion::factory()->create(['estado' => 'propuesta']);

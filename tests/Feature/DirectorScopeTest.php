@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Carrera;
-use App\Models\Gestion;
-use App\Models\Periodo;
 use App\Models\User;
 use Tests\TestCase;
 

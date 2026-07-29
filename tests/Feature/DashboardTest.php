@@ -3,12 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
-    
     public function test_usuario_autenticado_ve_designaciones_lista(): void
     {
         $this->actingAs(User::factory()->create())

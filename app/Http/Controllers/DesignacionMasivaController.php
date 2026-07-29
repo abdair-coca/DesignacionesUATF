@@ -48,19 +48,21 @@ class DesignacionMasivaController extends Controller
         $creadasIds = [];
         $cargaService = app(CargaAcademicaService::class);
 
-        DB::transaction(function () use ($data, $gestionId, $periodoId, $userId, &$gruposOcupados, $cargaService, &$creadas, &$saltadas, &$creadasIds) {
+        DB::transaction(function () use ($data, $gestionId, $periodoId, $userId, &$gruposOcupados, &$creadas, &$saltadas, &$creadasIds) {
             foreach ($data['filas'] as $fila) {
                 $grupoId = (int) $fila['Id_grupo'];
 
                 // Skip si grupo ya tiene designación activa en destino
                 if (in_array($grupoId, $gruposOcupados)) {
                     $saltadas++;
+
                     continue;
                 }
 
                 $grupo = Grupo::with('materia')->find($grupoId);
                 if (! $grupo) {
                     $saltadas++;
+
                     continue;
                 }
 
@@ -74,6 +76,7 @@ class DesignacionMasivaController extends Controller
                 $horasNuevas = (int) ($grupo->materia->horas ?? 0);
                 if (($horasActuales + $horasNuevas) > CargaAcademicaService::MAXIMO_HORAS) {
                     $saltadas++;
+
                     continue;
                 }
 
