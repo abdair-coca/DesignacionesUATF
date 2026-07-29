@@ -155,7 +155,7 @@
                                         Imprimir
                                     </button>
 
-                                    <!-- Botón Enviar a Vicerrectorado (Solo si está en borrador o con observaciones) -->
+                                    <!-- Botón Enviar / Retirar Envío Alternante -->
                                     <template x-if="item.estado === 'propuesta' || item.estado === 'con_observaciones'">
                                         <button @click="solicitarRevisionEspecifica(item)" 
                                                 title="Enviar esta propuesta al Vicerrectorado"
@@ -164,13 +164,10 @@
                                         </button>
                                     </template>
 
-                                    <!-- Botón Retirar Envío (Solo si NO está oficial y está enviado) -->
-                                    <template x-if="item.estado !== 'oficial'">
+                                    <template x-if="item.estado === 'enviado' || item.estado === 'pendiente'">
                                         <button @click="retirarEnvio(item)" 
-                                                :disabled="item.estado !== 'enviado'"
-                                                :class="item.estado === 'enviado' ? 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold cursor-pointer' : 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'"
                                                 title="Cancelar el envío a Vicerrectorado"
-                                                class="px-3 py-1.5 rounded-xs text-xs transition-colors">
+                                                class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-amber-700 font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
                                             Retirar Envío
                                         </button>
                                     </template>

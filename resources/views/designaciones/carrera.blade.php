@@ -99,18 +99,6 @@
                 </select>
             </form>
 
-            <button @click="guardarCambiosGeneral()" 
-                    :disabled="cargandoGuardar"
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer disabled:opacity-50">
-                <svg x-show="!cargandoGuardar" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
-                <svg x-show="cargandoGuardar" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span x-text="cargandoGuardar ? 'Guardando...' : 'Guardar Cambios'"></span>
-            </button>
-
             <button @click="abrirModalCopiarAnterior()" 
                     class="bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -560,9 +548,9 @@
 
             <!-- Body -->
             <div class="p-6 space-y-4">
-                <div class="h-14 w-14 rounded-full bg-teal-100 text-[#00acac] font-bold flex items-center justify-center mx-auto border-2 border-teal-200">
+                <div class="h-14 w-14 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mx-auto border-2 border-amber-300">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
                 <h3 class="font-bold text-gray-900 text-base">¿Enviar propuesta a revisión?</h3>
