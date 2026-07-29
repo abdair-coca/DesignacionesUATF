@@ -58,30 +58,37 @@ class DesignacionReportService
 
     public function resumenPorCarrera(int $gestionId, int $periodoId): \Illuminate\Support\Collection
     {
-        $carreras = Carrera::orderBy('sigla')->get();
+        $rows = Carrera::selectRaw('
+                carreras.id, carreras.nombre, carreras.sigla,
+                COUNT(DISTINCT materias.id) as total_materias,
+                COUNT(DISTINCT grupos.id) as total_grupos,
+                COUNT(DISTINCT CASE WHEN designaciones.id IS NOT NULL AND designaciones.estado != ? THEN grupos.id END) as grupos_designados
+            ', ['rechazada'])
+            ->leftJoin('materias', 'materias.carrera_id', '=', 'carreras.id')
+            ->leftJoin('grupos', function ($j) {
+                $j->on('grupos.materia_id', '=', 'materias.id')
+                  ->where('grupos.estado', 'habilitado');
+            })
+            ->leftJoin('designaciones', function ($j) use ($gestionId, $periodoId) {
+                $j->on('designaciones.Id_grupo', '=', 'grupos.id')
+                  ->where('designaciones.Id_gestion', $gestionId)
+                  ->where('designaciones.Id_periodo', $periodoId);
+            })
+            ->groupBy('carreras.id', 'carreras.nombre', 'carreras.sigla')
+            ->orderBy('carreras.sigla')
+            ->get();
 
-        return $carreras->map(function (Carrera $carrera) use ($gestionId, $periodoId) {
-            $materiasIds = Materia::where('carrera_id', $carrera->id)->pluck('id');
-            $grupos = Grupo::whereIn('materia_id', $materiasIds)->where('estado', 'habilitado')->get();
-            $totalGrupos = $grupos->count();
-            $grupoIds = $grupos->pluck('id');
-
-            $activas = Designacion::whereIn('Id_grupo', $grupoIds)
-                ->where('Id_gestion', $gestionId)
-                ->where('Id_periodo', $periodoId)
-                ->where('estado', '!=', 'rechazada')
-                ->pluck('Id_grupo')
-                ->unique()
-                ->count();
-
-            $pendientes = $totalGrupos - $activas;
+        return $rows->map(function ($carrera) {
+            $grupos = (int) $carrera->total_grupos;
+            $activas = (int) $carrera->grupos_designados;
+            $pendientes = $grupos - $activas;
 
             return [
                 'id' => $carrera->id,
                 'nombre' => $carrera->nombre,
                 'sigla' => $carrera->sigla,
-                'materias' => $materiasIds->count(),
-                'grupos' => $totalGrupos,
+                'materias' => (int) $carrera->total_materias,
+                'grupos' => $grupos,
                 'activas' => $activas,
                 'pendientes' => $pendientes,
                 'situacion' => $activas > 0 ? ($pendientes > 0 ? 'pendientes' : 'activas') : 'sin',
