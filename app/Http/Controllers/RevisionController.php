@@ -229,11 +229,29 @@ class RevisionController extends Controller
         $revisadasCount = Revision::where('estado', 'revisado')->count();
         $todasCount = Revision::count();
 
-        $pendientes = $revisionesList->map(function (Revision $r) {
-            $cantDesignaciones = Designacion::where('Id_gestion', $r->Id_gestion)
-                ->where('Id_periodo', $r->Id_periodo)
-                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $r->carrera_id))
-                ->count();
+        // Pre-computar conteo de designaciones por carrera+gestion+periodo (evita N+1)
+        $designacionesCounts = collect();
+        if ($revisionesList->isNotEmpty()) {
+            $gestionesIds = $revisionesList->pluck('Id_gestion')->filter()->unique()->values()->toArray();
+            $periodosIds = $revisionesList->pluck('Id_periodo')->filter()->unique()->values()->toArray();
+
+            if (! empty($gestionesIds) && ! empty($periodosIds)) {
+                $designacionesCounts = Designacion::join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+                    ->whereIn('designaciones.Id_gestion', $gestionesIds)
+                    ->whereIn('designaciones.Id_periodo', $periodosIds)
+                    ->groupBy('materias.carrera_id', 'designaciones.Id_gestion', 'designaciones.Id_periodo')
+                    ->select('materias.carrera_id', 'designaciones.Id_gestion', 'designaciones.Id_periodo', DB::raw('COUNT(*) as total'))
+                    ->get()
+                    ->groupBy('carrera_id');
+            }
+        }
+
+        $pendientes = $revisionesList->map(function (Revision $r) use ($designacionesCounts) {
+            $grupoCarrera = $designacionesCounts->get($r->carrera_id, collect());
+            $cantDesignaciones = $grupoCarrera->firstWhere(function ($item) use ($r) {
+                return (int) $item->Id_gestion === (int) $r->Id_gestion
+                    && (int) $item->Id_periodo === (int) $r->Id_periodo;
+            })?->total ?? 0;
 
             return [
                 'id' => $r->id,

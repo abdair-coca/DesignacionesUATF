@@ -46,8 +46,8 @@ class DesignacionController extends Controller
             return redirect()->route('revisiones.pendientes');
         }
 
-        $carreraId = $user->carrera_id ?? Carrera::first()?->id ?? 1;
-        $carreraActual = Carrera::find($carreraId) ?? Carrera::first();
+        $carreraId = $user->carrera_id ?? Carrera::first()?->id;
+        $carreraActual = $carreraId ? Carrera::find($carreraId) : Carrera::first();
         if (! $carreraActual) {
             abort(404, 'No hay carreras registradas en el sistema.');
         }

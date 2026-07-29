@@ -23,8 +23,8 @@
         <!-- Filtros de Gestión y Periodo Académico -->
         <form method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-3">
             <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Gestión</label>
-                <select name="gestion_id" onchange="this.form.submit()" 
+                <label for="dashboard_gestion_id" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Gestión</label>
+                <select id="dashboard_gestion_id" name="gestion_id" onchange="this.form.submit()" aria-label="Seleccionar Gestión Académica" 
                         class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold bg-white text-gray-800 focus:ring-2 focus:ring-[#00acac] focus:outline-none">
                     @foreach($gestiones as $g)
                         <option value="{{ $g->id }}" {{ (string)$g->id === (string)$filtros['gestion_id'] ? 'selected' : '' }}>
@@ -35,8 +35,8 @@
             </div>
 
             <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Periodo</label>
-                <select name="periodo_id" onchange="this.form.submit()" 
+                <label for="dashboard_periodo_id" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Periodo</label>
+                <select id="dashboard_periodo_id" name="periodo_id" onchange="this.form.submit()" aria-label="Seleccionar Periodo Académico" 
                         class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold bg-white text-gray-800 focus:ring-2 focus:ring-[#00acac] focus:outline-none">
                     @foreach($periodos as $p)
                         <option value="{{ $p->id }}" {{ (string)$p->id === (string)$filtros['periodo_id'] ? 'selected' : '' }}>

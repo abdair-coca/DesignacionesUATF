@@ -56,24 +56,36 @@ class DesignacionReportService
         ];
     }
 
-    public function resumenPorCarrera(int $gestionId, int $periodoId)
+    public function resumenPorCarrera(int $gestionId, int $periodoId): \Illuminate\Support\Collection
     {
-        return Carrera::all()->map(function ($carrera) use ($gestionId, $periodoId) {
-            $rep = $this->reporteCarrera($carrera->id, $gestionId, $periodoId);
-            $grupos = $rep['kpis']['totalGruposHabilitados'];
-            $activas = $rep['kpis']['totalGruposDesignados'];
-            $pendientes = $rep['kpis']['gruposPendientes'];
+        $carreras = Carrera::orderBy('sigla')->get();
 
-        return [
-            'id' => $carrera->id,
-            'nombre' => $carrera->nombre,
-            'sigla' => $carrera->sigla,
-            'materias' => $carrera->materias()->count(),
-            'grupos' => $grupos,
-            'activas' => $activas,
-            'pendientes' => $pendientes,
-            'situacion' => $activas > 0 ? ($pendientes > 0 ? 'pendientes' : 'activas') : 'sin',
-        ];
+        return $carreras->map(function (Carrera $carrera) use ($gestionId, $periodoId) {
+            $materiasIds = Materia::where('carrera_id', $carrera->id)->pluck('id');
+            $grupos = Grupo::whereIn('materia_id', $materiasIds)->where('estado', 'habilitado')->get();
+            $totalGrupos = $grupos->count();
+            $grupoIds = $grupos->pluck('id');
+
+            $activas = Designacion::whereIn('Id_grupo', $grupoIds)
+                ->where('Id_gestion', $gestionId)
+                ->where('Id_periodo', $periodoId)
+                ->where('estado', '!=', 'rechazada')
+                ->pluck('Id_grupo')
+                ->unique()
+                ->count();
+
+            $pendientes = $totalGrupos - $activas;
+
+            return [
+                'id' => $carrera->id,
+                'nombre' => $carrera->nombre,
+                'sigla' => $carrera->sigla,
+                'materias' => $materiasIds->count(),
+                'grupos' => $totalGrupos,
+                'activas' => $activas,
+                'pendientes' => $pendientes,
+                'situacion' => $activas > 0 ? ($pendientes > 0 ? 'pendientes' : 'activas') : 'sin',
+            ];
         });
     }
 

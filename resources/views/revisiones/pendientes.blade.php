@@ -111,10 +111,10 @@
                 </label>
 
                 <!-- Selector de filtro -->
-                <select onchange="window.location.href=this.value" class="border border-gray-300 rounded px-3 py-1 bg-white text-gray-700 font-bold focus:outline-none text-xs shadow-2xs">
+                <select onchange="window.location.href=this.value" aria-label="Filtrar bandeja de solicitudes" class="border border-gray-300 rounded px-3 py-1 bg-white text-gray-700 font-bold focus:outline-none text-xs shadow-2xs">
                     <option value="{{ route('revisiones.pendientes', ['folder' => 'inbox']) }}" {{ $folder === 'inbox' ? 'selected' : '' }}>Bandeja (Pendientes)</option>
                     <option value="{{ route('revisiones.pendientes', ['folder' => 'revisadas']) }}" {{ $folder === 'revisadas' ? 'selected' : '' }}>Ver Revisadas</option>
-                    <option value="{{ route('revisiones.pendientes', ['folder' => 'todas']) }}" {{ $folder === 'todas' ? 'selected' : '' }}>Ver Todas</option>
+                    <option value="{{ route('revisiones.pendientes', ['folder' => 'todas']) }}" {{ $folder === 'todas' ? 'selected' : '' }}>Ver Todas (Pendientes)</option>
                 </select>
 
                 <!-- Refresh Button ↻ -->
@@ -145,7 +145,10 @@
                      class="flex items-center justify-between px-4 py-3 hover:bg-[#f0f3f8] cursor-pointer transition-colors group">
                     
                     <div class="flex items-center gap-3 min-w-0 flex-1">
-                        <input type="checkbox" onclick="event.stopPropagation()" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                        <label class="flex items-center" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                            <span class="sr-only">Seleccionar solicitud {{ $p['carrera_sigla'] }}</span>
+                        </label>
                         
                         <!-- Circular Avatar con la Inicial de la Carrera -->
                         @php

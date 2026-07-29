@@ -85,14 +85,15 @@
 
         <div class="flex items-center gap-3">
             <form method="GET" action="{{ route('designaciones.carrera', $carrera->id) }}" class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">Periodo:</span>
-                <select name="gestion_id" onchange="this.form.submit()" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
+                <label for="carrera_gestion_id" class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">Gestión:</label>
+                <select id="carrera_gestion_id" name="gestion_id" onchange="this.form.submit()" aria-label="Seleccionar Gestión Académica" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
                     @foreach($gestiones as $g)
                         <option value="{{ $g->id }}" {{ (string)$g->id === (string)$filtros['gestion_id'] ? 'selected' : '' }}>Gestión {{ $g->nombre }}</option>
                     @endforeach
                 </select>
 
-                <select name="periodo_id" onchange="this.form.submit()" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
+                <label for="carrera_periodo_id" class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">Periodo:</label>
+                <select id="carrera_periodo_id" name="periodo_id" onchange="this.form.submit()" aria-label="Seleccionar Periodo Académico" class="text-xs font-medium border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-800 focus:ring-1 focus:ring-[#00acac] outline-none">
                     @foreach($periodos as $p)
                         <option value="{{ $p->id }}" {{ (string)$p->id === (string)$filtros['periodo_id'] ? 'selected' : '' }}>Periodo {{ $p->nombre }}</option>
                     @endforeach
@@ -153,7 +154,8 @@
         <!-- Top Controls Bar -->
         <div class="p-3.5 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
             <div class="flex items-center gap-2">
-                <select x-model="perPage" @change="currentPage = 1" class="border border-gray-300 rounded-xs px-2 py-1 bg-white text-gray-700 shadow-2xs focus:border-[#348fe2] focus:ring-1 focus:ring-[#348fe2] outline-none">
+                <label for="carrera_per_page" class="sr-only">Registros por página</label>
+                <select id="carrera_per_page" x-model="perPage" @change="currentPage = 1" aria-label="Registros por página" class="border border-gray-300 rounded-xs px-2 py-1 bg-white text-gray-700 shadow-2xs focus:border-[#348fe2] focus:ring-1 focus:ring-[#348fe2] outline-none">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -425,8 +427,8 @@
                 <!-- Selectores de Periodo Origen -->
                 <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-lg border border-gray-200">
                     <div>
-                        <label class="block font-bold text-gray-700 mb-1">Gestión Origen:</label>
-                        <select x-model="copiarOrigenGestionId" @change="cargarPrevisualizacionCopia()" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
+                        <label for="copiar_origen_gestion_id" class="block font-bold text-gray-700 mb-1">Gestión Origen:</label>
+                        <select id="copiar_origen_gestion_id" x-model="copiarOrigenGestionId" @change="cargarPrevisualizacionCopia()" aria-label="Seleccionar gestión origen" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
                             @foreach($gestiones as $g)
                                 <option value="{{ $g->id }}">Gestión {{ $g->nombre }}</option>
                             @endforeach
@@ -434,8 +436,8 @@
                     </div>
 
                     <div>
-                        <label class="block font-bold text-gray-700 mb-1">Periodo Origen:</label>
-                        <select x-model="copiarOrigenPeriodoId" @change="cargarPrevisualizacionCopia()" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
+                        <label for="copiar_origen_periodo_id" class="block font-bold text-gray-700 mb-1">Periodo Origen:</label>
+                        <select id="copiar_origen_periodo_id" x-model="copiarOrigenPeriodoId" @change="cargarPrevisualizacionCopia()" aria-label="Seleccionar periodo origen" class="w-full text-xs font-medium border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 focus:ring-1 focus:ring-[#348fe2] outline-none">
                             @foreach($periodos as $p)
                                 <option value="{{ $p->id }}">Periodo {{ $p->nombre }}</option>
                             @endforeach
