@@ -12,6 +12,17 @@ use Illuminate\Support\Facades\DB;
 class DesignacionMasivaController extends Controller
 {
     /**
+     * Grupos con designación activa en una gestión/periodo específicos.
+     */
+    private function gruposOcupados(int $gestionId, int $periodoId): array
+    {
+        return Designacion::activas()
+            ->forGestionPeriodo($gestionId, $periodoId)
+            ->pluck('Id_grupo')
+            ->toArray();
+    }
+
+    /**
      * Pegar designaciones copiadas (clipboard del navegador) a gestión/periodo destino.
      * POST /designaciones/pegar  (JSON)
      */
@@ -30,11 +41,7 @@ class DesignacionMasivaController extends Controller
         $periodoId = (int) $data['Id_periodo'];
         $userId = $request->user()->id;
 
-        // Grupos que ya tienen designación activa en destino
-        $gruposOcupados = Designacion::activas()
-            ->forGestionPeriodo($gestionId, $periodoId)
-            ->pluck('Id_grupo')
-            ->toArray();
+        $gruposOcupados = $this->gruposOcupados($gestionId, $periodoId);
 
         $creadas = 0;
         $saltadas = 0;
@@ -51,9 +58,21 @@ class DesignacionMasivaController extends Controller
                     continue;
                 }
 
-                // Check límite de horas (removido: los docentes no tienen límite máximo de horas)
                 $grupo = Grupo::with('materia')->find($grupoId);
                 if (! $grupo) {
+                    $saltadas++;
+                    continue;
+                }
+
+                // Check límite de 32 horas máximo semanales por docente en UATF
+                $docenteId = $fila['Id_docente'];
+                $horasActuales = (int) Designacion::forGestionPeriodo($gestionId, $periodoId)
+                    ->where('Id_docente', $docenteId)
+                    ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+                    ->sum('materias.horas');
+
+                $horasNuevas = (int) ($grupo->materia->horas ?? 0);
+                if (($horasActuales + $horasNuevas) > CargaAcademicaService::MAXIMO_HORAS) {
                     $saltadas++;
                     continue;
                 }
@@ -99,10 +118,7 @@ class DesignacionMasivaController extends Controller
         $gestionId = (int) $data['Id_gestion'];
         $periodoId = (int) $data['Id_periodo'];
 
-        $gruposOcupados = Designacion::activas()
-            ->forGestionPeriodo($gestionId, $periodoId)
-            ->pluck('Id_grupo')
-            ->toArray();
+        $gruposOcupados = $this->gruposOcupados($gestionId, $periodoId);
 
         $resultados = [];
 

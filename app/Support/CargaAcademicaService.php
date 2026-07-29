@@ -14,10 +14,13 @@ class CargaAcademicaService
         return (int) config('designaciones.minimo_horas', self::MINIMO_HORAS);
     }
 
+    public static function getMaximo(): int
+    {
+        return self::MAXIMO_HORAS;
+    }
+
     /**
-     * Obtiene el mínimo de horas requeridas por docente (6h por defecto).
-     * El nombre "limite" se mantiene por compatibilidad con código existente.
-     * @deprecated Usar getMinimo() para claridad semántica.
+     * @deprecated Usar getMinimo() o getMaximo() según contexto.
      */
     public static function getLimite(): int
     {

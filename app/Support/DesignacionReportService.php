@@ -169,7 +169,7 @@ class DesignacionReportService
             'conteoEstado' => $dash['conteoEstado'],
             'docentesBajoLimite' => $dash['docentesBajoLimite'],
             'minimoHoras' => CargaAcademicaService::getMinimo(),
-            'limiteHoras' => CargaAcademicaService::getLimite(),
+            'limiteHoras' => CargaAcademicaService::getMinimo(),
         ];
     }
 

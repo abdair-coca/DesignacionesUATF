@@ -108,12 +108,14 @@ class RevisionController extends Controller
                     ], 422);
                 }
 
-                $revision->update([
-                    'solicitado_por' => $request->user()->id,
-                    'solicitado_en' => now(),
-                    'estado' => 'pendiente',
-                    'descripcion' => ! empty($data['descripcion']) ? trim($data['descripcion']) : $revision->descripcion,
-                ]);
+                DB::transaction(function () use ($revision, $request, $data) {
+                    $revision->update([
+                        'solicitado_por' => $request->user()->id,
+                        'solicitado_en' => now(),
+                        'estado' => 'pendiente',
+                        'descripcion' => ! empty($data['descripcion']) ? trim($data['descripcion']) : $revision->descripcion,
+                    ]);
+                });
 
                 return response()->json([
                     'success' => true,
@@ -142,24 +144,26 @@ class RevisionController extends Controller
             ->latest('id')
             ->first();
 
-        if ($revision) {
-            $revision->update([
-                'solicitado_por' => $request->user()->id,
-                'solicitado_en' => now(),
-                'estado' => 'pendiente',
-                'descripcion' => $data['descripcion'] ?? $revision->descripcion ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
-            ]);
-        } else {
-            $revision = Revision::create([
-                'carrera_id' => $data['carrera_id'],
-                'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
-                'Id_gestion' => $data['Id_gestion'],
-                'Id_periodo' => $data['Id_periodo'],
-                'solicitado_por' => $request->user()->id,
-                'solicitado_en' => now(),
-                'estado' => 'pendiente',
-            ]);
-        }
+        DB::transaction(function () use ($data, $request, $gestion, &$revision) {
+            if ($revision) {
+                $revision->update([
+                    'solicitado_por' => $request->user()->id,
+                    'solicitado_en' => now(),
+                    'estado' => 'pendiente',
+                    'descripcion' => $data['descripcion'] ?? $revision->descripcion ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
+                ]);
+            } else {
+                $revision = Revision::create([
+                    'carrera_id' => $data['carrera_id'],
+                    'descripcion' => $data['descripcion'] ?? ('Propuesta de Designación — ' . ($gestion->nombre ?? date('Y'))),
+                    'Id_gestion' => $data['Id_gestion'],
+                    'Id_periodo' => $data['Id_periodo'],
+                    'solicitado_por' => $request->user()->id,
+                    'solicitado_en' => now(),
+                    'estado' => 'pendiente',
+                ]);
+            }
+        });
 
         return response()->json([
             'success' => true,
@@ -199,7 +203,7 @@ class RevisionController extends Controller
         }
 
         $folder = $request->query('folder', 'inbox');
-        $q = $request->query('q', '');
+        $q = str_replace(['%', '_'], ['\%', '\_'], $request->query('q', ''));
 
         $query = Revision::with(['carrera:id,sigla,nombre', 'solicitante:id,name', 'gestion:id,nombre', 'periodo:id,nombre']);
 
@@ -210,11 +214,12 @@ class RevisionController extends Controller
         }
 
         if (! empty($q)) {
-            $query->whereHas('carrera', function ($cQuery) use ($q) {
-                $cQuery->where('nombre', 'like', "%{$q}%")
-                    ->orWhere('sigla', 'like', "%{$q}%");
-            })->orWhereHas('solicitante', function ($sQuery) use ($q) {
-                $sQuery->where('name', 'like', "%{$q}%");
+            $qSanitized = str_replace(['%', '_'], ['\%', '\_'], substr($q, 0, 100));
+            $query->whereHas('carrera', function ($cQuery) use ($qSanitized) {
+                $cQuery->where('nombre', 'like', "%{$qSanitized}%")
+                    ->orWhere('sigla', 'like', "%{$qSanitized}%");
+            })->orWhereHas('solicitante', function ($sQuery) use ($qSanitized) {
+                $sQuery->where('name', 'like', "%{$qSanitized}%");
             });
         }
 
@@ -278,16 +283,19 @@ class RevisionController extends Controller
             ->orderBy('Id_materia')
             ->get();
 
-        // Calcular carga total docente global para detectar sobrecargas
+        // Calcular carga total docente global en 1 sola consulta SQL con GROUP BY
         $docentesIds = $designacionesRaw->pluck('Id_docente')->filter()->unique()->toArray();
         $cargasGlobales = [];
-        foreach ($docentesIds as $docId) {
-            $totalHorasGlobal = Designacion::where('Id_gestion', $revision->Id_gestion)
+        if (! empty($docentesIds)) {
+            $cargasGlobales = Designacion::where('Id_gestion', $revision->Id_gestion)
                 ->where('Id_periodo', $revision->Id_periodo)
-                ->where('Id_docente', $docId)
+                ->whereIn('Id_docente', $docentesIds)
                 ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
-                ->sum('materias.horas');
-            $cargasGlobales[$docId] = (int) $totalHorasGlobal;
+                ->groupBy('designaciones.Id_docente')
+                ->select('designaciones.Id_docente', DB::raw('SUM(materias.horas) as total_horas'))
+                ->pluck('total_horas', 'designaciones.Id_docente')
+                ->map(fn ($val) => (int) $val)
+                ->toArray();
         }
 
         $designaciones = $designacionesRaw->map(fn (Designacion $d) => [
@@ -438,6 +446,7 @@ class RevisionController extends Controller
         DB::transaction(function () use ($revision, $data, $decision, $request) {
             $designacionesCarrera = Designacion::where('Id_gestion', $revision->Id_gestion)
                 ->where('Id_periodo', $revision->Id_periodo)
+                ->where('estado', 'propuesta')
                 ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
                 ->get();
 

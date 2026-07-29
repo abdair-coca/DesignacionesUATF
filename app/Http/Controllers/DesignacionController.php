@@ -204,7 +204,7 @@ class DesignacionController extends Controller
             'docentes' => $docentesOrdenados,
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
-            'limiteHoras' => CargaAcademicaService::getLimite(),
+            'limiteHoras' => CargaAcademicaService::getMinimo(),
             'revision' => $revision ? [
                 'id' => $revision->id,
                 'estado' => $revision->estado,
@@ -223,6 +223,11 @@ class DesignacionController extends Controller
 
     public function guardarRoster(Request $request, Carrera $carrera): RedirectResponse|JsonResponse
     {
+        $user = $request->user();
+        if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
+            return response()->json(['error' => 'No tienes permisos para modificar designaciones en esta carrera.'], 403);
+        }
+
         $data = $request->validate([
             'Id_gestion' => ['required', 'exists:gestiones,id'],
             'Id_periodo' => ['required', 'exists:periodos,id'],
@@ -231,6 +236,21 @@ class DesignacionController extends Controller
             'cambios.*.Id_materia' => ['required', 'exists:materias,id'],
             'cambios.*.Id_docente' => ['nullable', 'exists:docentes,id'],
         ]);
+
+        // Verificar inmutabilidad: no se pueden modificar propuestas pendientes u oficiales
+        $revisionExistente = Revision::where('carrera_id', $carrera->id)
+            ->where('Id_gestion', $data['Id_gestion'])
+            ->where('Id_periodo', $data['Id_periodo'])
+            ->latest('id')
+            ->first();
+
+        if ($revisionExistente && in_array($revisionExistente->estado, ['pendiente', 'revisado'])) {
+            $msg = $revisionExistente->estado === 'revisado'
+                ? 'Esta propuesta ya fue aprobada y oficializada por el Vicerrectorado. No se permite realizar modificaciones.'
+                : 'Esta propuesta se encuentra pendiente de revisión en el Vicerrectorado. Debes retirar el envío si deseas modificarla.';
+
+            return response()->json(['error' => $msg], 422);
+        }
 
         // Bloqueo estricto: Verificar que ningún docente exceda las 32 horas semanales
         $docentesCambios = collect($data['cambios'])->whereNotNull('Id_docente')->pluck('Id_docente')->unique();
@@ -313,6 +333,10 @@ class DesignacionController extends Controller
 
     public function copiarAnterior(Request $request, Carrera $carrera): JsonResponse
     {
+        $user = $request->user();
+        if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
+            return response()->json(['error' => 'No tienes permisos para modificar designaciones en esta carrera.'], 403);
+        }
         $data = $request->validate([
             'origen_gestion_id' => ['required', 'exists:gestiones,id'],
             'origen_periodo_id' => ['required', 'exists:periodos,id'],
@@ -500,7 +524,7 @@ class DesignacionController extends Controller
                     'id' => $actual->id,
                     'estado' => $actual->estado,
                     'motivo_rechazo' => $actual->motivo_rechazo,
-                    'docente' => ['id' => $actual->docente->id, 'nombre' => $actual->docente->nombre],
+                    'docente' => ['id' => $actual->docente?->id, 'nombre' => $actual->docente?->nombre ?? 'Sin docente'],
                 ] : null,
                 'aviso' => $aviso,
             ];
@@ -522,9 +546,9 @@ class DesignacionController extends Controller
             ->map(fn (Collection $items) => $items
                 ->take(8)
                 ->map(fn (Designacion $d) => [
-                    'docente' => ['id' => $d->docente->id, 'nombre' => $d->docente->nombre],
-                    'gestion' => $d->gestion->nombre,
-                    'periodo' => $d->periodo->nombre,
+                    'docente' => ['id' => $d->docente?->id, 'nombre' => $d->docente?->nombre ?? 'Sin docente'],
+                    'gestion' => $d->gestion?->nombre ?? '',
+                    'periodo' => $d->periodo?->nombre ?? '',
                     'estado' => $d->estado,
                 ])
                 ->values()
@@ -610,7 +634,7 @@ class DesignacionController extends Controller
         if ($gestionId && $periodoId) {
             $docentes = $docentes->filter(function (Docente $docente) use ($gestionId, $periodoId) {
                 $horas = $this->cargaAcademica->horasAsignadas($docente->id, $gestionId, $periodoId);
-                return $horas < CargaAcademicaService::getLimite();
+                return $horas < CargaAcademicaService::getMinimo();
             })->values();
         }
 
