@@ -6,16 +6,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Grupo extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['materia_id', 'malla_curricular_id', 'codigo', 'estado'];
+    protected $fillable = ['malla_curricular_id', 'codigo', 'estado'];
 
-    public function materia(): BelongsTo
+    public function materia(): HasOneThrough
     {
-        return $this->belongsTo(Materia::class);
+        return $this->hasOneThrough(
+            Materia::class,
+            MallaCurricular::class,
+            'id',
+            'id',
+            'malla_curricular_id',
+            'materia_id',
+        );
     }
 
     public function mallaCurricular(): BelongsTo

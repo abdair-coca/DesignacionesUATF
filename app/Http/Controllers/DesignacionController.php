@@ -121,14 +121,14 @@ class DesignacionController extends Controller
         $designaciones = Designacion::with(['docente', 'materia', 'grupo'])
             ->where('Id_gestion', $gestionId)
             ->where('Id_periodo', $periodoId)
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $carrera->id))
             ->orderBy('Id_materia')
             ->get();
 
-        $grupos = Grupo::with('materia')
+        $grupos = Grupo::with(['mallaCurricular.materia'])
             ->where('estado', 'habilitado')
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
-            ->orderBy('materia_id')
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->orderBy('malla_curricular_id')
             ->orderBy('codigo')
             ->get();
 
@@ -145,8 +145,8 @@ class DesignacionController extends Controller
 
         // Obtener IDs de docentes que han dictado materias en esta carrera alguna vez
         $docentesHistorialIds = DB::table('designaciones')
-            ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
-            ->where('materias.carrera_id', $carrera->id)
+            ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
+            ->where('malla_curricular.carrera_id', $carrera->id)
             ->whereNotNull('designaciones.Id_docente')
             ->pluck('designaciones.Id_docente')
             ->unique()
@@ -155,9 +155,10 @@ class DesignacionController extends Controller
         // Obtener horas asignadas en OTRAS carreras para cada docente en la misma gestion y periodo
         $horasOtrasCarrerasPorDocente = DB::table('designaciones')
             ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+            ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
             ->where('designaciones.Id_gestion', $gestionId)
             ->where('designaciones.Id_periodo', $periodoId)
-            ->where('materias.carrera_id', '!=', $carrera->id)
+            ->where('malla_curricular.carrera_id', '!=', $carrera->id)
             ->whereNotNull('designaciones.Id_docente')
             ->groupBy('designaciones.Id_docente')
             ->select('designaciones.Id_docente', DB::raw('SUM(materias.horas) as total_horas'))
@@ -263,7 +264,8 @@ class DesignacionController extends Controller
 
             $gruposDelDocenteEnCambios = collect($data['cambios'])->where('Id_docente', $docenteId)->pluck('Id_grupo');
             $horasNuevas = (int) Grupo::whereIn('grupos.id', $gruposDelDocenteEnCambios)
-                ->join('materias', 'grupos.materia_id', '=', 'materias.id')
+                ->join('malla_curricular', 'grupos.malla_curricular_id', '=', 'malla_curricular.id')
+                ->join('materias', 'malla_curricular.materia_id', '=', 'materias.id')
                 ->sum('materias.horas');
 
             $totalProyectado = $horasBase + $horasNuevas;
@@ -436,7 +438,7 @@ class DesignacionController extends Controller
         $designacionesDestino = Designacion::with('docente')
             ->where('Id_gestion', $data['destino_gestion_id'])
             ->where('Id_periodo', $data['destino_periodo_id'])
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $carrera->id))
             ->get()
             ->keyBy('Id_grupo');
 
@@ -620,7 +622,7 @@ class DesignacionController extends Controller
         return Designacion::with($with)
             ->where('Id_gestion', $data['origen_gestion_id'])
             ->where('Id_periodo', $data['origen_periodo_id'])
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $carrera->id))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $carrera->id))
             ->whereNotNull('Id_docente')
             ->get();
     }
@@ -629,7 +631,10 @@ class DesignacionController extends Controller
     {
         // Materias que tienen al menos un grupo habilitado, con carrera para filtrado client-side
         $materiasConGrupos = Materia::whereIn('id', function ($q) {
-            $q->select('materia_id')->from('grupos')->where('estado', 'habilitado');
+            $q->select('malla_curricular.materia_id')
+                ->from('grupos')
+                ->join('malla_curricular', 'grupos.malla_curricular_id', '=', 'malla_curricular.id')
+                ->where('grupos.estado', 'habilitado');
         })->orderBy('sigla')->get();
 
         // Docentes con horas disponibles, enriquecidos con historial de materias

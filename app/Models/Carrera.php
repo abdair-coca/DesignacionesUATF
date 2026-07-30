@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Carrera extends Model
 {
@@ -12,9 +13,16 @@ class Carrera extends Model
 
     protected $fillable = ['sigla', 'nombre'];
 
-    public function materias(): HasMany
+    public function materias(): HasManyThrough
     {
-        return $this->hasMany(Materia::class);
+        return $this->hasManyThrough(
+            Materia::class,
+            MallaCurricular::class,
+            'carrera_id',
+            'id',
+            'id',
+            'materia_id',
+        );
     }
 
     public function mallaCurricular(): HasMany

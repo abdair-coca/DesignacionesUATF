@@ -72,11 +72,11 @@ class RevisionController extends Controller
 
         // Verificar 100% asignación de grupos HABILITADOS en la carrera
         $gruposTotales = Grupo::where('estado', 'habilitado')
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
             ->count();
 
         $gruposAsignados = Designacion::forGestionPeriodo($data['Id_gestion'], $data['Id_periodo'])
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $data['carrera_id']))
             ->whereNotNull('Id_docente')
             ->count();
 
@@ -242,11 +242,11 @@ class RevisionController extends Controller
             $periodosIds = $revisionesList->pluck('Id_periodo')->filter()->unique()->values()->toArray();
 
             if (! empty($gestionesIds) && ! empty($periodosIds)) {
-                $designacionesCounts = Designacion::join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+                $designacionesCounts = Designacion::join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
                     ->whereIn('designaciones.Id_gestion', $gestionesIds)
                     ->whereIn('designaciones.Id_periodo', $periodosIds)
-                    ->groupBy('materias.carrera_id', 'designaciones.Id_gestion', 'designaciones.Id_periodo')
-                    ->select('materias.carrera_id', 'designaciones.Id_gestion', 'designaciones.Id_periodo', DB::raw('COUNT(*) as total'))
+                    ->groupBy('malla_curricular.carrera_id', 'designaciones.Id_gestion', 'designaciones.Id_periodo')
+                    ->select('malla_curricular.carrera_id', 'designaciones.Id_gestion', 'designaciones.Id_periodo', DB::raw('COUNT(*) as total'))
                     ->get()
                     ->groupBy('carrera_id');
             }
@@ -303,7 +303,7 @@ class RevisionController extends Controller
         $designacionesRaw = Designacion::with(['docente:id,nombre', 'materia:id,sigla,nombre,horas', 'grupo:id,codigo'])
             ->where('Id_gestion', $revision->Id_gestion)
             ->where('Id_periodo', $revision->Id_periodo)
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
             ->orderBy('Id_materia')
             ->get();
 
@@ -342,7 +342,7 @@ class RevisionController extends Controller
 
         $totalHoras = Designacion::where('Id_gestion', $revision->Id_gestion)
             ->where('Id_periodo', $revision->Id_periodo)
-            ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+            ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
             ->whereNotNull('Id_docente')
             ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
             ->sum('materias.horas');
@@ -471,7 +471,7 @@ class RevisionController extends Controller
             $designacionesCarrera = Designacion::where('Id_gestion', $revision->Id_gestion)
                 ->where('Id_periodo', $revision->Id_periodo)
                 ->where('estado', 'propuesta')
-                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+                ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
                 ->get();
 
             if ($decision === 'aprobar_todo') {
@@ -518,7 +518,7 @@ class RevisionController extends Controller
             // Si hay designaciones rechazadas o la decisión fue observar explícitamente
             $rechazadas = Designacion::where('Id_gestion', $revision->Id_gestion)
                 ->where('Id_periodo', $revision->Id_periodo)
-                ->whereHas('materia', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
+                ->whereHas('mallaCurricular', fn ($q) => $q->where('carrera_id', $revision->carrera_id))
                 ->where('estado', 'rechazada')
                 ->get();
 
