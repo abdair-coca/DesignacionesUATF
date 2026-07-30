@@ -28,26 +28,10 @@ class VerifyAcademicNormalization extends Command
 
         $muestra = max(1, (int) $this->option('muestra'));
         $hallazgos = [
-            'Materias sin malla curricular para su carrera historica' => $this->ids(
-                'SELECT materias.id
-                 FROM materias
-                 LEFT JOIN malla_curricular AS mallas
-                    ON mallas.materia_id = materias.id
-                   AND mallas.carrera_id = materias.carrera_id
-                 WHERE mallas.id IS NULL
-                 ORDER BY materias.id',
-            ),
             'Grupos sin malla curricular' => $this->ids(
                 'SELECT grupos.id
                  FROM grupos
                  WHERE grupos.malla_curricular_id IS NULL
-                 ORDER BY grupos.id',
-            ),
-            'Grupos cuya materia heredada no coincide con la malla' => $this->ids(
-                'SELECT grupos.id
-                 FROM grupos
-                 JOIN malla_curricular AS mallas ON mallas.id = grupos.malla_curricular_id
-                 WHERE grupos.materia_id <> mallas.materia_id
                  ORDER BY grupos.id',
             ),
             'Grupos con codigo no numerico positivo' => $this->ids(

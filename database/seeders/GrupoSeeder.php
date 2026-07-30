@@ -12,7 +12,6 @@ class GrupoSeeder extends Seeder
     {
         foreach (MallaCurricular::all() as $malla) {
             Grupo::create([
-                'materia_id' => $malla->materia_id,
                 'malla_curricular_id' => $malla->id,
                 'codigo' => '1',
                 'estado' => 'habilitado',
@@ -21,7 +20,6 @@ class GrupoSeeder extends Seeder
             // Las materias de alta demanda tienen un segundo grupo.
             if (fake()->boolean(35)) {
                 Grupo::create([
-                    'materia_id' => $malla->materia_id,
                     'malla_curricular_id' => $malla->id,
                     'codigo' => '2',
                     'estado' => 'habilitado',

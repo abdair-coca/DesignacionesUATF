@@ -47,7 +47,7 @@ solo en `.env` o `.env.testing`, que no se versionan.
 
 ## Verificacion de normalizacion academica
 
-Antes de retirar las columnas heredadas `grupos.materia_id` y `materias.carrera_id`, ejecute la auditoria de solo lectura sobre una base migrada:
+Ejecute la auditoria de solo lectura despues de migrar una base academica:
 
 ```powershell
 php artisan academico:verificar-normalizacion

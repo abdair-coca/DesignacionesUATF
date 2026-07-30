@@ -23,7 +23,7 @@ class AcademicSchemaTest extends TestCase
     {
         $carrera = Carrera::factory()->create();
         $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
-        $malla = MallaCurricular::create([
+        $malla = MallaCurricular::firstOrCreate([
             'carrera_id' => $carrera->id,
             'materia_id' => $materia->id,
         ]);
@@ -38,9 +38,10 @@ class AcademicSchemaTest extends TestCase
 
     public function test_permite_codigo_repetido_para_mallas_distintas_de_una_materia_compartida(): void
     {
-        $materia = Materia::factory()->create();
-        $mallaA = MallaCurricular::create([
-            'carrera_id' => $materia->carrera_id,
+        $carreraA = Carrera::factory()->create();
+        $materia = Materia::factory()->create(['carrera_id' => $carreraA->id]);
+        $mallaA = MallaCurricular::firstOrCreate([
+            'carrera_id' => $carreraA->id,
             'materia_id' => $materia->id,
         ]);
         $mallaB = MallaCurricular::create([

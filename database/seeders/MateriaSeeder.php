@@ -67,7 +67,6 @@ class MateriaSeeder extends Seeder
                 Materia::create([
                     'sigla' => sprintf('%s-%03d', $carrera->sigla, $numero),
                     'nombre' => $nombre,
-                    'carrera_id' => $carrera->id,
                     'horas' => fake()->randomElement([2, 4, 4, 6, 6, 6, 8]),
                 ]);
                 $numero += 10;
@@ -76,8 +75,7 @@ class MateriaSeeder extends Seeder
 
         // Materias de servicio: las dicta Matemáticas pero las cursan varias ingenierías
         // (ver MallaCurricularSeeder, que las agrega también a esas mallas).
-        $matematicas = $carreras->firstWhere('sigla', 'MAT');
-        Materia::create(['sigla' => 'MAT-050', 'nombre' => 'Cálculo I', 'carrera_id' => $matematicas->id, 'horas' => 6]);
-        Materia::create(['sigla' => 'MAT-060', 'nombre' => 'Cálculo II', 'carrera_id' => $matematicas->id, 'horas' => 6]);
+        Materia::create(['sigla' => 'MAT-050', 'nombre' => 'Cálculo I', 'horas' => 6]);
+        Materia::create(['sigla' => 'MAT-060', 'nombre' => 'Cálculo II', 'horas' => 6]);
     }
 }
