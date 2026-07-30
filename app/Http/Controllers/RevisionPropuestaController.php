@@ -13,14 +13,49 @@ class RevisionPropuestaController extends Controller
 {
     public function __construct(private RevisionPropuestaService $revisiones) {}
 
-    public function pendientes(): View
+    public function pendientes(Request $request): View
     {
-        $versiones = PropuestaVersion::with(['propuesta.carrera', 'propuesta.gestion', 'propuesta.periodo', 'remitente'])
-            ->where('estado', 'pendiente')
+        $folder = $request->string('folder')->toString();
+        $folder = in_array($folder, ['inbox', 'pendientes', 'revisadas', 'todas'], true) ? $folder : 'inbox';
+        $q = trim($request->string('q')->toString());
+        $base = PropuestaVersion::with(['propuesta.carrera', 'propuesta.gestion', 'propuesta.periodo', 'remitente'])
+            ->withCount('designaciones');
+
+        $versiones = (clone $base)
+            ->when(
+                in_array($folder, ['inbox', 'pendientes'], true),
+                fn ($query) => $query->where('estado', 'pendiente'),
+                fn ($query) => $query->when($folder === 'revisadas', fn ($query) => $query->whereIn('estado', ['aprobada', 'observada']))
+            )
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($query) use ($q) {
+                    $query->whereHas('remitente', fn ($query) => $query->where('name', 'ilike', "%{$q}%"))
+                        ->orWhereHas('propuesta.carrera', fn ($query) => $query->where('nombre', 'ilike', "%{$q}%")->orWhere('sigla', 'ilike', "%{$q}%"));
+                });
+            })
             ->latest('enviado_en')
             ->get();
 
-        return view('versiones.pendientes', compact('versiones'));
+        $pendientes = $versiones->map(fn (PropuestaVersion $version) => [
+            'id' => $version->id,
+            'carrera_nombre' => $version->propuesta->carrera->nombre,
+            'carrera_sigla' => $version->propuesta->carrera->sigla,
+            'cant_designaciones' => $version->designaciones_count,
+            'solicitante' => $version->remitente->name,
+            'gestion_nombre' => $version->propuesta->gestion->nombre,
+            'periodo_nombre' => $version->propuesta->periodo->nombre,
+            'solicitado_en' => $version->enviado_en?->format('d/m/Y H:i'),
+            'hace_tiempo' => $version->enviado_en?->diffForHumans(),
+            'estado' => $version->estado,
+        ]);
+        $counts = [
+            'inbox' => (clone $base)->where('estado', 'pendiente')->count(),
+            'pendientes' => (clone $base)->where('estado', 'pendiente')->count(),
+            'revisadas' => (clone $base)->whereIn('estado', ['aprobada', 'observada'])->count(),
+            'todas' => (clone $base)->count(),
+        ];
+
+        return view('revisiones.pendientes', compact('counts', 'folder', 'pendientes', 'q'));
     }
 
     public function revisar(PropuestaVersion $version): View

@@ -24,16 +24,42 @@ class PropuestaController extends Controller
 
     public function index(Request $request): View
     {
+        $gestiones = Gestion::orderByDesc('nombre')->get();
+        $gestionActual = $gestiones->firstWhere('es_actual', true) ?? $gestiones->first();
+        $gestionId = $request->integer('gestion_id') ?: $gestionActual?->id;
         $propuestas = Propuesta::with(['gestion', 'periodo', 'versiones' => fn ($query) => $query->latest('numero')])
             ->where('carrera_id', $request->user()->carrera_id)
+            ->when($gestionId, fn ($query) => $query->where('gestion_id', $gestionId))
             ->latest('updated_at')
             ->get();
 
-        return view('propuestas.index', [
+        $propuestasData = $propuestas->map(function (Propuesta $propuesta): array {
+            $versionPendiente = $propuesta->versiones->firstWhere('estado', 'pendiente');
+            $versionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
+
+            return [
+                'id' => $propuesta->id,
+                'descripcion' => $propuesta->descripcion ?: 'Designaciones sin descripcion',
+                'gestion_id' => $propuesta->gestion_id,
+                'periodo_id' => $propuesta->periodo_id,
+                'gestion' => $propuesta->gestion->nombre,
+                'periodo' => $propuesta->periodo->nombre,
+                'estado' => $propuesta->estado === 'oficial'
+                    ? 'oficial'
+                    : ($versionPendiente ? 'enviado' : ($versionObservada ? 'con_observaciones' : 'propuesta')),
+                'observacion' => $versionObservada?->observaciones,
+                'version_pendiente_id' => $versionPendiente?->id,
+                'created_at' => $propuesta->created_at?->toIso8601String(),
+            ];
+        });
+
+        return view('designaciones.lista', [
             'propuestas' => $propuestas,
-            'gestiones' => Gestion::orderByDesc('nombre')->get(),
+            'propuestasData' => $propuestasData,
+            'carreraActual' => $request->user()->carrera,
+            'gestiones' => $gestiones,
             'periodos' => Periodo::orderBy('nombre')->get(),
-            'gestionActual' => Gestion::where('es_actual', true)->first(),
+            'gestionActual' => $gestionActual,
         ]);
     }
 
@@ -118,7 +144,7 @@ class PropuestaController extends Controller
             ->with('success', "Versión {$version->numero} enviada a revisión.");
     }
 
-    public function importar(Propuesta $propuesta): View
+    public function importar(Request $request, Propuesta $propuesta): View
     {
         Gate::authorize('update', $propuesta);
 
@@ -126,6 +152,8 @@ class PropuestaController extends Controller
             'propuesta' => $propuesta->load('carrera', 'gestion', 'periodo'),
             'gestiones' => Gestion::orderByDesc('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
+            'origenGestion' => Gestion::find($request->integer('origen_gestion_id')),
+            'origenPeriodo' => Periodo::find($request->integer('origen_periodo_id')),
             'previsualizacion' => null,
         ]);
     }

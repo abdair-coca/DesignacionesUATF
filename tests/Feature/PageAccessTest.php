@@ -34,7 +34,12 @@ class PageAccessTest extends TestCase
     {
         $director = User::factory()->director(Carrera::factory()->create())->create();
 
-        $this->actingAs($director)->get('/designaciones')->assertOk()->assertSee('Designaciones');
+        $this->actingAs($director)
+            ->get('/designaciones')
+            ->assertOk()
+            ->assertSee('Designaciones')
+            ->assertSee('Nueva Propuesta de Designación')
+            ->assertDontSee('/designaciones/carrera');
         $this->actingAs($director)->get('/designaciones/create')->assertNotFound();
         $this->actingAs($director)->get('/propuestas')->assertNotFound();
         $this->actingAs($director)->get('/designaciones/lista')->assertNotFound();
@@ -44,7 +49,12 @@ class PageAccessTest extends TestCase
     {
         $vicerrectorado = User::factory()->vicerrectorado()->create();
 
-        $this->actingAs($vicerrectorado)->get('/revisiones/pendientes')->assertOk()->assertSee('Bandeja de Revisiones');
+        $this->actingAs($vicerrectorado)
+            ->get('/revisiones/pendientes?folder=todas')
+            ->assertOk()
+            ->assertSee('Bandeja de Revisiones')
+            ->assertSee('Todas las Peticiones')
+            ->assertSee('Buscar por director o carrera');
         $this->actingAs($vicerrectorado)->get('/versiones/pendientes')->assertNotFound();
         $this->actingAs($vicerrectorado)->get('/designaciones')->assertForbidden();
     }
