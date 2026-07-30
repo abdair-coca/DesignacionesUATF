@@ -94,10 +94,12 @@ class DesignacionValidationTest extends TestCase
             'Id_periodo' => $periodo->id,
         ]);
 
+        $grupoAlterno = Grupo::factory()->create(['materia_id' => $materia->id]);
+
         $designacion = Designacion::factory()->create([
             'Id_docente' => $docenteB->id,
             'Id_materia' => $materia->id,
-            'Id_grupo' => $grupo->id,
+            'Id_grupo' => $grupoAlterno->id,
             'Id_gestion' => $gestion->id,
             'Id_periodo' => $periodo->id,
         ]);

@@ -287,7 +287,7 @@ class DesignacionController extends Controller
                     continue;
                 }
 
-                $grupo = Grupo::with('materia')->find($cambio['Id_grupo']);
+                $grupo = Grupo::with(['materia', 'mallaCurricular'])->find($cambio['Id_grupo']);
                 $horasGrupo = $grupo->materia->horas;
 
                 // Buscar designacion existente (incluye rechazadas)
@@ -308,8 +308,9 @@ class DesignacionController extends Controller
                 // Límite de horas: verificar antes de crear
                 Designacion::create([
                     'Id_docente' => $cambio['Id_docente'],
-                    'Id_materia' => $cambio['Id_materia'],
+                    'Id_materia' => $grupo->mallaCurricular->materia_id,
                     'Id_grupo' => $cambio['Id_grupo'],
+                    'malla_curricular_id' => $grupo->malla_curricular_id,
                     'Id_gestion' => $data['Id_gestion'],
                     'Id_periodo' => $data['Id_periodo'],
                     'estado' => 'propuesta',
@@ -376,6 +377,7 @@ class DesignacionController extends Controller
                         'Id_docente' => $desig->Id_docente,
                         'Id_materia' => $desig->Id_materia,
                         'Id_grupo' => $desig->Id_grupo,
+                        'malla_curricular_id' => $desig->malla_curricular_id,
                         'Id_gestion' => $data['destino_gestion_id'],
                         'Id_periodo' => $data['destino_periodo_id'],
                         'estado' => 'propuesta',
@@ -559,6 +561,7 @@ class DesignacionController extends Controller
     public function store(StoreDesignacionRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $data['malla_curricular_id'] = Grupo::findOrFail($data['Id_grupo'])->malla_curricular_id;
         $data['creado_por'] = $request->user()->id;
 
         Designacion::create($data);
@@ -585,7 +588,9 @@ class DesignacionController extends Controller
 
     public function update(UpdateDesignacionRequest $request, Designacion $designacion): RedirectResponse
     {
-        $designacion->update($request->validated());
+        $data = $request->validated();
+        $data['malla_curricular_id'] = Grupo::findOrFail($data['Id_grupo'])->malla_curricular_id;
+        $designacion->update($data);
 
         return redirect()->route('designaciones.index')
             ->with('status', 'Designación actualizada correctamente.');

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Grupo;
 use App\Models\MallaCurricular;
+use App\Models\Materia;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,10 +17,15 @@ class GrupoFactory extends Factory
     public function definition(): array
     {
         return [
-            'malla_curricular_id' => MallaCurricular::factory(),
-            'materia_id' => fn (array $attributes) => MallaCurricular::query()
-                ->findOrFail($attributes['malla_curricular_id'])
-                ->materia_id,
+            'materia_id' => Materia::factory(),
+            'malla_curricular_id' => function (array $attributes): int {
+                $materia = Materia::query()->findOrFail($attributes['materia_id']);
+
+                return MallaCurricular::firstOrCreate([
+                    'carrera_id' => $materia->carrera_id,
+                    'materia_id' => $materia->id,
+                ])->id;
+            },
             'codigo' => (string) fake()->unique()->numberBetween(1, 999),
             'estado' => 'habilitado',
         ];

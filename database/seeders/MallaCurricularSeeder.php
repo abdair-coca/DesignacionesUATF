@@ -12,6 +12,8 @@ class MallaCurricularSeeder extends Seeder
 {
     public function run(): void
     {
+        $carreras = Carrera::all();
+
         // Cada materia aparece, como mínimo, en la malla indicada por su sigla.
         foreach (Materia::all() as $materia) {
             $carrera = $carreras->firstWhere('sigla', Str::before($materia->sigla, '-'));

@@ -40,6 +40,8 @@ php artisan migrate:fresh --seed --env=testing
 php artisan test
 ```
 
+Cuando el usuario local no tiene permiso `CREATEDB`, se puede aislar testing en un esquema PostgreSQL dentro de una base local de datos ficticios. Configure `DB_DATABASE` con esa base, `DB_SCHEMA=designaciones_uatf_testing` y cree el esquema con su propietario antes de ejecutar las mismas migraciones.
+
 `phpunit.xml` no debe contener usuarios ni contraseñas reales. Las credenciales locales viven
 solo en `.env` o `.env.testing`, que no se versionan.
 

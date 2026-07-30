@@ -36,6 +36,32 @@ class AcademicSchemaTest extends TestCase
         $this->assertTrue($grupo->mallaCurricular->is($malla));
     }
 
+    public function test_permite_codigo_repetido_para_mallas_distintas_de_una_materia_compartida(): void
+    {
+        $materia = Materia::factory()->create();
+        $mallaA = MallaCurricular::create([
+            'carrera_id' => $materia->carrera_id,
+            'materia_id' => $materia->id,
+        ]);
+        $mallaB = MallaCurricular::create([
+            'carrera_id' => Carrera::factory()->create()->id,
+            'materia_id' => $materia->id,
+        ]);
+
+        Grupo::factory()->create([
+            'materia_id' => $materia->id,
+            'malla_curricular_id' => $mallaA->id,
+            'codigo' => '1',
+        ]);
+        Grupo::factory()->create([
+            'materia_id' => $materia->id,
+            'malla_curricular_id' => $mallaB->id,
+            'codigo' => '1',
+        ]);
+
+        $this->assertDatabaseCount('grupos', 2);
+    }
+
     public function test_no_permite_mas_de_una_gestion_actual(): void
     {
         Gestion::factory()->create(['es_actual' => true]);

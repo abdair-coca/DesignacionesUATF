@@ -14,8 +14,8 @@ class GrupoNormalizationTest extends TestCase
     public function test_normaliza_grupos_a_malla_y_codigos_numericos(): void
     {
         [$materia, $malla] = $this->crearMateriaConMalla();
-        $grupoAlfabetico = Grupo::factory()->create(['materia_id' => $materia->id, 'codigo' => 'A']);
-        $grupoNumerico = Grupo::factory()->create(['materia_id' => $materia->id, 'codigo' => '7']);
+        $grupoAlfabetico = Grupo::factory()->create(['materia_id' => $materia->id, 'malla_curricular_id' => null, 'codigo' => 'A']);
+        $grupoNumerico = Grupo::factory()->create(['materia_id' => $materia->id, 'malla_curricular_id' => null, 'codigo' => '7']);
 
         $this->ejecutarNormalizacion();
 
@@ -34,8 +34,8 @@ class GrupoNormalizationTest extends TestCase
     public function test_detecta_colisiones_despues_de_normalizar_codigos(): void
     {
         [$materia] = $this->crearMateriaConMalla();
-        $grupoAlfabetico = Grupo::factory()->create(['materia_id' => $materia->id, 'codigo' => 'A']);
-        $grupoNumerico = Grupo::factory()->create(['materia_id' => $materia->id, 'codigo' => '1']);
+        $grupoAlfabetico = Grupo::factory()->create(['materia_id' => $materia->id, 'malla_curricular_id' => null, 'codigo' => 'A']);
+        $grupoNumerico = Grupo::factory()->create(['materia_id' => $materia->id, 'malla_curricular_id' => null, 'codigo' => '1']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("grupos {$grupoAlfabetico->id}, {$grupoNumerico->id}");
@@ -46,7 +46,7 @@ class GrupoNormalizationTest extends TestCase
     public function test_reversion_restaura_codigo_y_malla_anterior(): void
     {
         [$materia] = $this->crearMateriaConMalla();
-        $grupo = Grupo::factory()->create(['materia_id' => $materia->id, 'codigo' => 'B']);
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id, 'malla_curricular_id' => null, 'codigo' => 'B']);
         $migration = $this->migration();
 
         $migration->up();

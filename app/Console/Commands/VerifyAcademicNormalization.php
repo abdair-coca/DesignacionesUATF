@@ -28,20 +28,14 @@ class VerifyAcademicNormalization extends Command
 
         $muestra = max(1, (int) $this->option('muestra'));
         $hallazgos = [
-            'Materias sin malla curricular' => $this->ids(
+            'Materias sin malla curricular para su carrera historica' => $this->ids(
                 'SELECT materias.id
                  FROM materias
-                 LEFT JOIN malla_curricular AS mallas ON mallas.materia_id = materias.id
+                 LEFT JOIN malla_curricular AS mallas
+                    ON mallas.materia_id = materias.id
+                   AND mallas.carrera_id = materias.carrera_id
                  WHERE mallas.id IS NULL
                  ORDER BY materias.id',
-            ),
-            'Mallas incompatibles con la carrera historica de la materia' => $this->ids(
-                'SELECT mallas.id
-                 FROM malla_curricular AS mallas
-                 JOIN materias ON materias.id = mallas.materia_id
-                 WHERE materias.carrera_id IS NOT NULL
-                   AND materias.carrera_id <> mallas.carrera_id
-                 ORDER BY mallas.id',
             ),
             'Grupos sin malla curricular' => $this->ids(
                 'SELECT grupos.id

@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Designacion;
 use App\Models\Docente;
+use App\Models\Grupo;
 use App\Models\Materia;
 use App\Models\User;
 use Tests\TestCase;
@@ -60,9 +61,11 @@ class DesignacionObserverTest extends TestCase
     {
         $docente = Docente::factory()->create();
         $materia = Materia::factory()->create();
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
         $designacion = Designacion::factory()->create([
             'Id_docente' => $docente->id,
             'Id_materia' => $materia->id,
+            'Id_grupo' => $grupo->id,
             'estado' => 'propuesta',
         ]);
 

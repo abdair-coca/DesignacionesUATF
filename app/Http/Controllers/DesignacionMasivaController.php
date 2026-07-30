@@ -59,8 +59,8 @@ class DesignacionMasivaController extends Controller
                     continue;
                 }
 
-                $grupo = Grupo::with('materia')->find($grupoId);
-                if (! $grupo) {
+                $grupo = Grupo::with(['materia', 'mallaCurricular'])->find($grupoId);
+                if (! $grupo || $grupo->mallaCurricular?->materia_id !== (int) $fila['Id_materia']) {
                     $saltadas++;
 
                     continue;
@@ -82,8 +82,9 @@ class DesignacionMasivaController extends Controller
 
                 $nueva = Designacion::create([
                     'Id_docente' => $fila['Id_docente'],
-                    'Id_materia' => $fila['Id_materia'],
+                    'Id_materia' => $grupo->mallaCurricular->materia_id,
                     'Id_grupo' => $grupoId,
+                    'malla_curricular_id' => $grupo->malla_curricular_id,
                     'Id_gestion' => $gestionId,
                     'Id_periodo' => $periodoId,
                     'estado' => 'propuesta',

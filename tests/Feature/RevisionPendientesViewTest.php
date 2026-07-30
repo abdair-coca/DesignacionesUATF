@@ -53,7 +53,7 @@ class RevisionPendientesViewTest extends TestCase
 
         $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-        Designacion::factory()->count(3)->create([
+        Designacion::factory()->create([
             'Id_materia' => $materia->id,
             'Id_grupo' => $grupo->id,
             'Id_gestion' => $gestion->id,

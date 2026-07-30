@@ -10,7 +10,10 @@ class PageAccessTest extends TestCase
 {
     public function test_raiz_redirige_a_designaciones_lista_para_director(): void
     {
-        $director = User::factory()->create(['is_admin' => false]);
+        $director = User::factory()->create([
+            'is_admin' => false,
+            'carrera_id' => Carrera::factory(),
+        ]);
         $this->actingAs($director)
             ->get('/')
             ->assertRedirect('/designaciones/lista');
@@ -26,7 +29,10 @@ class PageAccessTest extends TestCase
 
     public function test_designaciones_lista_acceso_director(): void
     {
-        $director = User::factory()->create(['is_admin' => false]);
+        $director = User::factory()->create([
+            'is_admin' => false,
+            'carrera_id' => Carrera::factory(),
+        ]);
         $this->actingAs($director)
             ->get('/designaciones/lista')
             ->assertOk();
