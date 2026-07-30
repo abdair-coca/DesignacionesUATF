@@ -10,7 +10,7 @@ class PropuestaVersionPolicy
     public function view(User $user, PropuestaVersion $version): bool
     {
         return $user->esVicerrectorado()
-            && in_array($version->estado, ['pendiente', 'observada', 'aprobada'], true);
+            && in_array($version->estado, ['pendiente', 'retirada', 'observada', 'aprobada'], true);
     }
 
     public function review(User $user, PropuestaVersion $version): bool

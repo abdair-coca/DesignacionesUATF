@@ -11,6 +11,7 @@ use App\Models\PropuestaEvento;
 use App\Models\PropuestaVersion;
 use App\Models\PropuestaVersionDesignacion;
 use App\Models\User;
+use App\Notifications\PropuestaActualizadaNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -143,6 +144,9 @@ class PropuestaService
                 'ocurrio_en' => now(),
             ]);
 
+            $version->setRelation('propuesta', $propuesta);
+            $this->notificarVicerrectorado($version, $version->numero === 1 ? 'enviada' : 'reenviada');
+
             return $version;
         });
     }
@@ -178,6 +182,9 @@ class PropuestaService
                 'datos' => ['numero_version' => $version->numero],
                 'ocurrio_en' => now(),
             ]);
+
+            $version->load('propuesta.carrera', 'propuesta.gestion', 'propuesta.periodo');
+            $this->notificarVicerrectorado($version, 'retirada');
         });
     }
 
@@ -225,5 +232,13 @@ class PropuestaService
             'periodo_nombre' => $propuesta->periodo->nombre,
             'estado' => $fila->estado,
         ]);
+    }
+
+    private function notificarVicerrectorado(PropuestaVersion $version, string $evento): void
+    {
+        User::query()
+            ->where('rol', User::ROL_VICERRECTORADO)
+            ->get()
+            ->each(fn (User $usuario) => $usuario->notify(new PropuestaActualizadaNotification($version, $evento)));
     }
 }

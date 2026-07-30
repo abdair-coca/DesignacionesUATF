@@ -8,6 +8,7 @@ use App\Models\Grupo;
 use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\PropuestaVersion;
+use App\Services\ImportacionPropuestaService;
 use App\Services\PropuestaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Illuminate\View\View;
 
 class PropuestaController extends Controller
 {
-    public function __construct(private PropuestaService $propuestas) {}
+    public function __construct(
+        private PropuestaService $propuestas,
+        private ImportacionPropuestaService $importaciones,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -114,6 +118,50 @@ class PropuestaController extends Controller
             ->with('success', "Versión {$version->numero} enviada a revisión.");
     }
 
+    public function importar(Propuesta $propuesta): View
+    {
+        Gate::authorize('update', $propuesta);
+
+        return view('propuestas.importar', [
+            'propuesta' => $propuesta->load('carrera', 'gestion', 'periodo'),
+            'gestiones' => Gestion::orderByDesc('nombre')->get(),
+            'periodos' => Periodo::orderBy('nombre')->get(),
+            'previsualizacion' => null,
+        ]);
+    }
+
+    public function previsualizarImportacion(Request $request, Propuesta $propuesta): View
+    {
+        Gate::authorize('update', $propuesta);
+        $data = $this->validarOrigenImportacion($request);
+        $gestionOrigen = Gestion::findOrFail($data['origen_gestion_id']);
+        $periodoOrigen = Periodo::findOrFail($data['origen_periodo_id']);
+
+        return view('propuestas.importar', [
+            'propuesta' => $propuesta->load('carrera', 'gestion', 'periodo'),
+            'gestiones' => Gestion::orderByDesc('nombre')->get(),
+            'periodos' => Periodo::orderBy('nombre')->get(),
+            'origenGestion' => $gestionOrigen,
+            'origenPeriodo' => $periodoOrigen,
+            'previsualizacion' => $this->importaciones->previsualizar($propuesta, $gestionOrigen, $periodoOrigen),
+        ]);
+    }
+
+    public function aplicarImportacion(Request $request, Propuesta $propuesta): RedirectResponse
+    {
+        Gate::authorize('update', $propuesta);
+        $data = $this->validarOrigenImportacion($request);
+        $filas = $this->importaciones->aplicar(
+            $propuesta,
+            Gestion::findOrFail($data['origen_gestion_id']),
+            Periodo::findOrFail($data['origen_periodo_id']),
+            $request->user(),
+        );
+
+        return redirect()->route('propuestas.editar', $propuesta)
+            ->with('success', "Importacion aplicada: {$filas} filas actualizadas en el borrador.");
+    }
+
     public function retirar(Request $request, PropuestaVersion $version): RedirectResponse
     {
         Gate::authorize('withdraw', $version);
@@ -122,5 +170,13 @@ class PropuestaController extends Controller
 
         return redirect()->route('propuestas.editar', $version->propuesta_id)
             ->with('success', 'La versión pendiente fue retirada. El borrador vuelve a estar disponible.');
+    }
+
+    private function validarOrigenImportacion(Request $request): array
+    {
+        return $request->validate([
+            'origen_gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
+            'origen_periodo_id' => ['required', 'integer', 'exists:periodos,id'],
+        ]);
     }
 }

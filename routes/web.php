@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
+use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PropuestaController;
 use App\Http\Controllers\RevisionController;
 use App\Http\Controllers\RevisionPropuestaController;
@@ -22,6 +23,9 @@ Route::middleware('auth')->group(function () {
         Route::post('propuestas', [PropuestaController::class, 'crear'])->name('propuestas.crear');
         Route::get('propuestas/{propuesta}', [PropuestaController::class, 'editar'])->name('propuestas.editar');
         Route::put('propuestas/{propuesta}/designaciones', [PropuestaController::class, 'guardar'])->name('propuestas.guardar');
+        Route::get('propuestas/{propuesta}/importar', [PropuestaController::class, 'importar'])->name('propuestas.importar');
+        Route::post('propuestas/{propuesta}/importar/previsualizar', [PropuestaController::class, 'previsualizarImportacion'])->name('propuestas.importar.previsualizar');
+        Route::post('propuestas/{propuesta}/importar', [PropuestaController::class, 'aplicarImportacion'])->name('propuestas.importar.aplicar');
         Route::post('propuestas/{propuesta}/enviar', [PropuestaController::class, 'enviar'])->name('propuestas.enviar');
         Route::post('propuesta-versiones/{version}/retirar', [PropuestaController::class, 'retirar'])->name('propuestas.versiones.retirar');
 
@@ -53,6 +57,9 @@ Route::middleware('auth')->group(function () {
         Route::post('revisiones/{revision}/retirar', [RevisionController::class, 'retirar'])->name('revisiones.retirar');
         Route::delete('revisiones/{revision}', [RevisionController::class, 'destroy'])->name('revisiones.destroy');
     });
+
+    Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::post('notificaciones/{notificacion}/leer', [NotificacionController::class, 'marcarLeida'])->name('notificaciones.leer');
 
     Route::middleware('rol:vicerrectorado')->group(function () {
         Route::get('versiones/pendientes', [RevisionPropuestaController::class, 'pendientes'])->name('versiones.pendientes');

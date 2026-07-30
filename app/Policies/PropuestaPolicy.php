@@ -16,6 +16,7 @@ class PropuestaPolicy
     {
         return $this->view($user, $propuesta)
             && $propuesta->estado === 'borrador'
+            && $propuesta->gestion()->where('es_actual', true)->exists()
             && ! $propuesta->versiones()->where('estado', 'pendiente')->exists();
     }
 

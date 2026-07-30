@@ -11,10 +11,13 @@
                 <p class="text-sm text-gray-600 mt-1">{{ $propuesta->carrera->nombre }} · Gestión {{ $propuesta->gestion->nombre }} · Período {{ $propuesta->periodo->nombre }}</p>
             </div>
             @if($puedeEditar)
-                <form method="POST" action="{{ route('propuestas.enviar', $propuesta) }}">
+                <div class="flex gap-2">
+                    <a href="{{ route('propuestas.importar', $propuesta) }}" class="border border-[#007c7c] text-[#007c7c] px-4 py-2 text-sm font-semibold hover:bg-teal-50">Importar historico</a>
+                    <form method="POST" action="{{ route('propuestas.enviar', $propuesta) }}">
                     @csrf
                     <button type="submit" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Enviar versión a revisión</button>
-                </form>
+                    </form>
+                </div>
             @endif
         </div>
 

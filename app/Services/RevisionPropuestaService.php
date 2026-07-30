@@ -6,6 +6,7 @@ use App\Models\PropuestaEvento;
 use App\Models\PropuestaVersion;
 use App\Models\PropuestaVersionDecision;
 use App\Models\User;
+use App\Notifications\PropuestaActualizadaNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -95,6 +96,13 @@ class RevisionPropuestaService
                 ],
                 'ocurrio_en' => now(),
             ]);
+
+            $version->load('propuesta.carrera', 'propuesta.gestion', 'propuesta.periodo', 'propuesta.creador');
+            $this->notificarDirector($version, $hayObservaciones ? 'observada' : 'aprobada_final');
+
+            if ($hayObservaciones && $decisionesPorSnapshot->contains(fn (array $decision) => $decision['decision'] === 'aprobada')) {
+                $this->notificarDirector($version, 'aprobacion_parcial');
+            }
         });
     }
 
@@ -135,5 +143,10 @@ class RevisionPropuestaService
                 ],
             ];
         });
+    }
+
+    private function notificarDirector(PropuestaVersion $version, string $evento): void
+    {
+        $version->propuesta->creador?->notify(new PropuestaActualizadaNotification($version, $evento));
     }
 }
