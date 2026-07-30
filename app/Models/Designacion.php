@@ -18,6 +18,7 @@ class Designacion extends Model
         'Id_docente',
         'Id_materia',
         'Id_grupo',
+        'malla_curricular_id',
         'Id_gestion',
         'Id_periodo',
         'estado',
@@ -57,6 +58,11 @@ class Designacion extends Model
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class, 'Id_grupo');
+    }
+
+    public function mallaCurricular(): BelongsTo
+    {
+        return $this->belongsTo(MallaCurricular::class);
     }
 
     public function gestion(): BelongsTo

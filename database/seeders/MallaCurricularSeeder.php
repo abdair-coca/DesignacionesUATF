@@ -6,15 +6,22 @@ use App\Models\Carrera;
 use App\Models\MallaCurricular;
 use App\Models\Materia;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class MallaCurricularSeeder extends Seeder
 {
     public function run(): void
     {
-        // Cada materia aparece, como mínimo, en la malla de su propia carrera.
+        // Cada materia aparece, como mínimo, en la malla indicada por su sigla.
         foreach (Materia::all() as $materia) {
-            MallaCurricular::create([
-                'carrera_id' => $materia->carrera_id,
+            $carrera = $carreras->firstWhere('sigla', Str::before($materia->sigla, '-'));
+
+            if (! $carrera) {
+                throw new \LogicException("No existe carrera para la materia {$materia->sigla}.");
+            }
+
+            MallaCurricular::firstOrCreate([
+                'carrera_id' => $carrera->id,
                 'materia_id' => $materia->id,
             ]);
         }
@@ -27,8 +34,8 @@ class MallaCurricularSeeder extends Seeder
         $ingenierias = Carrera::whereIn('sigla', ['CIV', 'INF', 'IND', 'ELE', 'ELT', 'MEC', 'QUI', 'MIN'])->pluck('id');
 
         foreach ($ingenierias as $carreraId) {
-            MallaCurricular::create(['carrera_id' => $carreraId, 'materia_id' => $calculoI]);
-            MallaCurricular::create(['carrera_id' => $carreraId, 'materia_id' => $calculoII]);
+            MallaCurricular::firstOrCreate(['carrera_id' => $carreraId, 'materia_id' => $calculoI]);
+            MallaCurricular::firstOrCreate(['carrera_id' => $carreraId, 'materia_id' => $calculoII]);
         }
     }
 }

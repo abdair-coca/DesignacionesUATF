@@ -28,7 +28,9 @@ class DesignacionSeeder extends Seeder
 
     public function run(): void
     {
-        $grupos = Grupo::with('materia')->where('estado', 'habilitado')->get();
+        $grupos = Grupo::with('mallaCurricular.materia', 'mallaCurricular.carrera')
+            ->where('estado', 'habilitado')
+            ->get();
         $docentesPorCarrera = Docente::all()->groupBy('carrera_origen_id');
         $usuarioIds = User::pluck('id')->all();
 
@@ -41,7 +43,7 @@ class DesignacionSeeder extends Seeder
                     continue;
                 }
 
-                $candidatos = $docentesPorCarrera->get($grupo->materia->carrera_id);
+                $candidatos = $docentesPorCarrera->get($grupo->mallaCurricular->carrera_id);
                 if (! $candidatos || $candidatos->isEmpty()) {
                     continue;
                 }
@@ -57,8 +59,9 @@ class DesignacionSeeder extends Seeder
 
                 Designacion::create([
                     'Id_docente' => $candidatos->random()->id,
-                    'Id_materia' => $grupo->materia_id,
+                    'Id_materia' => $grupo->mallaCurricular->materia_id,
                     'Id_grupo' => $grupo->id,
+                    'malla_curricular_id' => $grupo->malla_curricular_id,
                     'Id_gestion' => $gestionId,
                     'Id_periodo' => $periodoId,
                     'estado' => fake()->randomElement(self::expandirEstados($escenario['estados'])),

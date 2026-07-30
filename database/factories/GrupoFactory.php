@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Grupo;
-use App\Models\Materia;
+use App\Models\MallaCurricular;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +16,11 @@ class GrupoFactory extends Factory
     public function definition(): array
     {
         return [
-            'materia_id' => Materia::factory(),
-            'codigo' => strtoupper(fake()->unique()->lexify('G?')),
+            'malla_curricular_id' => MallaCurricular::factory(),
+            'materia_id' => fn (array $attributes) => MallaCurricular::query()
+                ->findOrFail($attributes['malla_curricular_id'])
+                ->materia_id,
+            'codigo' => (string) fake()->unique()->numberBetween(1, 999),
             'estado' => 'habilitado',
         ];
     }
