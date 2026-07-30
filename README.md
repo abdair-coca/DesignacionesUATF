@@ -43,6 +43,16 @@ php artisan test
 `phpunit.xml` no debe contener usuarios ni contraseñas reales. Las credenciales locales viven
 solo en `.env` o `.env.testing`, que no se versionan.
 
+## Verificacion de normalizacion academica
+
+Antes de retirar las columnas heredadas `grupos.materia_id` y `materias.carrera_id`, ejecute la auditoria de solo lectura sobre una base migrada:
+
+```powershell
+php artisan academico:verificar-normalizacion
+```
+
+El comando informa conteos de materias, mallas, grupos y designaciones, y termina con error cuando encuentra una relacion inconsistente, codigos no numericos, colisiones o designaciones activas duplicadas. Use `--muestra=20` para ampliar los IDs mostrados por hallazgo.
+
 ## Calidad
 
 Antes de integrar cambios, ejecutar:

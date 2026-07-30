@@ -18,7 +18,9 @@ class MallaCurricularFactory extends Factory
     {
         return [
             'carrera_id' => Carrera::factory(),
-            'materia_id' => Materia::factory(),
+            'materia_id' => fn (array $attributes) => Materia::factory()->create([
+                'carrera_id' => $attributes['carrera_id'],
+            ])->id,
         ];
     }
 }
