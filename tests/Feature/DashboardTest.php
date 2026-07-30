@@ -15,10 +15,10 @@ class DashboardTest extends TestCase
             ->assertOk();
     }
 
-    public function test_raiz_redirige_a_designaciones_lista_para_usuario_autenticado(): void
+    public function test_raiz_redirige_a_propuestas_para_usuario_autenticado(): void
     {
         $this->actingAs(User::factory()->create(['carrera_id' => Carrera::factory()]))
             ->get('/')
-            ->assertRedirect('/designaciones/lista');
+            ->assertRedirect('/propuestas');
     }
 }

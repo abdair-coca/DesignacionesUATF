@@ -8,14 +8,14 @@ use Tests\TestCase;
 
 class PageAccessTest extends TestCase
 {
-    public function test_raiz_redirige_a_designaciones_lista_para_director(): void
+    public function test_raiz_redirige_a_propuestas_para_director(): void
     {
         $director = User::factory()->create([
             'carrera_id' => Carrera::factory(),
         ]);
         $this->actingAs($director)
             ->get('/')
-            ->assertRedirect('/designaciones/lista');
+            ->assertRedirect('/propuestas');
     }
 
     public function test_raiz_redirige_a_revisiones_pendientes_para_vicerrectorado(): void

@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
                 [
                     'name' => $nombre,
                     'password' => Hash::make('password'),
-                'rol' => User::ROL_DIRECTOR_CARRERA,
+                    'rol' => User::ROL_DIRECTOR_CARRERA,
                     'carrera_id' => $carrera->id,
                 ]
             );

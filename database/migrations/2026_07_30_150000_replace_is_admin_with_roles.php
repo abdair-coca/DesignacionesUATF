@@ -17,11 +17,11 @@ return new class extends Migration
         DB::table('users')->where('is_admin', false)->update(['rol' => 'director_carrera']);
 
         if (DB::table('users')->where('rol', 'director_carrera')->whereNull('carrera_id')->exists()) {
-            throw new \RuntimeException('No se puede migrar usuarios directores sin carrera asignada. Corrija los datos antes de continuar.');
+            throw new RuntimeException('No se puede migrar usuarios directores sin carrera asignada. Corrija los datos antes de continuar.');
         }
 
         if (DB::table('users')->where('rol', 'vicerrectorado')->whereNotNull('carrera_id')->exists()) {
-            throw new \RuntimeException('No se puede migrar usuarios de Vicerrectorado con carrera asignada. Corrija los datos antes de continuar.');
+            throw new RuntimeException('No se puede migrar usuarios de Vicerrectorado con carrera asignada. Corrija los datos antes de continuar.');
         }
 
         Schema::table('users', function (Blueprint $table) {
