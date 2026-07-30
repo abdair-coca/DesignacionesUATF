@@ -35,3 +35,6 @@ Thumbs.db
 /.claude/
 CLAUDE.md
 opencode.md
+
+# Cache regenerable de Graphify; el grafo y manifiesto se versionan.
+/graphify-out/cache/

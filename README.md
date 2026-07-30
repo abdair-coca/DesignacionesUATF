@@ -19,6 +19,10 @@ Aplicacion interna para preparar, revisar y aprobar designaciones de materias a 
 
 La tabla historica `designaciones` se conserva solo como fuente de importacion. El trabajo diario no usa su CRUD ni la tabla `revisiones` historica.
 
+## Estado del flujo
+
+La arquitectura, los permisos, los borradores, las versiones inmutables, la revision, la importacion y las notificaciones ya estan implementados. Aun falta completar la validacion integral de usuario del flujo de Designaciones con datos representativos antes de considerarlo aceptado para operacion. Consulte [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md).
+
 ## Instalacion
 
 ```bash
@@ -54,5 +58,7 @@ php artisan academico:verificar-normalizacion
 ## Documentacion
 
 - [Modelo de datos](docs/ERD.md)
+- [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md)
+- [Grafo de conocimiento](docs/GRAFO_CONOCIMIENTO.md)
 - [Contexto de trabajo](CLAUDE.md)
 - [Bitacora](docs/bitacora/)
