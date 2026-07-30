@@ -5,7 +5,7 @@
 @section('content')
     <div class="max-w-6xl mx-auto space-y-6">
         <div>
-            <a href="{{ route('propuestas.editar', $propuesta) }}" class="text-sm text-[#007c7c] hover:underline">Volver al borrador</a>
+            <a href="{{ route('designaciones.editar', $propuesta) }}" class="text-sm text-[#007c7c] hover:underline">Volver al borrador</a>
             <h1 class="text-xl font-bold text-gray-900 mt-2">Importar designaciones historicas</h1>
             <p class="text-sm text-gray-600 mt-1">{{ $propuesta->carrera->nombre }} - Destino: {{ $propuesta->gestion->nombre }} / {{ $propuesta->periodo->nombre }}</p>
         </div>
@@ -15,7 +15,7 @@
         @endif
 
         <section class="bg-white border border-gray-200 p-5 shadow-sm">
-            <form method="POST" action="{{ route('propuestas.importar.previsualizar', $propuesta) }}" class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+            <form method="POST" action="{{ route('designaciones.importar.previsualizar', $propuesta) }}" class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
                 @csrf
                 <div>
                     <label for="origen_gestion_id" class="block text-xs font-semibold text-gray-700 mb-1">Gestion de origen</label>
@@ -61,7 +61,7 @@
                     </tbody>
                 </table>
                 @if($previsualizacion->contains('importable', true))
-                    <form method="POST" action="{{ route('propuestas.importar.aplicar', $propuesta) }}" class="border-t border-gray-200 px-4 py-3 flex justify-end">
+                    <form method="POST" action="{{ route('designaciones.importar.aplicar', $propuesta) }}" class="border-t border-gray-200 px-4 py-3 flex justify-end">
                         @csrf
                         <input type="hidden" name="origen_gestion_id" value="{{ $origenGestion->id }}">
                         <input type="hidden" name="origen_periodo_id" value="{{ $origenPeriodo->id }}">

@@ -63,7 +63,7 @@ class RevisionPropuestaController extends Controller
             $data['decisiones'] ?? [],
         );
 
-        return redirect()->route('versiones.pendientes')
+        return redirect()->route('revisiones.pendientes')
             ->with('success', 'La decisión se registró sobre la versión enviada.');
     }
 }

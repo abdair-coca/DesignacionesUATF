@@ -31,8 +31,8 @@ class PropuestaActualizadaNotification extends Notification
             'titulo' => $this->titulo(),
             'detalle' => "{$propuesta->carrera->nombre} - {$propuesta->gestion->nombre}/{$propuesta->periodo->nombre}",
             'url' => $notifiable->esVicerrectorado()
-                ? route('versiones.revisar', $this->version)
-                : route('propuestas.editar', $propuesta),
+                ? route('revisiones.revisar', $this->version)
+                : route('designaciones.editar', $propuesta),
         ];
     }
 

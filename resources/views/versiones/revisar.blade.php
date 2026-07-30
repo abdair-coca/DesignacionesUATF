@@ -5,8 +5,8 @@
 @section('content')
     <div class="max-w-7xl mx-auto space-y-6">
         <div>
-            <a href="{{ route('versiones.pendientes') }}" class="text-sm text-[#007c7c] hover:underline">Volver a la bandeja</a>
-            <h1 class="text-xl font-bold text-gray-900 mt-2">{{ $version->propuesta->carrera->nombre }} · Versión {{ $version->numero }}</h1>
+            <a href="{{ route('revisiones.pendientes') }}" class="text-sm text-[#007c7c] hover:underline">Volver a la bandeja</a>
+            <h1 class="text-xl font-bold text-gray-900 mt-2">{{ $version->propuesta->carrera->nombre }} · Revisión {{ $version->numero }}</h1>
             <p class="text-sm text-gray-600 mt-1">Enviada por {{ $version->remitente->name }} el {{ $version->enviado_en?->format('d/m/Y H:i') }}.</p>
         </div>
 
@@ -15,11 +15,11 @@
         @endif
 
         @if($puedeDecidir)
-            <form method="POST" action="{{ route('versiones.decidir', $version) }}" class="space-y-5">
+            <form method="POST" action="{{ route('revisiones.decidir', $version) }}" class="space-y-5">
                 @csrf
                 <section class="bg-white border border-gray-200 shadow-sm p-4">
                     <label for="observacion_general" class="block text-sm font-semibold text-gray-900">Observación general</label>
-                    <textarea id="observacion_general" name="observacion_general" rows="3" maxlength="2000" class="w-full mt-2 border border-gray-300 p-2 text-sm" placeholder="Visible para el Director cuando la versión sea observada."></textarea>
+                    <textarea id="observacion_general" name="observacion_general" rows="3" maxlength="2000" class="w-full mt-2 border border-gray-300 p-2 text-sm" placeholder="Visible para el Director cuando la revisión sea observada."></textarea>
                 </section>
 
                 <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
@@ -51,7 +51,7 @@
 
                 <div class="flex flex-wrap justify-end gap-3">
                     <button type="submit" name="modo" value="decidir_filas" class="bg-amber-600 text-white px-4 py-2 text-sm font-semibold hover:bg-amber-700">Registrar decisiones por fila</button>
-                    <button type="submit" name="modo" value="aprobar_todo" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Aprobar versión completa</button>
+                    <button type="submit" name="modo" value="aprobar_todo" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Aprobar revisión completa</button>
                 </div>
             </form>
         @else

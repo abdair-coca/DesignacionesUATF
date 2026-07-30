@@ -3,13 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Carrera;
-use App\Models\Designacion;
-use App\Models\Docente;
 use App\Models\Gestion;
-use App\Models\Grupo;
-use App\Models\Materia;
 use App\Models\Periodo;
-use App\Models\Revision;
+use App\Models\Propuesta;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Tests\TestCase;
@@ -43,70 +39,26 @@ class RoleAuthorizationTest extends TestCase
         ]);
     }
 
-    public function test_director_no_puede_actualizar_designacion_de_otra_carrera_al_alterar_la_url(): void
+    public function test_vicerrectorado_no_puede_acceder_a_designaciones_de_director(): void
     {
-        $carreraPropia = Carrera::factory()->create();
-        $carreraAjena = Carrera::factory()->create();
-        $director = User::factory()->director($carreraPropia)->create();
-        [$materia, $grupo] = $this->materiaYGrupo($carreraAjena);
-        $designacion = Designacion::factory()->create([
-            'Id_materia' => $materia->id,
-            'Id_grupo' => $grupo->id,
-            'malla_curricular_id' => $grupo->malla_curricular_id,
-            'estado' => 'propuesta',
-        ]);
-
-        $this->actingAs($director)
-            ->put("/designaciones/{$designacion->id}", $this->payload($materia, $grupo))
-            ->assertForbidden();
-    }
-
-    public function test_vicerrectorado_no_puede_ver_borrador_no_enviado(): void
-    {
-        $carrera = Carrera::factory()->create();
-        $director = User::factory()->director($carrera)->create();
-        $borrador = Revision::create([
-            'carrera_id' => $carrera->id,
-            'Id_gestion' => Gestion::factory()->create()->id,
-            'Id_periodo' => Periodo::factory()->create()->id,
-            'solicitado_por' => $director->id,
-            'estado' => 'propuesta',
+        Gestion::query()->update(['es_actual' => false]);
+        $gestion = Gestion::factory()->create(['es_actual' => true]);
+        $periodo = Periodo::factory()->create();
+        $director = User::factory()->director(Carrera::factory()->create())->create();
+        $propuesta = Propuesta::create([
+            'carrera_id' => $director->carrera_id,
+            'gestion_id' => $gestion->id,
+            'periodo_id' => $periodo->id,
+            'creado_por' => $director->id,
+            'estado' => 'borrador',
         ]);
 
         $this->actingAs(User::factory()->vicerrectorado()->create())
-            ->get("/revisiones/{$borrador->id}/revisar")
+            ->get('/designaciones')
             ->assertForbidden();
-    }
 
-    public function test_vicerrectorado_no_puede_manipular_designaciones_ni_importaciones(): void
-    {
-        $vicerrectorado = User::factory()->vicerrectorado()->create();
-
-        $this->actingAs($vicerrectorado)
-            ->postJson('/designaciones/previsualizar-pegado', [
-                'Id_gestion' => Gestion::factory()->create()->id,
-                'Id_periodo' => Periodo::factory()->create()->id,
-                'filas' => [],
-            ])
+        $this->actingAs(User::factory()->vicerrectorado()->create())
+            ->get("/designaciones/{$propuesta->id}/importar")
             ->assertForbidden();
-    }
-
-    private function materiaYGrupo(Carrera $carrera): array
-    {
-        $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
-
-        return [$materia, Grupo::factory()->create(['materia_id' => $materia->id])];
-    }
-
-    private function payload(Materia $materia, Grupo $grupo): array
-    {
-        return [
-            'Id_docente' => Docente::factory()->create()->id,
-            'Id_materia' => $materia->id,
-            'Id_grupo' => $grupo->id,
-            'Id_gestion' => Gestion::factory()->create()->id,
-            'Id_periodo' => Periodo::factory()->create()->id,
-            'estado' => 'propuesta',
-        ];
     }
 }

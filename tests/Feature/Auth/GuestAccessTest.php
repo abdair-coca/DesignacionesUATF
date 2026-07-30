@@ -13,8 +13,7 @@ class GuestAccessTest extends TestCase
     {
         return [
             'raiz' => ['/'],
-            'designaciones.index' => ['/designaciones'],
-            'designaciones.lista' => ['/designaciones/lista'],
+            'designaciones' => ['/designaciones'],
             'revisiones.pendientes' => ['/revisiones/pendientes'],
         ];
     }
@@ -47,7 +46,7 @@ class GuestAccessTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'secret',
-        ])->assertRedirect('/designaciones/lista');
+        ])->assertRedirect('/designaciones');
 
         $this->assertAuthenticated();
     }
@@ -105,7 +104,7 @@ class GuestAccessTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct',
-        ])->assertRedirect('/designaciones/lista');
+        ])->assertRedirect('/designaciones');
 
         $this->assertSame(0, RateLimiter::attempts($throttleKey));
     }

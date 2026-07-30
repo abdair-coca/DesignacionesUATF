@@ -49,7 +49,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('revisiones.pendientes'));
         }
 
-        return redirect()->intended(route('designaciones.lista'));
+        return redirect()->intended(route('designaciones.index'));
     }
 
     public function destroy(Request $request): RedirectResponse

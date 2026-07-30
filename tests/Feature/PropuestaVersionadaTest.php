@@ -23,7 +23,7 @@ class PropuestaVersionadaTest extends TestCase
         [$director, $gestion, $periodo] = $this->contextoDirector();
 
         $this->actingAs($director)
-            ->post('/propuestas', [
+            ->post('/designaciones', [
                 'gestion_id' => $gestion->id,
                 'periodo_id' => $periodo->id,
                 'descripcion' => 'Propuesta inicial',
@@ -31,7 +31,7 @@ class PropuestaVersionadaTest extends TestCase
             ->assertRedirect();
 
         $this->actingAs($director)
-            ->post('/propuestas', [
+            ->post('/designaciones', [
                 'gestion_id' => $gestion->id,
                 'periodo_id' => $periodo->id,
                 'descripcion' => 'No debe duplicarse',
@@ -42,7 +42,7 @@ class PropuestaVersionadaTest extends TestCase
         $this->assertDatabaseHas('propuestas', ['descripcion' => 'Propuesta inicial', 'estado' => 'borrador']);
 
         $this->actingAs($director)
-            ->get('/propuestas')
+            ->get('/designaciones')
             ->assertOk()
             ->assertSee('Propuesta inicial');
     }
@@ -53,7 +53,7 @@ class PropuestaVersionadaTest extends TestCase
         $pasada = Gestion::factory()->create(['es_actual' => false]);
 
         $this->actingAs($director)
-            ->post('/propuestas', [
+            ->post('/designaciones', [
                 'gestion_id' => $pasada->id,
                 'periodo_id' => $periodo->id,
             ])
@@ -70,7 +70,7 @@ class PropuestaVersionadaTest extends TestCase
         $this->guardarFila($director, $propuesta, $grupo, $materia, $docente);
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/enviar")
+            ->post("/designaciones/{$propuesta->id}/enviar")
             ->assertRedirect();
 
         $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->firstOrFail();
@@ -83,9 +83,9 @@ class PropuestaVersionadaTest extends TestCase
         $this->assertSame((string) $grupo->codigo, $snapshot->grupo_codigo);
 
         $this->actingAs($director)
-            ->get("/propuestas/{$propuesta->id}")
+            ->get("/designaciones/{$propuesta->id}")
             ->assertOk()
-            ->assertSee('Historial de versiones');
+            ->assertSee('Historial de revisiones');
 
         $docente->update(['nombre' => 'Docente modificado']);
         $materia->update(['horas' => 99]);
@@ -104,7 +104,7 @@ class PropuestaVersionadaTest extends TestCase
         [$materia, $grupo] = $this->materiaYGrupo($carrera);
         $propuesta = $this->propuesta($director, $gestion, $periodo);
         $this->guardarFila($director, $propuesta, $grupo, $materia, Docente::factory()->create());
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar");
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
 
         $snapshot = PropuestaVersionDesignacion::firstOrFail();
 
@@ -118,7 +118,7 @@ class PropuestaVersionadaTest extends TestCase
         [$materia, $grupo] = $this->materiaYGrupo($carrera);
         $propuesta = $this->propuesta($director, $gestion, $periodo);
         $this->guardarFila($director, $propuesta, $grupo, $materia, Docente::factory()->create());
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar");
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
 
         $this->expectException(QueryException::class);
         PropuestaVersionDesignacion::firstOrFail()->delete();
@@ -131,21 +131,21 @@ class PropuestaVersionadaTest extends TestCase
         [$materia, $grupo] = $this->materiaYGrupo($carrera);
         $propuesta = $this->propuesta($director, $gestion, $periodo);
         $this->guardarFila($director, $propuesta, $grupo, $materia, Docente::factory()->create());
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar");
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
         $version = PropuestaVersion::firstOrFail();
 
         $this->actingAs($otroDirector)
-            ->post("/propuesta-versiones/{$version->id}/retirar")
+            ->post("/designacion-versiones/{$version->id}/retirar")
             ->assertForbidden();
 
         $this->actingAs($director)
-            ->post("/propuesta-versiones/{$version->id}/retirar")
+            ->post("/designacion-versiones/{$version->id}/retirar")
             ->assertRedirect();
 
         $this->assertDatabaseHas('propuesta_versiones', ['id' => $version->id, 'estado' => 'retirada', 'retirado_por' => $director->id]);
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/enviar")
+            ->post("/designaciones/{$propuesta->id}/enviar")
             ->assertRedirect();
 
         $this->assertDatabaseHas('propuesta_versiones', ['propuesta_id' => $propuesta->id, 'numero' => 2, 'estado' => 'pendiente']);
@@ -160,11 +160,11 @@ class PropuestaVersionadaTest extends TestCase
         $ajena = $this->propuesta($otroDirector, $gestion, $periodo);
 
         $this->actingAs($director)
-            ->get("/propuestas/{$ajena->id}")
+            ->get("/designaciones/{$ajena->id}")
             ->assertForbidden();
 
         $this->actingAs($director)
-            ->put("/propuestas/{$ajena->id}/designaciones", ['cambios' => []])
+            ->put("/designaciones/{$ajena->id}/asignaciones", ['cambios' => []])
             ->assertForbidden();
     }
 
@@ -199,7 +199,7 @@ class PropuestaVersionadaTest extends TestCase
     private function guardarFila(User $director, Propuesta $propuesta, Grupo $grupo, Materia $materia, Docente $docente): void
     {
         $this->actingAs($director)
-            ->put("/propuestas/{$propuesta->id}/designaciones", [
+            ->put("/designaciones/{$propuesta->id}/asignaciones", [
                 'cambios' => [[
                     'grupo_id' => $grupo->id,
                     'materia_id' => $materia->id,

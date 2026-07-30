@@ -12,6 +12,7 @@ use App\Models\Propuesta;
 use App\Models\PropuestaVersion;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class NotificacionPropuestaTest extends TestCase
@@ -21,7 +22,7 @@ class NotificacionPropuestaTest extends TestCase
         [$director, $vicerrectorado, $propuesta] = $this->propuestaLista();
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/enviar")
+            ->post("/designaciones/{$propuesta->id}/enviar")
             ->assertRedirect();
 
         $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->firstOrFail();
@@ -41,7 +42,7 @@ class NotificacionPropuestaTest extends TestCase
 
         $this->actingAs($vicerrectorado)
             ->post("/notificaciones/{$notificacion->id}/leer")
-            ->assertRedirect("/versiones/{$version->id}/revisar");
+            ->assertRedirect("/revisiones/{$version->id}/revisar");
 
         $this->assertNotNull($notificacion->fresh()->read_at);
     }
@@ -49,12 +50,12 @@ class NotificacionPropuestaTest extends TestCase
     public function test_revision_notifica_al_director_duegno(): void
     {
         [$director, $vicerrectorado, $propuesta] = $this->propuestaLista();
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar");
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
         $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->firstOrFail();
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$version->id}/decidir", ['modo' => 'aprobar_todo'])
-            ->assertRedirect('/versiones/pendientes');
+            ->post("/revisiones/{$version->id}/decidir", ['modo' => 'aprobar_todo'])
+            ->assertRedirect('/revisiones/pendientes');
 
         $notificacion = DatabaseNotification::where('notifiable_id', $director->id)->firstOrFail();
         $this->assertSame('aprobada_final', $notificacion->data['evento']);
@@ -64,11 +65,11 @@ class NotificacionPropuestaTest extends TestCase
     public function test_observacion_y_aprobacion_parcial_notifican_al_director(): void
     {
         [$director, $vicerrectorado, $propuesta] = $this->propuestaLista(2);
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar");
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
         $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->with('designaciones')->firstOrFail();
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$version->id}/decidir", [
+            ->post("/revisiones/{$version->id}/decidir", [
                 'modo' => 'decidir_filas',
                 'observacion_general' => 'Corregir una fila.',
                 'decisiones' => [
@@ -76,7 +77,7 @@ class NotificacionPropuestaTest extends TestCase
                     ['snapshot_id' => $version->designaciones[1]->id, 'decision' => 'aprobada'],
                 ],
             ])
-            ->assertRedirect('/versiones/pendientes');
+            ->assertRedirect('/revisiones/pendientes');
 
         $eventos = DatabaseNotification::where('notifiable_id', $director->id)->get()->pluck('data.evento');
         $this->assertTrue($eventos->contains('observada'));
@@ -86,22 +87,40 @@ class NotificacionPropuestaTest extends TestCase
     public function test_retiro_notifica_a_vicerrectorado(): void
     {
         [$director, $vicerrectorado, $propuesta] = $this->propuestaLista();
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar");
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
         $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->firstOrFail();
 
         $this->actingAs($director)
-            ->post("/propuesta-versiones/{$version->id}/retirar")
+            ->post("/designacion-versiones/{$version->id}/retirar")
             ->assertRedirect();
 
         $eventos = DatabaseNotification::where('notifiable_id', $vicerrectorado->id)->get()->pluck('data.evento');
         $this->assertTrue($eventos->contains('retirada'));
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/enviar")
+            ->post("/designaciones/{$propuesta->id}/enviar")
             ->assertRedirect();
 
         $eventos = DatabaseNotification::where('notifiable_id', $vicerrectorado->id)->get()->pluck('data.evento');
         $this->assertTrue($eventos->contains('reenviada'));
+    }
+
+    public function test_notificacion_historica_redirige_a_la_ruta_canonica(): void
+    {
+        $vicerrectorado = User::factory()->vicerrectorado()->create();
+        $notificacion = DatabaseNotification::create([
+            'id' => (string) Str::uuid(),
+            'type' => 'App\\Notifications\\PropuestaActualizadaNotification',
+            'notifiable_type' => $vicerrectorado::class,
+            'notifiable_id' => $vicerrectorado->id,
+            'data' => ['url' => '/versiones/42/revisar'],
+        ]);
+
+        $this->actingAs($vicerrectorado)
+            ->post("/notificaciones/{$notificacion->id}/leer")
+            ->assertRedirect('/revisiones/42/revisar');
+
+        $this->assertNotNull($notificacion->fresh()->read_at);
     }
 
     private function propuestaLista(int $filas = 1): array
@@ -125,7 +144,7 @@ class NotificacionPropuestaTest extends TestCase
             $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
 
             $this->actingAs($director)
-                ->put("/propuestas/{$propuesta->id}/designaciones", [
+                ->put("/designaciones/{$propuesta->id}/asignaciones", [
                     'cambios' => [[
                         'grupo_id' => $grupo->id,
                         'materia_id' => $materia->id,

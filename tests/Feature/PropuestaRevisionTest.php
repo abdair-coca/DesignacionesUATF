@@ -22,17 +22,17 @@ class PropuestaRevisionTest extends TestCase
         [$director, $vicerrectorado, $propuesta, $version] = $this->propuestaEnviada(1);
 
         $this->actingAs($vicerrectorado)
-            ->get('/versiones/pendientes')
+            ->get('/revisiones/pendientes')
             ->assertOk()
             ->assertSee($propuesta->carrera->nombre);
 
         $this->actingAs($vicerrectorado)
-            ->get("/versiones/{$version->id}/revisar")
+            ->get("/revisiones/{$version->id}/revisar")
             ->assertOk()
-            ->assertSee('Aprobar versión completa');
+            ->assertSee('Aprobar revisión completa');
 
         $this->actingAs($director)
-            ->get('/versiones/pendientes')
+            ->get('/revisiones/pendientes')
             ->assertForbidden();
     }
 
@@ -42,7 +42,7 @@ class PropuestaRevisionTest extends TestCase
         [$filaObservada, $filaAprobada] = $filas;
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$version->id}/decidir", [
+            ->post("/revisiones/{$version->id}/decidir", [
                 'modo' => 'decidir_filas',
                 'observacion_general' => 'Corregir la primera asignación.',
                 'decisiones' => [
@@ -50,7 +50,7 @@ class PropuestaRevisionTest extends TestCase
                     ['snapshot_id' => $filaAprobada->id, 'decision' => 'aprobada'],
                 ],
             ])
-            ->assertRedirect('/versiones/pendientes');
+            ->assertRedirect('/revisiones/pendientes');
 
         $this->assertDatabaseHas('propuesta_versiones', [
             'id' => $version->id,
@@ -72,13 +72,13 @@ class PropuestaRevisionTest extends TestCase
         $this->assertSame('aprobada_previamente', $aprobadaEnBorrador->estado);
 
         $this->actingAs($director)
-            ->get("/propuestas/{$propuesta->id}")
+            ->get("/designaciones/{$propuesta->id}")
             ->assertOk()
             ->assertSee('Corregir la primera asignación.')
             ->assertSee('Aprobada previamente');
 
         $this->actingAs($director)
-            ->put("/propuestas/{$propuesta->id}/designaciones", [
+            ->put("/designaciones/{$propuesta->id}/asignaciones", [
                 'cambios' => [[
                     'grupo_id' => $filaAprobada->grupo_id,
                     'materia_id' => $filaAprobada->materia_id,
@@ -89,7 +89,7 @@ class PropuestaRevisionTest extends TestCase
 
         $docenteCorregido = Docente::factory()->create(['nombre' => 'Docente corregido']);
         $this->actingAs($director)
-            ->put("/propuestas/{$propuesta->id}/designaciones", [
+            ->put("/designaciones/{$propuesta->id}/asignaciones", [
                 'cambios' => [[
                     'grupo_id' => $filaObservada->grupo_id,
                     'materia_id' => $filaObservada->materia_id,
@@ -99,7 +99,7 @@ class PropuestaRevisionTest extends TestCase
             ->assertRedirect();
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/enviar")
+            ->post("/designaciones/{$propuesta->id}/enviar")
             ->assertRedirect();
 
         $segundaVersion = PropuestaVersion::where('propuesta_id', $propuesta->id)->where('numero', 2)->firstOrFail();
@@ -116,7 +116,7 @@ class PropuestaRevisionTest extends TestCase
         ]);
 
         $this->actingAs($vicerrectorado)
-            ->get("/versiones/{$segundaVersion->id}/revisar")
+            ->get("/revisiones/{$segundaVersion->id}/revisar")
             ->assertOk()
             ->assertSee('Aprobada previamente');
     }
@@ -126,8 +126,8 @@ class PropuestaRevisionTest extends TestCase
         [$director, $vicerrectorado, $propuesta, $version] = $this->propuestaEnviada(2);
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$version->id}/decidir", ['modo' => 'aprobar_todo'])
-            ->assertRedirect('/versiones/pendientes');
+            ->post("/revisiones/{$version->id}/decidir", ['modo' => 'aprobar_todo'])
+            ->assertRedirect('/revisiones/pendientes');
 
         $this->assertDatabaseHas('propuesta_versiones', ['id' => $version->id, 'estado' => 'aprobada']);
         $this->assertDatabaseHas('propuestas', ['id' => $propuesta->id, 'estado' => 'oficial']);
@@ -135,7 +135,7 @@ class PropuestaRevisionTest extends TestCase
         $this->assertSame(2, PropuestaVersionDecision::whereIn('propuesta_version_designacion_id', $version->designaciones->pluck('id'))->where('decision', 'aprobada')->count());
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/enviar")
+            ->post("/designaciones/{$propuesta->id}/enviar")
             ->assertForbidden();
     }
 
@@ -145,7 +145,7 @@ class PropuestaRevisionTest extends TestCase
         [, , , $versionB, $filasB] = $this->propuestaEnviada(1);
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$versionA->id}/decidir", [
+            ->post("/revisiones/{$versionA->id}/decidir", [
                 'modo' => 'decidir_filas',
                 'decisiones' => [
                     ['snapshot_id' => $filasB[0]->id, 'decision' => 'aprobada'],
@@ -162,7 +162,7 @@ class PropuestaRevisionTest extends TestCase
         [, $vicerrectorado, , $version, $filas] = $this->propuestaEnviada(2);
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$version->id}/decidir", [
+            ->post("/revisiones/{$version->id}/decidir", [
                 'modo' => 'decidir_filas',
                 'decisiones' => [
                     ['snapshot_id' => $filas[0]->id, 'decision' => 'aprobada'],
@@ -178,7 +178,7 @@ class PropuestaRevisionTest extends TestCase
         [, $vicerrectorado, , $version, $filas] = $this->propuestaEnviada(1);
 
         $this->actingAs($vicerrectorado)
-            ->post("/versiones/{$version->id}/decidir", [
+            ->post("/revisiones/{$version->id}/decidir", [
                 'modo' => 'decidir_filas',
                 'decisiones' => [
                     ['snapshot_id' => $filas[0]->id, 'decision' => 'observada'],
@@ -206,7 +206,7 @@ class PropuestaRevisionTest extends TestCase
         for ($indice = 0; $indice < $cantidadFilas; $indice++) {
             $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
             $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-            $this->actingAs($director)->put("/propuestas/{$propuesta->id}/designaciones", [
+            $this->actingAs($director)->put("/designaciones/{$propuesta->id}/asignaciones", [
                 'cambios' => [[
                     'grupo_id' => $grupo->id,
                     'materia_id' => $materia->id,
@@ -215,7 +215,7 @@ class PropuestaRevisionTest extends TestCase
             ])->assertRedirect();
         }
 
-        $this->actingAs($director)->post("/propuestas/{$propuesta->id}/enviar")->assertRedirect();
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar")->assertRedirect();
         $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->firstOrFail();
 
         return [$director, $vicerrectorado, $propuesta->load('carrera'), $version->load('designaciones'), $version->designaciones->values()];

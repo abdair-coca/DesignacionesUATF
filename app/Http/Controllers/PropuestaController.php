@@ -52,7 +52,7 @@ class PropuestaController extends Controller
             $data['descripcion'] ?? null,
         );
 
-        return redirect()->route('propuestas.editar', $propuesta)
+        return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', 'Borrador listo para editar.');
     }
 
@@ -104,7 +104,7 @@ class PropuestaController extends Controller
 
         $this->propuestas->guardarCambios($propuesta, $data['cambios']);
 
-        return redirect()->route('propuestas.editar', $propuesta)
+        return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', 'Borrador actualizado.');
     }
 
@@ -114,7 +114,7 @@ class PropuestaController extends Controller
 
         $version = $this->propuestas->enviar($propuesta, $request->user());
 
-        return redirect()->route('propuestas.editar', $propuesta)
+        return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', "Versión {$version->numero} enviada a revisión.");
     }
 
@@ -158,7 +158,7 @@ class PropuestaController extends Controller
             $request->user(),
         );
 
-        return redirect()->route('propuestas.editar', $propuesta)
+        return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', "Importacion aplicada: {$filas} filas actualizadas en el borrador.");
     }
 
@@ -168,7 +168,7 @@ class PropuestaController extends Controller
 
         $this->propuestas->retirar($version, $request->user());
 
-        return redirect()->route('propuestas.editar', $version->propuesta_id)
+        return redirect()->route('designaciones.editar', $version->propuesta_id)
             ->with('success', 'La versión pendiente fue retirada. El borrador vuelve a estar disponible.');
     }
 

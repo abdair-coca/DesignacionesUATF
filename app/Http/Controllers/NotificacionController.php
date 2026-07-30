@@ -22,6 +22,12 @@ class NotificacionController extends Controller
 
         $notificacion->markAsRead();
 
-        return redirect()->to($notificacion->data['url'] ?? route('notificaciones.index'));
+        $url = $notificacion->data['url'] ?? route('notificaciones.index');
+
+        return redirect()->to(str_replace(
+            ['/versiones/', '/propuestas/', '/propuesta-versiones/'],
+            ['/revisiones/', '/designaciones/', '/designacion-versiones/'],
+            $url,
+        ));
     }
 }

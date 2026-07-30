@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Borrador de Propuesta')
+@section('title', 'Designaciones')
 
 @section('content')
     <div class="max-w-7xl mx-auto space-y-6">
         <div class="flex flex-wrap justify-between gap-4 items-start">
             <div>
-                <a href="{{ route('propuestas.index') }}" class="text-sm text-[#007c7c] hover:underline">Volver a propuestas</a>
-                <h1 class="text-xl font-bold text-gray-900 mt-2">{{ $propuesta->descripcion ?: 'Borrador de designación' }}</h1>
+                <a href="{{ route('designaciones.index') }}" class="text-sm text-[#007c7c] hover:underline">Volver a designaciones</a>
+                <h1 class="text-xl font-bold text-gray-900 mt-2">{{ $propuesta->descripcion ?: 'Designaciones' }}</h1>
                 <p class="text-sm text-gray-600 mt-1">{{ $propuesta->carrera->nombre }} · Gestión {{ $propuesta->gestion->nombre }} · Período {{ $propuesta->periodo->nombre }}</p>
             </div>
             @if($puedeEditar)
                 <div class="flex gap-2">
-                    <a href="{{ route('propuestas.importar', $propuesta) }}" class="border border-[#007c7c] text-[#007c7c] px-4 py-2 text-sm font-semibold hover:bg-teal-50">Importar historico</a>
-                    <form method="POST" action="{{ route('propuestas.enviar', $propuesta) }}">
+                    <a href="{{ route('designaciones.importar', $propuesta) }}" class="border border-[#007c7c] text-[#007c7c] px-4 py-2 text-sm font-semibold hover:bg-teal-50">Importar historico</a>
+                    <form method="POST" action="{{ route('designaciones.enviar', $propuesta) }}">
                     @csrf
-                    <button type="submit" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Enviar versión a revisión</button>
+                    <button type="submit" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Enviar revisión a revisión</button>
                     </form>
                 </div>
             @endif
@@ -34,7 +34,7 @@
         @endif
 
         @if($puedeEditar)
-            <form method="POST" action="{{ route('propuestas.guardar', $propuesta) }}" class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
+            <form method="POST" action="{{ route('designaciones.guardar', $propuesta) }}" class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
                 @csrf
                 @method('PUT')
                 <table class="w-full text-sm">
@@ -71,11 +71,11 @@
                 <div class="border-t border-gray-200 px-4 py-3 flex justify-end"><button type="submit" class="bg-[#348fe2] text-white px-4 py-2 text-sm font-semibold hover:bg-[#2a72b5]">Guardar borrador</button></div>
             </form>
         @else
-            <div class="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">El borrador está bloqueado mientras una versión esté pendiente de revisión.</div>
+            <div class="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">El borrador está bloqueado mientras una revisión esté pendiente de revisión.</div>
         @endif
 
         <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
-            <div class="px-4 py-3 border-b border-gray-200"><h2 class="font-bold text-sm text-gray-900">Historial de versiones</h2></div>
+            <div class="px-4 py-3 border-b border-gray-200"><h2 class="font-bold text-sm text-gray-900">Historial de revisiones</h2></div>
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600"><tr><th class="px-4 py-3">Versión</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Enviada</th><th class="px-4 py-3 text-right">Acción</th></tr></thead>
                 <tbody class="divide-y divide-gray-100">
@@ -84,7 +84,7 @@
                             <td class="px-4 py-3 font-semibold">{{ $version->numero }}</td><td class="px-4 py-3">{{ ucfirst($version->estado) }}</td><td class="px-4 py-3 text-gray-600">{{ $version->enviado_en?->format('d/m/Y H:i') }}</td>
                             <td class="px-4 py-3 text-right">
                                 @if($version->estado === 'pendiente' && $version->enviado_por === auth()->id())
-                                    <form method="POST" action="{{ route('propuestas.versiones.retirar', $version) }}">@csrf <button type="submit" class="text-amber-800 font-semibold hover:underline">Retirar</button></form>
+                                    <form method="POST" action="{{ route('designaciones.versiones.retirar', $version) }}">@csrf <button type="submit" class="text-amber-800 font-semibold hover:underline">Retirar</button></form>
                                 @endif
                             </td>
                         </tr>

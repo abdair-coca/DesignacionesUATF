@@ -41,7 +41,7 @@ class ImportacionPropuestaTest extends TestCase
         ]);
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar/previsualizar", [
+            ->post("/designaciones/{$propuesta->id}/importar/previsualizar", [
                 'origen_gestion_id' => $gestionOrigen->id,
                 'origen_periodo_id' => $periodoOrigen->id,
             ])
@@ -56,11 +56,11 @@ class ImportacionPropuestaTest extends TestCase
         ]);
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar", [
+            ->post("/designaciones/{$propuesta->id}/importar", [
                 'origen_gestion_id' => $gestionOrigen->id,
                 'origen_periodo_id' => $periodoOrigen->id,
             ])
-            ->assertRedirect("/propuestas/{$propuesta->id}");
+            ->assertRedirect("/designaciones/{$propuesta->id}");
 
         $this->assertDatabaseHas('propuesta_designaciones', [
             'propuesta_id' => $propuesta->id,
@@ -99,7 +99,7 @@ class ImportacionPropuestaTest extends TestCase
         ]);
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar/previsualizar", [
+            ->post("/designaciones/{$propuesta->id}/importar/previsualizar", [
                 'origen_gestion_id' => $gestionOrigen->id,
                 'origen_periodo_id' => $periodoOrigen->id,
             ])
@@ -107,7 +107,7 @@ class ImportacionPropuestaTest extends TestCase
             ->assertSee('Aprobada previamente: se conserva');
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar", [
+            ->post("/designaciones/{$propuesta->id}/importar", [
                 'origen_gestion_id' => $gestionOrigen->id,
                 'origen_periodo_id' => $periodoOrigen->id,
             ])
@@ -129,7 +129,7 @@ class ImportacionPropuestaTest extends TestCase
         ]);
 
         $this->actingAs($director)
-            ->get("/propuestas/{$propuesta->id}/importar")
+            ->get("/designaciones/{$propuesta->id}/importar")
             ->assertForbidden();
     }
 
@@ -140,18 +140,18 @@ class ImportacionPropuestaTest extends TestCase
         $vicerrectorado = User::factory()->vicerrectorado()->create();
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar/previsualizar", [
+            ->post("/designaciones/{$propuesta->id}/importar/previsualizar", [
                 'origen_gestion_id' => $propuesta->gestion_id,
                 'origen_periodo_id' => $propuesta->periodo_id,
             ])
             ->assertSessionHasErrors('origen_gestion_id');
 
         $this->actingAs($otroDirector)
-            ->get("/propuestas/{$propuesta->id}/importar")
+            ->get("/designaciones/{$propuesta->id}/importar")
             ->assertForbidden();
 
         $this->actingAs($vicerrectorado)
-            ->get("/propuestas/{$propuesta->id}/importar")
+            ->get("/designaciones/{$propuesta->id}/importar")
             ->assertForbidden();
     }
 
@@ -161,7 +161,7 @@ class ImportacionPropuestaTest extends TestCase
         $propuesta->gestion->update(['es_actual' => false]);
 
         $this->actingAs($director)
-            ->get("/propuestas/{$propuesta->id}/importar")
+            ->get("/designaciones/{$propuesta->id}/importar")
             ->assertForbidden();
     }
 
@@ -186,7 +186,7 @@ class ImportacionPropuestaTest extends TestCase
         ]);
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar/previsualizar", [
+            ->post("/designaciones/{$propuesta->id}/importar/previsualizar", [
                 'origen_gestion_id' => $gestionOrigen->id,
                 'origen_periodo_id' => $periodoOrigen->id,
             ])
@@ -194,7 +194,7 @@ class ImportacionPropuestaTest extends TestCase
             ->assertSee('Docente de propuesta oficial');
 
         $this->actingAs($director)
-            ->post("/propuestas/{$propuesta->id}/importar", [
+            ->post("/designaciones/{$propuesta->id}/importar", [
                 'origen_gestion_id' => $gestionOrigen->id,
                 'origen_periodo_id' => $periodoOrigen->id,
             ])
