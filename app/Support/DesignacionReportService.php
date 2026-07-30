@@ -6,6 +6,7 @@ use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Grupo;
+use App\Models\MallaCurricular;
 use App\Models\Materia;
 use App\Models\Periodo;
 use Illuminate\Support\Collection;
@@ -19,15 +20,22 @@ class DesignacionReportService
      */
     public function reporteCarrera(int $carreraId, int $gestionId, int $periodoId): array
     {
-        $materias = Materia::where('carrera_id', $carreraId)
-            ->with(['grupos' => function ($query) use ($gestionId, $periodoId) {
+        $materias = MallaCurricular::where('carrera_id', $carreraId)
+            ->with(['materia', 'grupos' => function ($query) use ($gestionId, $periodoId) {
                 $query->where('estado', 'habilitado')
                     ->with(['designaciones' => function ($q) use ($gestionId, $periodoId) {
                         $q->activas()->forGestionPeriodo($gestionId, $periodoId)->with('docente');
                     }]);
             }])
-            ->orderBy('sigla')
-            ->get();
+            ->get()
+            ->sortBy('materia.sigla')
+            ->map(function (MallaCurricular $malla) {
+                $materia = $malla->materia;
+                $materia->setRelation('grupos', $malla->grupos);
+
+                return $materia;
+            })
+            ->values();
 
         $totalGruposHabilitados = 0;
         $totalGruposDesignados = 0;
@@ -64,9 +72,10 @@ class DesignacionReportService
                 COUNT(DISTINCT grupos.id) as total_grupos,
                 COUNT(DISTINCT CASE WHEN designaciones.id IS NOT NULL AND designaciones.estado != ? THEN grupos.id END) as grupos_designados
             ', ['rechazada'])
-            ->leftJoin('materias', 'materias.carrera_id', '=', 'carreras.id')
+            ->leftJoin('malla_curricular', 'malla_curricular.carrera_id', '=', 'carreras.id')
+            ->leftJoin('materias', 'materias.id', '=', 'malla_curricular.materia_id')
             ->leftJoin('grupos', function ($j) {
-                $j->on('grupos.materia_id', '=', 'materias.id')
+                $j->on('grupos.malla_curricular_id', '=', 'malla_curricular.id')
                     ->where('grupos.estado', 'habilitado');
             })
             ->leftJoin('designaciones', function ($j) use ($gestionId, $periodoId) {
@@ -118,7 +127,8 @@ class DesignacionReportService
      */
     public function dashboardGeneral(int $gestionId, int $periodoId): array
     {
-        $gruposSinDesignar = (int) Materia::join('grupos', 'grupos.materia_id', '=', 'materias.id')
+        $gruposSinDesignar = (int) Grupo::join('malla_curricular', 'malla_curricular.id', '=', 'grupos.malla_curricular_id')
+            ->join('materias', 'materias.id', '=', 'malla_curricular.materia_id')
             ->where('grupos.estado', 'habilitado')
             ->whereNotExists(function ($query) use ($gestionId, $periodoId) {
                 $query->selectRaw(1)
@@ -174,7 +184,7 @@ class DesignacionReportService
         $dash = $this->dashboardGeneral($gestionId, $periodoId);
 
         return [
-            'gruposSinDesignar' => Grupo::with(['materia', 'materia.carrera'])
+            'gruposSinDesignar' => Grupo::with(['mallaCurricular.materia', 'mallaCurricular.carrera'])
                 ->where('estado', 'habilitado')
                 ->whereNotExists(function ($query) use ($gestionId, $periodoId) {
                     $query->selectRaw(1)
