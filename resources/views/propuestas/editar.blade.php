@@ -24,6 +24,12 @@
             </div>
         @endif
 
+        @if($ultimaVersionObservada?->observaciones)
+            <div class="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                <span class="font-semibold">Observación de Vicerrectorado:</span> {{ $ultimaVersionObservada->observaciones }}
+            </div>
+        @endif
+
         @if($puedeEditar)
             <form method="POST" action="{{ route('propuestas.guardar', $propuesta) }}" class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
                 @csrf
@@ -35,18 +41,25 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($grupos as $indice => $grupo)
                             @php($designacion = $designacionesPorGrupo->get($grupo->id))
+                            @php($bloqueada = $designacion?->estado === 'aprobada_previamente')
                             <tr>
                                 <td class="px-4 py-3"><span class="font-semibold">{{ $grupo->mallaCurricular->materia->sigla }}</span> <span class="text-gray-600">{{ $grupo->mallaCurricular->materia->nombre }}</span></td>
                                 <td class="px-4 py-3">{{ $grupo->codigo }}</td>
                                 <td class="px-4 py-3 min-w-64">
                                     <input type="hidden" name="cambios[{{ $indice }}][grupo_id]" value="{{ $grupo->id }}">
                                     <input type="hidden" name="cambios[{{ $indice }}][materia_id]" value="{{ $grupo->mallaCurricular->materia_id }}">
-                                    <select name="cambios[{{ $indice }}][docente_id]" class="w-full border border-gray-300 px-2 py-1.5">
+                                    <select name="cambios[{{ $indice }}][docente_id]" @disabled($bloqueada) class="w-full border border-gray-300 px-2 py-1.5 disabled:bg-gray-100">
                                         <option value="">Sin asignar</option>
                                         @foreach($docentes as $docente)
                                             <option value="{{ $docente->id }}" @selected((int) $designacion?->docente_id === $docente->id)>{{ $docente->nombre }}</option>
                                         @endforeach
                                     </select>
+                                    @if($bloqueada)
+                                        <p class="mt-1 text-xs font-semibold text-emerald-800">Aprobada previamente</p>
+                                    @endif
+                                    @if($observacionesPorGrupo->get($grupo->id))
+                                        <p class="mt-1 text-xs text-amber-800">Observación: {{ $observacionesPorGrupo->get($grupo->id) }}</p>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

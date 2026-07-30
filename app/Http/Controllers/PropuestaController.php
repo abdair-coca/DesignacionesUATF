@@ -61,7 +61,7 @@ class PropuestaController extends Controller
             'gestion',
             'periodo',
             'designaciones',
-            'versiones' => fn ($query) => $query->latest('numero'),
+            'versiones' => fn ($query) => $query->with('designaciones.decision')->latest('numero'),
         ]);
 
         $grupos = Grupo::with('mallaCurricular.materia')
@@ -71,11 +71,18 @@ class PropuestaController extends Controller
             ->orderBy('codigo')
             ->get();
 
+        $ultimaVersionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
+        $observacionesPorGrupo = $ultimaVersionObservada?->designaciones
+            ->mapWithKeys(fn ($snapshot) => [$snapshot->grupo_id => $snapshot->decision?->observacion])
+            ->filter() ?? collect();
+
         return view('propuestas.editar', [
             'propuesta' => $propuesta,
             'grupos' => $grupos,
             'docentes' => Docente::orderBy('nombre')->get(),
             'designacionesPorGrupo' => $propuesta->designaciones->keyBy('grupo_id'),
+            'observacionesPorGrupo' => $observacionesPorGrupo,
+            'ultimaVersionObservada' => $ultimaVersionObservada,
             'puedeEditar' => auth()->user()->can('update', $propuesta),
         ]);
     }

@@ -18,12 +18,12 @@ class PageAccessTest extends TestCase
             ->assertRedirect('/propuestas');
     }
 
-    public function test_raiz_redirige_a_revisiones_pendientes_para_vicerrectorado(): void
+    public function test_raiz_redirige_a_versiones_pendientes_para_vicerrectorado(): void
     {
         $admin = User::factory()->vicerrectorado()->create();
         $this->actingAs($admin)
             ->get('/')
-            ->assertRedirect(route('revisiones.pendientes'));
+            ->assertRedirect(route('versiones.pendientes'));
     }
 
     public function test_designaciones_lista_acceso_director(): void

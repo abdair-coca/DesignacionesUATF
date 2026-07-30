@@ -18,6 +18,9 @@ class PropuestaVersion extends Model
         'enviado_en',
         'retirado_por',
         'retirado_en',
+        'revisado_por',
+        'revisado_en',
+        'observaciones',
     ];
 
     protected function casts(): array
@@ -25,6 +28,7 @@ class PropuestaVersion extends Model
         return [
             'enviado_en' => 'datetime',
             'retirado_en' => 'datetime',
+            'revisado_en' => 'datetime',
         ];
     }
 
@@ -46,5 +50,10 @@ class PropuestaVersion extends Model
     public function designaciones(): HasMany
     {
         return $this->hasMany(PropuestaVersionDesignacion::class);
+    }
+
+    public function revisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revisado_por');
     }
 }

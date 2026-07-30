@@ -29,13 +29,13 @@
 
         @if(Auth::user()?->esVicerrectorado())
             <!-- Bandeja de Revisiones (Solo Vicerrectorado) -->
-            <a href="{{ route('revisiones.pendientes') }}" 
-               class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('revisiones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
+            <a href="{{ route('versiones.pendientes') }}"
+               class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('versiones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
                 <div class="flex items-center gap-3">
                     <svg class="w-4 h-4 {{ request()->routeIs('revisiones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span>Bandeja de Revisiones</span>
+                    <span>Bandeja de Versiones</span>
                 </div>
                 <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">
                     INBOX

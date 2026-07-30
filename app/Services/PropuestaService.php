@@ -60,11 +60,22 @@ class PropuestaService
 
             foreach ($cambios as $cambio) {
                 $grupo = $grupos->get($cambio['grupo_id']);
+                $designacionExistente = $propuesta->designaciones()->where('grupo_id', $cambio['grupo_id'])->first();
 
                 if (! $grupo || (int) $grupo->mallaCurricular->materia_id !== (int) $cambio['materia_id']) {
                     throw ValidationException::withMessages([
                         'cambios' => 'Cada grupo debe pertenecer a la carrera y materia de la propuesta.',
                     ]);
+                }
+
+                if ($designacionExistente?->estado === 'aprobada_previamente') {
+                    if (isset($cambio['docente_id']) && (int) $cambio['docente_id'] !== (int) $designacionExistente->docente_id) {
+                        throw ValidationException::withMessages([
+                            'cambios' => 'Las filas aprobadas previamente no se pueden modificar.',
+                        ]);
+                    }
+
+                    continue;
                 }
 
                 if (empty($cambio['docente_id'])) {

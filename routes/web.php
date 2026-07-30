@@ -4,13 +4,14 @@ use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\DesignacionMasivaController;
 use App\Http\Controllers\PropuestaController;
 use App\Http\Controllers\RevisionController;
+use App\Http\Controllers\RevisionPropuestaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/', function (Request $request) {
         if ($request->user()?->esVicerrectorado()) {
-            return redirect()->route('revisiones.pendientes');
+            return redirect()->route('versiones.pendientes');
         }
 
         return redirect()->route('propuestas.index');
@@ -54,6 +55,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('rol:vicerrectorado')->group(function () {
+        Route::get('versiones/pendientes', [RevisionPropuestaController::class, 'pendientes'])->name('versiones.pendientes');
+        Route::get('versiones/{version}/revisar', [RevisionPropuestaController::class, 'revisar'])->name('versiones.revisar');
+        Route::post('versiones/{version}/decidir', [RevisionPropuestaController::class, 'decidir'])->name('versiones.decidir');
+
         Route::get('revisiones/pendientes', [RevisionController::class, 'pendientes'])->name('revisiones.pendientes');
         Route::get('revisiones/{revision}/revisar', [RevisionController::class, 'revisar'])->name('revisiones.revisar');
         Route::post('revisiones/{revision}/procesar', [RevisionController::class, 'procesar'])->name('revisiones.procesar');
