@@ -10,6 +10,7 @@ use App\Models\Revision;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class RevisionController extends Controller
@@ -27,10 +28,9 @@ class RevisionController extends Controller
         ]);
 
         $user = $request->user();
-        $carreraId = $user->carrera_id ?? Carrera::first()?->id;
-        if (! $carreraId) {
-            return response()->json(['error' => 'No hay carreras registradas en el sistema.'], 404);
-        }
+        $carreraId = $user->carrera_id;
+        abort_unless($carreraId, 403);
+        Gate::authorize('create', [Revision::class, $user->carrera]);
 
         $revision = Revision::create([
             'carrera_id' => $carreraId,
@@ -60,6 +60,9 @@ class RevisionController extends Controller
             'revision_id' => ['nullable', 'exists:revisiones,id'],
             'descripcion' => ['nullable', 'string', 'max:255'],
         ]);
+
+        $carrera = Carrera::findOrFail($data['carrera_id']);
+        Gate::authorize('manage', $carrera);
 
         $gestion = Gestion::find($data['Id_gestion']);
         $anioActual = (string) date('Y');
@@ -91,6 +94,14 @@ class RevisionController extends Controller
         if (! empty($data['revision_id'])) {
             $revision = Revision::find($data['revision_id']);
             if ($revision) {
+                abort_unless(
+                    (int) $revision->carrera_id === (int) $data['carrera_id']
+                    && (int) $revision->Id_gestion === (int) $data['Id_gestion']
+                    && (int) $revision->Id_periodo === (int) $data['Id_periodo'],
+                    403,
+                );
+                Gate::authorize('submit', $revision);
+
                 if ($revision->estado === 'pendiente') {
                     return response()->json([
                         'error' => 'Esta propuesta ya se encuentra pendiente de revisión por el Vicerrectorado.',
@@ -184,6 +195,8 @@ class RevisionController extends Controller
      */
     public function retirar(Request $request, Revision $revision): JsonResponse
     {
+        Gate::authorize('withdraw', $revision);
+
         if ($revision->estado !== 'pendiente') {
             return response()->json([
                 'error' => 'Únicamente se pueden retirar solicitudes enviadas que aún estén pendientes.',
@@ -205,9 +218,7 @@ class RevisionController extends Controller
      */
     public function pendientes(Request $request): View
     {
-        if (! $request->user()->is_admin) {
-            abort(403, 'Solo administradores pueden ver la bandeja de revisiones.');
-        }
+        Gate::authorize('viewAny', Revision::class);
 
         $folder = $request->query('folder', 'inbox');
         $q = str_replace(['%', '_'], ['\%', '\_'], $request->query('q', ''));
@@ -294,9 +305,7 @@ class RevisionController extends Controller
      */
     public function revisar(Request $request, Revision $revision): View
     {
-        if (! $request->user()->is_admin) {
-            abort(403);
-        }
+        Gate::authorize('review', $revision);
 
         $revision->load(['carrera:id,sigla,nombre', 'solicitante:id,name', 'revisor:id,name', 'gestion:id,nombre', 'periodo:id,nombre']);
 
@@ -398,9 +407,7 @@ class RevisionController extends Controller
      */
     public function procesar(Request $request, Revision $revision): JsonResponse
     {
-        if (! $request->user()->is_admin) {
-            abort(403);
-        }
+        Gate::authorize('review', $revision);
 
         if ($revision->estado !== 'pendiente') {
             return response()->json(['error' => 'Esta revisión ya fue completada.'], 422);
@@ -412,6 +419,8 @@ class RevisionController extends Controller
             'acciones.*.accion' => ['required', 'in:aprobar,rechazar'],
             'acciones.*.motivo_rechazo' => ['nullable', 'string', 'max:500'],
         ]);
+
+        $this->asegurarDesignacionesDeRevision($revision, $data['acciones']);
 
         DB::transaction(function () use ($data, $request) {
             foreach ($data['acciones'] as $accion) {
@@ -448,9 +457,7 @@ class RevisionController extends Controller
      */
     public function completar(Request $request, Revision $revision): JsonResponse
     {
-        if (! $request->user()->is_admin) {
-            abort(403);
-        }
+        Gate::authorize('review', $revision);
 
         if ($revision->estado !== 'pendiente') {
             return response()->json(['error' => 'Esta revisión ya fue procesada anteriormente.'], 422);
@@ -464,6 +471,10 @@ class RevisionController extends Controller
             'acciones.*.motivo_rechazo' => ['nullable', 'string', 'max:500'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (! empty($data['acciones'])) {
+            $this->asegurarDesignacionesDeRevision($revision, $data['acciones']);
+        }
 
         $decision = $data['decision'] ?? null;
 
@@ -553,6 +564,8 @@ class RevisionController extends Controller
      */
     public function destroy(Request $request, Revision $revision): JsonResponse
     {
+        Gate::authorize('delete', $revision);
+
         if ($revision->estado === 'revisado') {
             return response()->json([
                 'error' => 'No se pueden eliminar propuestas que ya han sido aprobadas y oficializadas por el Vicerrectorado.',
@@ -565,5 +578,17 @@ class RevisionController extends Controller
             'success' => true,
             'message' => 'La propuesta fue eliminada correctamente.',
         ]);
+    }
+
+    private function asegurarDesignacionesDeRevision(Revision $revision, array $acciones): void
+    {
+        $ids = collect($acciones)->pluck('id')->unique();
+        $cantidadPermitida = Designacion::whereIn('id', $ids)
+            ->where('Id_gestion', $revision->Id_gestion)
+            ->where('Id_periodo', $revision->Id_periodo)
+            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $revision->carrera_id))
+            ->count();
+
+        abort_unless($cantidadPermitida === $ids->count(), 403);
     }
 }

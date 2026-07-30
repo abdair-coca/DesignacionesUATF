@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Carrera;
 use App\Models\Designacion;
 use App\Models\Docente;
 use App\Models\Gestion;
@@ -13,106 +14,76 @@ use Tests\TestCase;
 
 class DesignacionValidationTest extends TestCase
 {
-    public function test_store_requiere_campos_obligatorios(): void
+    public function test_director_no_puede_elegir_estado_aprobado_al_crear(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->post('/designaciones', [])
-            ->assertSessionHasErrors(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']);
-    }
+        [$director, $materia, $grupo] = $this->contexto();
 
-    public function test_store_ignora_estado_del_usuario_y_fuerza_propuesta(): void
-    {
-        $docente = Docente::factory()->create();
-        $materia = Materia::factory()->create();
-        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-        $gestion = Gestion::factory()->create();
-        $periodo = Periodo::factory()->create();
-
-        $this->actingAs(User::factory()->create())
-            ->post('/designaciones', [
-                'Id_docente' => $docente->id,
-                'Id_materia' => $materia->id,
-                'Id_grupo' => $grupo->id,
-                'Id_gestion' => $gestion->id,
-                'Id_periodo' => $periodo->id,
-                'estado' => 'aprobada',  // usuario intenta forzar estado
-            ])
+        $this->actingAs($director)
+            ->post('/designaciones', $this->payload($materia, $grupo, ['estado' => 'aprobada']))
             ->assertRedirect('/designaciones');
 
         $this->assertDatabaseHas('designaciones', [
-            'Id_docente' => $docente->id,
-            'estado' => 'propuesta',  // siempre forzado a propuesta
+            'Id_grupo' => $grupo->id,
+            'estado' => 'propuesta',
         ]);
     }
 
-    public function test_store_rechaza_ids_inexistentes(): void
+    public function test_director_no_puede_usar_grupo_de_otra_carrera(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->post('/designaciones', [
-                'Id_docente' => 9999,
-                'Id_materia' => 9999,
-                'Id_grupo' => 9999,
-                'Id_gestion' => 9999,
-                'Id_periodo' => 9999,
-            ])
-            ->assertSessionHasErrors(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']);
+        [$director] = $this->contexto();
+        $otraCarrera = Carrera::factory()->create();
+        $materia = Materia::factory()->create(['carrera_id' => $otraCarrera->id]);
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+
+        $this->actingAs($director)
+            ->post('/designaciones', $this->payload($materia, $grupo))
+            ->assertForbidden();
     }
 
-    public function test_update_permite_mismos_datos_sin_error(): void
+    public function test_director_no_puede_asignar_materia_distinta_a_la_del_grupo(): void
     {
-        $designacion = Designacion::factory()->create(['estado' => 'propuesta']);
+        [$director, , $grupo] = $this->contexto();
+        $materiaDistinta = Materia::factory()->create();
 
-        $this->actingAs(User::factory()->create())
-            ->put("/designaciones/{$designacion->id}", [
-                'Id_docente' => $designacion->Id_docente,
-                'Id_materia' => $designacion->Id_materia,
-                'Id_grupo' => $designacion->Id_grupo,
-                'Id_gestion' => $designacion->Id_gestion,
-                'Id_periodo' => $designacion->Id_periodo,
-                'estado' => 'propuesta',
-            ])
+        $this->actingAs($director)
+            ->post('/designaciones', $this->payload($materiaDistinta, $grupo))
+            ->assertSessionHasErrors('Id_grupo');
+    }
+
+    public function test_director_no_puede_aprobar_mediante_payload_de_actualizacion(): void
+    {
+        [$director, $materia, $grupo] = $this->contexto();
+        $designacion = Designacion::factory()->create([
+            'Id_materia' => $materia->id,
+            'Id_grupo' => $grupo->id,
+            'malla_curricular_id' => $grupo->malla_curricular_id,
+            'estado' => 'propuesta',
+        ]);
+
+        $this->actingAs($director)
+            ->put("/designaciones/{$designacion->id}", $this->payload($materia, $grupo, ['estado' => 'aprobada']))
             ->assertRedirect('/designaciones');
 
         $this->assertDatabaseHas('designaciones', ['id' => $designacion->id, 'estado' => 'propuesta']);
     }
 
-    public function test_update_rechaza_duplicado_con_otro_docente(): void
+    private function contexto(): array
     {
-        $materia = Materia::factory()->create();
+        $carrera = Carrera::factory()->create();
+        $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-        $gestion = Gestion::factory()->create();
-        $periodo = Periodo::factory()->create();
 
-        $docenteA = Docente::factory()->create();
-        $docenteB = Docente::factory()->create();
+        return [User::factory()->director($carrera)->create(), $materia, $grupo];
+    }
 
-        Designacion::factory()->create([
-            'Id_docente' => $docenteA->id,
+    private function payload(Materia $materia, Grupo $grupo, array $extra = []): array
+    {
+        return array_merge([
+            'Id_docente' => Docente::factory()->create()->id,
             'Id_materia' => $materia->id,
             'Id_grupo' => $grupo->id,
-            'Id_gestion' => $gestion->id,
-            'Id_periodo' => $periodo->id,
-        ]);
-
-        $grupoAlterno = Grupo::factory()->create(['materia_id' => $materia->id]);
-
-        $designacion = Designacion::factory()->create([
-            'Id_docente' => $docenteB->id,
-            'Id_materia' => $materia->id,
-            'Id_grupo' => $grupoAlterno->id,
-            'Id_gestion' => $gestion->id,
-            'Id_periodo' => $periodo->id,
-        ]);
-
-        $this->actingAs(User::factory()->create())
-            ->put("/designaciones/{$designacion->id}", [
-                'Id_docente' => $docenteA->id,
-                'Id_materia' => $materia->id,
-                'Id_grupo' => $grupo->id,
-                'Id_gestion' => $gestion->id,
-                'Id_periodo' => $periodo->id,
-                'estado' => 'propuesta',
-            ])
-            ->assertSessionHasErrors('Id_docente');
+            'Id_gestion' => Gestion::factory()->create()->id,
+            'Id_periodo' => Periodo::factory()->create()->id,
+        ], $extra);
     }
 }

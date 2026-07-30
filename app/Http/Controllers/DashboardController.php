@@ -38,7 +38,7 @@ class DashboardController extends Controller
             ],
             'resumenCarreras' => $resumenCarreras,
             'evolucion' => $evolucion,
-            'is_admin' => $request->user()->is_admin,
+            'rol' => $request->user()->rol,
             'revisionesPendientes' => $revisionesPendientes,
         ], $datos));
     }

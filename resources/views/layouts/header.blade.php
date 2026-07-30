@@ -44,7 +44,7 @@
                      class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 text-xs text-gray-700 z-50">
                     <div class="px-4 py-2 border-b border-gray-100">
                         <p class="font-semibold text-gray-900">{{ Auth::user()?->name ?? 'Usuario' }}</p>
-                        <p class="text-[11px] text-gray-400">Rol: {{ Auth::user()?->is_admin ?? false ? 'Administrador' : 'Director' }}</p>
+                        <p class="text-[11px] text-gray-400">Rol: {{ Auth::user()?->esVicerrectorado() ? 'Vicerrectorado' : 'Director de Carrera' }}</p>
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

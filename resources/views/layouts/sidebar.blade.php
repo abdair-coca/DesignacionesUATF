@@ -27,7 +27,7 @@
             Navegación
         </div>
 
-        @if(Auth::user()?->is_admin)
+        @if(Auth::user()?->esVicerrectorado())
             <!-- Bandeja de Revisiones (Solo Vicerrectorado) -->
             <a href="{{ route('revisiones.pendientes') }}" 
                class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('revisiones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">

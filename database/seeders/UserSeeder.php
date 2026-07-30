@@ -11,13 +11,13 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Crear Administrador / Vicedecano
+        // 1. Crear usuario de Vicerrectorado
         User::firstOrCreate(
             ['email' => 'admin@uatf.edu.bo'],
             [
-                'name' => 'Admin Vicedecano',
+                'name' => 'Vicerrectorado',
                 'password' => Hash::make('password'),
-                'is_admin' => true,
+                'rol' => User::ROL_VICERRECTORADO,
                 'carrera_id' => null,
             ]
         );
@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
                 [
                     'name' => $nombre,
                     'password' => Hash::make('password'),
-                    'is_admin' => false,
+                'rol' => User::ROL_DIRECTOR_CARRERA,
                     'carrera_id' => $carrera->id,
                 ]
             );

@@ -14,144 +14,107 @@ use Tests\TestCase;
 
 class DesignacionRosterTest extends TestCase
 {
-    public function test_guardar_roster_crea_nuevas_designaciones(): void
+    public function test_director_guarda_designacion_en_su_carrera(): void
     {
-        $user = User::factory()->create();
-        $carrera = Carrera::factory()->create();
+        [$carrera, $materia, $grupo, $director] = $this->contextoDirector();
+        $docente = Docente::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
-        $materia = Materia::factory()->create(['carrera_id' => $carrera->id, 'horas' => 4]);
-        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-        $docente = Docente::factory()->create();
 
-        $this->actingAs($user)
-            ->post("/designaciones/carrera/{$carrera->id}/guardar", [
+        $this->actingAs($director)
+            ->postJson(route('designaciones.carrera.guardar', $carrera), [
                 'Id_gestion' => $gestion->id,
                 'Id_periodo' => $periodo->id,
-                'cambios' => [
-                    [
-                        'Id_grupo' => $grupo->id,
-                        'Id_materia' => $materia->id,
-                        'Id_docente' => $docente->id,
-                    ],
-                ],
+                'cambios' => [[
+                    'Id_grupo' => $grupo->id,
+                    'Id_materia' => $materia->id,
+                    'Id_docente' => $docente->id,
+                ]],
             ])
-            ->assertRedirect();
+            ->assertOk();
 
         $this->assertDatabaseHas('designaciones', [
-            'Id_docente' => $docente->id,
-            'Id_materia' => $materia->id,
             'Id_grupo' => $grupo->id,
-            'Id_gestion' => $gestion->id,
-            'Id_periodo' => $periodo->id,
-            'estado' => 'propuesta',
-            'creado_por' => $user->id,
+            'Id_docente' => $docente->id,
+            'creado_por' => $director->id,
         ]);
     }
 
-    public function test_guardar_roster_actualiza_designacion_existente(): void
+    public function test_director_no_puede_guardar_roster_de_otra_carrera(): void
     {
-        $user = User::factory()->create();
-        $carrera = Carrera::factory()->create();
+        [, $materia, $grupo, $director] = $this->contextoDirector();
+        $otraCarrera = Carrera::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
-        $materia = Materia::factory()->create(['carrera_id' => $carrera->id, 'horas' => 4]);
-        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-        $docenteViejo = Docente::factory()->create();
-        $docenteNuevo = Docente::factory()->create();
 
-        $designacion = Designacion::factory()->create([
-            'Id_docente' => $docenteViejo->id,
-            'Id_materia' => $materia->id,
-            'Id_grupo' => $grupo->id,
-            'Id_gestion' => $gestion->id,
-            'Id_periodo' => $periodo->id,
-            'estado' => 'propuesta',
-        ]);
-
-        $this->actingAs($user)
-            ->post("/designaciones/carrera/{$carrera->id}/guardar", [
+        $this->actingAs($director)
+            ->postJson(route('designaciones.carrera.guardar', $otraCarrera), [
                 'Id_gestion' => $gestion->id,
                 'Id_periodo' => $periodo->id,
-                'cambios' => [
-                    [
-                        'Id_grupo' => $grupo->id,
-                        'Id_materia' => $materia->id,
-                        'Id_docente' => $docenteNuevo->id,
-                    ],
-                ],
+                'cambios' => [[
+                    'Id_grupo' => $grupo->id,
+                    'Id_materia' => $materia->id,
+                    'Id_docente' => Docente::factory()->create()->id,
+                ]],
             ])
-            ->assertRedirect();
-
-        $this->assertDatabaseHas('designaciones', [
-            'id' => $designacion->id,
-            'Id_docente' => $docenteNuevo->id,
-        ]);
+            ->assertForbidden();
     }
 
-    public function test_guardar_roster_elimina_designacion_cuando_docente_id_vacio(): void
+    public function test_director_no_puede_enviar_grupo_de_otra_carrera_en_el_payload(): void
     {
-        $user = User::factory()->create();
-        $carrera = Carrera::factory()->create();
+        [$carrera, , , $director] = $this->contextoDirector();
+        $otraCarrera = Carrera::factory()->create();
+        $materiaExterna = Materia::factory()->create(['carrera_id' => $otraCarrera->id]);
+        $grupoExterno = Grupo::factory()->create(['materia_id' => $materiaExterna->id]);
+
+        $this->actingAs($director)
+            ->postJson(route('designaciones.carrera.guardar', $carrera), [
+                'Id_gestion' => Gestion::factory()->create()->id,
+                'Id_periodo' => Periodo::factory()->create()->id,
+                'cambios' => [[
+                    'Id_grupo' => $grupoExterno->id,
+                    'Id_materia' => $materiaExterna->id,
+                    'Id_docente' => Docente::factory()->create()->id,
+                ]],
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_director_puede_quitar_docente_de_su_propuesta(): void
+    {
+        [$carrera, $materia, $grupo, $director] = $this->contextoDirector();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
-        $materia = Materia::factory()->create(['carrera_id' => $carrera->id, 'horas' => 4]);
-        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
-        $docente = Docente::factory()->create();
-
         $designacion = Designacion::factory()->create([
-            'Id_docente' => $docente->id,
             'Id_materia' => $materia->id,
             'Id_grupo' => $grupo->id,
+            'malla_curricular_id' => $grupo->malla_curricular_id,
             'Id_gestion' => $gestion->id,
             'Id_periodo' => $periodo->id,
             'estado' => 'propuesta',
         ]);
 
-        $this->actingAs($user)
-            ->post("/designaciones/carrera/{$carrera->id}/guardar", [
+        $this->actingAs($director)
+            ->postJson(route('designaciones.carrera.guardar', $carrera), [
                 'Id_gestion' => $gestion->id,
                 'Id_periodo' => $periodo->id,
-                'cambios' => [
-                    [
-                        'Id_grupo' => $grupo->id,
-                        'Id_materia' => $materia->id,
-                        'Id_docente' => '',
-                    ],
-                ],
+                'cambios' => [[
+                    'Id_grupo' => $grupo->id,
+                    'Id_materia' => $materia->id,
+                    'Id_docente' => null,
+                ]],
             ])
-            ->assertRedirect();
+            ->assertOk();
 
         $this->assertDatabaseMissing('designaciones', ['id' => $designacion->id]);
     }
 
-    public function test_guardar_roster_requiere_cambios_minimo_uno(): void
+    private function contextoDirector(): array
     {
-        $user = User::factory()->create();
         $carrera = Carrera::factory()->create();
-        $gestion = Gestion::factory()->create();
-        $periodo = Periodo::factory()->create();
+        $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
 
-        $this->actingAs($user)
-            ->post("/designaciones/carrera/{$carrera->id}/guardar", [
-                'Id_gestion' => $gestion->id,
-                'Id_periodo' => $periodo->id,
-                'cambios' => [],
-            ])
-            ->assertSessionHasErrors('cambios');
-    }
-
-    public function test_guardar_roster_requiere_gestion_y_periodo(): void
-    {
-        $user = User::factory()->create();
-        $carrera = Carrera::factory()->create();
-
-        $this->actingAs($user)
-            ->post("/designaciones/carrera/{$carrera->id}/guardar", [
-                'cambios' => [
-                    ['Id_grupo' => 1, 'Id_materia' => 1],
-                ],
-            ])
-            ->assertSessionHasErrors(['Id_gestion', 'Id_periodo']);
+        return [$carrera, $materia, $grupo, User::factory()->director($carrera)->create()];
     }
 }

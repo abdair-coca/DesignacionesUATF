@@ -11,7 +11,13 @@ class UpdateDesignacionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        $designacion = $this->route('designacion');
+        $grupo = Grupo::with('mallaCurricular')->find($this->input('Id_grupo'));
+
+        return $designacion
+            && $user?->can('update', $designacion)
+            && $user->administraCarrera((int) $grupo?->mallaCurricular?->carrera_id);
     }
 
     public function rules(): array

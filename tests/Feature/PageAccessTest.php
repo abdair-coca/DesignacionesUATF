@@ -11,7 +11,6 @@ class PageAccessTest extends TestCase
     public function test_raiz_redirige_a_designaciones_lista_para_director(): void
     {
         $director = User::factory()->create([
-            'is_admin' => false,
             'carrera_id' => Carrera::factory(),
         ]);
         $this->actingAs($director)
@@ -19,9 +18,9 @@ class PageAccessTest extends TestCase
             ->assertRedirect('/designaciones/lista');
     }
 
-    public function test_raiz_redirige_a_revisiones_pendientes_para_admin(): void
+    public function test_raiz_redirige_a_revisiones_pendientes_para_vicerrectorado(): void
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->vicerrectorado()->create();
         $this->actingAs($admin)
             ->get('/')
             ->assertRedirect(route('revisiones.pendientes'));
@@ -30,7 +29,6 @@ class PageAccessTest extends TestCase
     public function test_designaciones_lista_acceso_director(): void
     {
         $director = User::factory()->create([
-            'is_admin' => false,
             'carrera_id' => Carrera::factory(),
         ]);
         $this->actingAs($director)
@@ -38,13 +36,13 @@ class PageAccessTest extends TestCase
             ->assertOk();
     }
 
-    public function test_designaciones_carrera_redirecciona_admin(): void
+    public function test_designaciones_carrera_rechaza_vicerrectorado(): void
     {
         $carrera = Carrera::first() ?? Carrera::factory()->create();
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->vicerrectorado()->create();
 
         $this->actingAs($admin)
             ->get("/designaciones/carrera/{$carrera->id}")
-            ->assertRedirect(route('revisiones.pendientes'));
+            ->assertForbidden();
     }
 }

@@ -14,7 +14,6 @@ class DirectorScopeTest extends TestCase
         $directorInf = User::factory()->create([
             'name' => 'Director Informática',
             'email' => 'test.director.inf@uatf.edu.bo',
-            'is_admin' => false,
             'carrera_id' => $carreraInf->id,
         ]);
 
@@ -31,32 +30,29 @@ class DirectorScopeTest extends TestCase
         $directorInf = User::factory()->create([
             'name' => 'Director Informática',
             'email' => 'test.director.inf2@uatf.edu.bo',
-            'is_admin' => false,
             'carrera_id' => $carreraInf->id,
         ]);
 
         $this->actingAs($directorInf)
             ->get(route('designaciones.carrera', $carreraCiv->id))
-            ->assertRedirect(route('designaciones.carrera', $carreraInf->id));
+            ->assertForbidden();
     }
 
-    public function test_admin_es_redirigido_a_bandeja_de_revisiones(): void
+    public function test_vicerrectorado_no_puede_acceder_a_designaciones(): void
     {
         $carreraCiv = Carrera::where('sigla', 'CIV')->first() ?? Carrera::factory()->create(['sigla' => 'CIV_TEST3', 'nombre' => 'Ingeniería Civil']);
 
-        $admin = User::factory()->create([
-            'name' => 'Admin Vicerrector Test',
+        $admin = User::factory()->vicerrectorado()->create([
+            'name' => 'Vicerrectorado Test',
             'email' => 'admin.test@uatf.edu.bo',
-            'is_admin' => true,
-            'carrera_id' => null,
         ]);
 
         $this->actingAs($admin)
             ->get('/designaciones/lista')
-            ->assertRedirect(route('revisiones.pendientes'));
+            ->assertForbidden();
 
         $this->actingAs($admin)
             ->get(route('designaciones.carrera', $carreraCiv->id))
-            ->assertRedirect(route('revisiones.pendientes'));
+            ->assertForbidden();
     }
 }

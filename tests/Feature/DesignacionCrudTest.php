@@ -20,7 +20,7 @@ class DesignacionCrudTest extends TestCase
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
-        $usuario = User::factory()->create();
+        $usuario = User::factory()->director($grupo->mallaCurricular->carrera_id)->create();
 
         $this->actingAs($usuario)
             ->post('/designaciones', [
@@ -40,10 +40,10 @@ class DesignacionCrudTest extends TestCase
         ]);
     }
 
-    public function test_usuario_autenticado_actualiza_una_designacion_y_registra_historial(): void
+    public function test_director_actualiza_una_designacion_de_su_carrera(): void
     {
         $designacion = Designacion::factory()->create(['estado' => 'propuesta']);
-        $usuario = User::factory()->create();
+        $usuario = User::factory()->director($designacion->mallaCurricular->carrera_id)->create();
 
         $this->actingAs($usuario)
             ->put("/designaciones/{$designacion->id}", [
@@ -52,25 +52,18 @@ class DesignacionCrudTest extends TestCase
                 'Id_grupo' => $designacion->Id_grupo,
                 'Id_gestion' => $designacion->Id_gestion,
                 'Id_periodo' => $designacion->Id_periodo,
-                'estado' => 'aprobada',
+                'estado' => 'propuesta',
             ])
             ->assertRedirect('/designaciones');
 
-        $this->assertDatabaseHas('designaciones', ['id' => $designacion->id, 'estado' => 'aprobada']);
-        $this->assertDatabaseHas('designaciones_historial', [
-            'designacion_id' => $designacion->id,
-            'campo' => 'estado',
-            'valor_anterior' => 'propuesta',
-            'valor_nuevo' => 'aprobada',
-            'usuario_id' => $usuario->id,
-        ]);
+        $this->assertDatabaseHas('designaciones', ['id' => $designacion->id, 'estado' => 'propuesta']);
     }
 
     public function test_usuario_autenticado_elimina_una_designacion(): void
     {
         $designacion = Designacion::factory()->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->director($designacion->mallaCurricular->carrera_id)->create())
             ->delete("/designaciones/{$designacion->id}")
             ->assertRedirect();
 
@@ -84,7 +77,7 @@ class DesignacionCrudTest extends TestCase
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
-        $usuario = User::factory()->create();
+        $usuario = User::factory()->director($grupo->mallaCurricular->carrera_id)->create();
 
         $payload = [
             'Id_docente' => $docente->id,

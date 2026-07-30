@@ -45,7 +45,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if ($request->user()?->is_admin) {
+        if ($request->user()?->esVicerrectorado()) {
             return redirect()->intended(route('revisiones.pendientes'));
         }
 

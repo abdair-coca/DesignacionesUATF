@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class DesignacionController extends Controller
@@ -30,23 +31,14 @@ class DesignacionController extends Controller
 
     public function index(Request $request): RedirectResponse
     {
-        $user = $request->user();
-        if ($user?->is_admin) {
-            return redirect()->route('revisiones.pendientes');
-        }
-
         return redirect()->route('designaciones.lista');
     }
 
-    public function lista(Request $request): View|RedirectResponse
+    public function lista(Request $request): View
     {
         $user = $request->user();
-        if ($user?->is_admin) {
-            return redirect()->route('revisiones.pendientes');
-        }
 
-        $carreraId = $user->carrera_id ?? Carrera::first()?->id;
-        $carreraActual = $carreraId ? Carrera::find($carreraId) : Carrera::first();
+        $carreraActual = $user->carrera;
         if (! $carreraActual) {
             abort(404, 'No hay carreras registradas en el sistema.');
         }
@@ -97,16 +89,9 @@ class DesignacionController extends Controller
         ]);
     }
 
-    public function carrera(Request $request, Carrera $carrera): View|RedirectResponse
+    public function carrera(Request $request, Carrera $carrera): View
     {
-        $user = $request->user();
-        if ($user && $user->is_admin) {
-            return redirect()->route('revisiones.pendientes');
-        }
-
-        if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
-            return redirect()->route('designaciones.carrera', $user->carrera_id);
-        }
+        Gate::authorize('view', $carrera);
 
         $filtros = $request->validate([
             'gestion_id' => ['nullable', 'exists:gestiones,id'],
@@ -213,7 +198,7 @@ class DesignacionController extends Controller
                 'revisor' => $revision->revisor?->name,
                 'revisado_en' => $revision->revisado_en?->format('d/m/Y H:i'),
             ] : null,
-            'is_admin' => $request->user()->is_admin,
+            'rol' => $request->user()->rol,
             'filtros' => [
                 'gestion_id' => (string) $gestionId,
                 'periodo_id' => (string) $periodoId,
@@ -223,10 +208,7 @@ class DesignacionController extends Controller
 
     public function guardarRoster(Request $request, Carrera $carrera): RedirectResponse|JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
-            return response()->json(['error' => 'No tienes permisos para modificar designaciones en esta carrera.'], 403);
-        }
+        Gate::authorize('manage', $carrera);
 
         $data = $request->validate([
             'Id_gestion' => ['required', 'exists:gestiones,id'],
@@ -236,6 +218,8 @@ class DesignacionController extends Controller
             'cambios.*.Id_materia' => ['required', 'exists:materias,id'],
             'cambios.*.Id_docente' => ['nullable', 'exists:docentes,id'],
         ]);
+
+        $this->validarCambiosDeCarrera($data['cambios'], $carrera);
 
         // Verificar inmutabilidad: no se pueden modificar propuestas pendientes u oficiales
         $revisionExistente = Revision::where('carrera_id', $carrera->id)
@@ -333,10 +317,7 @@ class DesignacionController extends Controller
 
     public function copiarAnterior(Request $request, Carrera $carrera): JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->is_admin && $user->carrera_id && (int) $user->carrera_id !== (int) $carrera->id) {
-            return response()->json(['error' => 'No tienes permisos para modificar designaciones en esta carrera.'], 403);
-        }
+        Gate::authorize('manage', $carrera);
         $data = $request->validate([
             'origen_gestion_id' => ['required', 'exists:gestiones,id'],
             'origen_periodo_id' => ['required', 'exists:periodos,id'],
@@ -418,6 +399,8 @@ class DesignacionController extends Controller
 
     public function previsualizarCopia(Request $request, Carrera $carrera): JsonResponse
     {
+        Gate::authorize('view', $carrera);
+
         $data = $request->validate([
             'origen_gestion_id' => ['required', 'exists:gestiones,id'],
             'origen_periodo_id' => ['required', 'exists:periodos,id'],
@@ -550,7 +533,7 @@ class DesignacionController extends Controller
         $gestionId = (int) (Gestion::max('id') ?? 0);
         $periodoId = (int) (Periodo::min('id') ?? 0);
 
-        return view('designaciones.create', array_merge($this->catalogos($gestionId, $periodoId), [
+        return view('designaciones.create', array_merge($this->catalogos($gestionId, $periodoId, $request->user()->carrera_id), [
             'gestionActual' => $gestionId,
             'periodoActual' => $periodoId,
             'prefill' => $request->only(['Id_docente', 'Id_materia', 'Id_grupo', 'Id_gestion', 'Id_periodo']),
@@ -574,6 +557,8 @@ class DesignacionController extends Controller
 
     public function edit(Request $request, Designacion $designacion): View
     {
+        Gate::authorize('update', $designacion);
+
         $gestionId = $designacion->Id_gestion;
         $periodoId = $designacion->Id_periodo;
 
@@ -590,7 +575,10 @@ class DesignacionController extends Controller
 
     public function update(UpdateDesignacionRequest $request, Designacion $designacion): RedirectResponse
     {
+        Gate::authorize('update', $designacion);
+
         $data = $request->validated();
+        $data['estado'] = 'propuesta';
         $data['malla_curricular_id'] = Grupo::findOrFail($data['Id_grupo'])->malla_curricular_id;
         $designacion->update($data);
 
@@ -600,6 +588,8 @@ class DesignacionController extends Controller
 
     public function destroy(Designacion $designacion): RedirectResponse
     {
+        Gate::authorize('delete', $designacion);
+
         $designacion->delete();
 
         return redirect()->back()
@@ -608,6 +598,8 @@ class DesignacionController extends Controller
 
     public function historial(Designacion $designacion): View
     {
+        Gate::authorize('view', $designacion);
+
         $designacion->load(['docente', 'materia', 'grupo', 'gestion', 'periodo']);
         $historial = $designacion->historial()->orderByDesc('fecha')->get();
 
@@ -627,7 +619,7 @@ class DesignacionController extends Controller
             ->get();
     }
 
-    private function catalogos(int $gestionId = 0, int $periodoId = 0): array
+    private function catalogos(int $gestionId = 0, int $periodoId = 0, ?int $carreraId = null): array
     {
         // Materias que tienen al menos un grupo habilitado, con carrera para filtrado client-side
         $materiasConGrupos = Materia::whereIn('id', function ($q) {
@@ -635,7 +627,10 @@ class DesignacionController extends Controller
                 ->from('grupos')
                 ->join('malla_curricular', 'grupos.malla_curricular_id', '=', 'malla_curricular.id')
                 ->where('grupos.estado', 'habilitado');
-        })->orderBy('sigla')->get();
+        })
+            ->when($carreraId, fn ($query) => $query->whereHas('mallaCurricular', fn ($malla) => $malla->where('carrera_id', $carreraId)))
+            ->orderBy('sigla')
+            ->get();
 
         // Docentes con horas disponibles, enriquecidos con historial de materias
         $docentes = Docente::orderBy('nombre')->get();
@@ -665,9 +660,30 @@ class DesignacionController extends Controller
             'carreras' => Carrera::orderBy('nombre')->get(),
             'docentes' => $docentes,
             'materias' => $materiasConGrupos,
-            'grupos' => Grupo::with('materia')->where('estado', 'habilitado')->get(),
+            'grupos' => Grupo::with('materia')
+                ->where('estado', 'habilitado')
+                ->when($carreraId, fn ($query) => $query->whereHas('mallaCurricular', fn ($malla) => $malla->where('carrera_id', $carreraId)))
+                ->get(),
             'gestiones' => Gestion::orderBy('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
         ];
+    }
+
+    private function validarCambiosDeCarrera(array $cambios, Carrera $carrera): void
+    {
+        $grupos = Grupo::with('mallaCurricular')
+            ->whereIn('id', collect($cambios)->pluck('Id_grupo')->unique())
+            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $carrera->id))
+            ->get()
+            ->keyBy('id');
+
+        foreach ($cambios as $cambio) {
+            $grupo = $grupos->get($cambio['Id_grupo']);
+
+            abort_unless(
+                $grupo && (int) $grupo->mallaCurricular->materia_id === (int) $cambio['Id_materia'],
+                403,
+            );
+        }
     }
 }

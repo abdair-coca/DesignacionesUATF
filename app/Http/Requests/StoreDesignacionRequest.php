@@ -10,7 +10,10 @@ class StoreDesignacionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        $grupo = Grupo::with('mallaCurricular')->find($this->input('Id_grupo'));
+
+        return $user?->administraCarrera((int) $grupo?->mallaCurricular?->carrera_id) ?? false;
     }
 
     public function rules(): array

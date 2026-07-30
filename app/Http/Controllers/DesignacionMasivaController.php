@@ -41,6 +41,8 @@ class DesignacionMasivaController extends Controller
         $periodoId = (int) $data['Id_periodo'];
         $userId = $request->user()->id;
 
+        $this->validarFilasDeCarrera($data['filas'], (int) $request->user()->carrera_id);
+
         $gruposOcupados = $this->gruposOcupados($gestionId, $periodoId);
 
         $creadas = 0;
@@ -122,6 +124,8 @@ class DesignacionMasivaController extends Controller
         $gestionId = (int) $data['Id_gestion'];
         $periodoId = (int) $data['Id_periodo'];
 
+        $this->validarFilasDeCarrera($data['filas'], (int) $request->user()->carrera_id);
+
         $gruposOcupados = $this->gruposOcupados($gestionId, $periodoId);
 
         $resultados = [];
@@ -166,10 +170,34 @@ class DesignacionMasivaController extends Controller
             'ids.*' => ['required', 'exists:designaciones,id'],
         ]);
 
-        $eliminadas = Designacion::whereIn('id', $data['ids'])
-            ->where('estado', 'propuesta')
-            ->delete();
+        $designaciones = Designacion::whereIn('id', $data['ids'])
+            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $request->user()->carrera_id))
+            ->get();
+
+        abort_unless($designaciones->count() === count(array_unique($data['ids'])), 403);
+
+        $eliminadas = $designaciones->where('estado', 'propuesta')
+            ->each(fn (Designacion $designacion) => $designacion->delete())
+            ->count();
 
         return response()->json(['eliminadas' => $eliminadas]);
+    }
+
+    private function validarFilasDeCarrera(array $filas, int $carreraId): void
+    {
+        $grupos = Grupo::with('mallaCurricular')
+            ->whereIn('id', collect($filas)->pluck('Id_grupo')->unique())
+            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $carreraId))
+            ->get()
+            ->keyBy('id');
+
+        foreach ($filas as $fila) {
+            $grupo = $grupos->get($fila['Id_grupo']);
+
+            abort_unless(
+                $grupo && (int) $grupo->mallaCurricular->materia_id === (int) $fila['Id_materia'],
+                403,
+            );
+        }
     }
 }

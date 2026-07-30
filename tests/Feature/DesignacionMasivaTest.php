@@ -15,12 +15,12 @@ class DesignacionMasivaTest extends TestCase
 {
     public function test_previsualizar_pegado_retorna_filas_ok_cuando_no_hay_conflictos(): void
     {
-        $usuario = User::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
         $docente = Docente::factory()->create();
         $materia = Materia::factory()->create(['horas' => 4]);
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+        $usuario = User::factory()->director($grupo->mallaCurricular->carrera_id)->create();
 
         $response = $this->actingAs($usuario)
             ->postJson('/designaciones/previsualizar-pegado', [
@@ -53,13 +53,13 @@ class DesignacionMasivaTest extends TestCase
 
     public function test_previsualizar_pegado_detecta_grupo_ocupado(): void
     {
-        $usuario = User::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
         $docenteA = Docente::factory()->create();
         $docenteB = Docente::factory()->create();
         $materia = Materia::factory()->create(['horas' => 4]);
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+        $usuario = User::factory()->director($grupo->mallaCurricular->carrera_id)->create();
 
         // Crear una designación activa para este grupo en el periodo destino
         Designacion::factory()->create([
@@ -101,7 +101,6 @@ class DesignacionMasivaTest extends TestCase
 
     public function test_previsualizar_pegado_permite_mas_de_6_horas_sin_limite(): void
     {
-        $usuario = User::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
         $docente = Docente::factory()->create();
@@ -121,6 +120,7 @@ class DesignacionMasivaTest extends TestCase
         // Agregar otra materia de 4 horas (total seria 9h > 6h -> Permitido sin limite)
         $materiaNueva = Materia::factory()->create(['horas' => 4]);
         $grupoNuevo = Grupo::factory()->create(['materia_id' => $materiaNueva->id]);
+        $usuario = User::factory()->director($grupoNuevo->mallaCurricular->carrera_id)->create();
 
         $response = $this->actingAs($usuario)
             ->postJson('/designaciones/previsualizar-pegado', [
@@ -152,12 +152,12 @@ class DesignacionMasivaTest extends TestCase
 
     public function test_pegar_crea_designaciones_en_lote_con_estado_propuesta(): void
     {
-        $usuario = User::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
         $docente = Docente::factory()->create();
         $materia = Materia::factory()->create(['horas' => 4]);
         $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+        $usuario = User::factory()->director($grupo->mallaCurricular->carrera_id)->create();
 
         $response = $this->actingAs($usuario)
             ->postJson('/designaciones/pegar', [
@@ -191,9 +191,16 @@ class DesignacionMasivaTest extends TestCase
 
     public function test_deshacer_pegado_elimina_solo_propuestas(): void
     {
-        $usuario = User::factory()->create();
         $designacionPropuesta = Designacion::factory()->create(['estado' => 'propuesta']);
-        $designacionAprobada = Designacion::factory()->create(['estado' => 'aprobada']);
+        $designacionAprobada = Designacion::factory()->create([
+            'Id_materia' => $designacionPropuesta->Id_materia,
+            'Id_grupo' => $designacionPropuesta->Id_grupo,
+            'malla_curricular_id' => $designacionPropuesta->malla_curricular_id,
+            'Id_gestion' => Gestion::factory()->create()->id,
+            'Id_periodo' => Periodo::factory()->create()->id,
+            'estado' => 'aprobada',
+        ]);
+        $usuario = User::factory()->director($designacionPropuesta->mallaCurricular->carrera_id)->create();
 
         $response = $this->actingAs($usuario)
             ->postJson('/designaciones/deshacer-pegado', [

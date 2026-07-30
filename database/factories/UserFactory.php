@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Carrera;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,6 +31,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'rol' => User::ROL_DIRECTOR_CARRERA,
+            'carrera_id' => Carrera::factory(),
         ];
     }
 
@@ -40,6 +43,22 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function director(Carrera|int|null $carrera = null): static
+    {
+        return $this->state(fn () => [
+            'rol' => User::ROL_DIRECTOR_CARRERA,
+            'carrera_id' => $carrera ?? Carrera::factory(),
+        ]);
+    }
+
+    public function vicerrectorado(): static
+    {
+        return $this->state(fn () => [
+            'rol' => User::ROL_VICERRECTORADO,
+            'carrera_id' => null,
         ]);
     }
 }

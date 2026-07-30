@@ -8,45 +8,49 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/', function (Request $request) {
-        if ($request->user()?->is_admin) {
+        if ($request->user()?->esVicerrectorado()) {
             return redirect()->route('revisiones.pendientes');
         }
 
         return redirect()->route('designaciones.lista');
     });
 
-    Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
+    Route::middleware('rol:director_carrera')->group(function () {
+        Route::get('designaciones/lista', [DesignacionController::class, 'lista'])
         ->name('designaciones.lista');
-    Route::get('designaciones/carrera/{carrera}', [DesignacionController::class, 'carrera'])
+        Route::get('designaciones/carrera/{carrera}', [DesignacionController::class, 'carrera'])
         ->name('designaciones.carrera');
-    Route::post('designaciones/carrera/{carrera}/guardar', [DesignacionController::class, 'guardarRoster'])
+        Route::post('designaciones/carrera/{carrera}/guardar', [DesignacionController::class, 'guardarRoster'])
         ->name('designaciones.carrera.guardar');
-    Route::post('designaciones/carrera/{carrera}/copiar-anterior', [DesignacionController::class, 'copiarAnterior'])
+        Route::post('designaciones/carrera/{carrera}/copiar-anterior', [DesignacionController::class, 'copiarAnterior'])
         ->name('designaciones.carrera.copiar_anterior');
-    Route::post('designaciones/carrera/{carrera}/previsualizar-copia', [DesignacionController::class, 'previsualizarCopia'])
+        Route::post('designaciones/carrera/{carrera}/previsualizar-copia', [DesignacionController::class, 'previsualizarCopia'])
         ->name('designaciones.carrera.previsualizar_copia');
-    Route::post('designaciones/pegar', [DesignacionMasivaController::class, 'pegar'])
+        Route::post('designaciones/pegar', [DesignacionMasivaController::class, 'pegar'])
         ->name('designaciones.pegar');
-    Route::post('designaciones/deshacer-pegado', [DesignacionMasivaController::class, 'deshacerPegado'])
+        Route::post('designaciones/deshacer-pegado', [DesignacionMasivaController::class, 'deshacerPegado'])
         ->name('designaciones.deshacer-pegado');
-    Route::post('designaciones/previsualizar-pegado', [DesignacionMasivaController::class, 'previsualizar'])
+        Route::post('designaciones/previsualizar-pegado', [DesignacionMasivaController::class, 'previsualizar'])
         ->name('designaciones.previsualizar-pegado');
 
-    Route::resource('designaciones', DesignacionController::class)
+        Route::resource('designaciones', DesignacionController::class)
         ->except('show')
         ->parameters(['designaciones' => 'designacion']);
-    Route::get('designaciones/{designacion}/historial', [DesignacionController::class, 'historial'])
+        Route::get('designaciones/{designacion}/historial', [DesignacionController::class, 'historial'])
         ->name('designaciones.historial');
 
-    // Revisiones
-    Route::post('revisiones/crear-propuesta', [RevisionController::class, 'crearPropuesta'])->name('revisiones.crear_propuesta');
-    Route::post('revisiones/solicitar', [RevisionController::class, 'solicitar'])->name('revisiones.solicitar');
-    Route::post('revisiones/{revision}/retirar', [RevisionController::class, 'retirar'])->name('revisiones.retirar');
-    Route::get('revisiones/pendientes', [RevisionController::class, 'pendientes'])->name('revisiones.pendientes');
-    Route::get('revisiones/{revision}/revisar', [RevisionController::class, 'revisar'])->name('revisiones.revisar');
-    Route::post('revisiones/{revision}/procesar', [RevisionController::class, 'procesar'])->name('revisiones.procesar');
-    Route::post('revisiones/{revision}/completar', [RevisionController::class, 'completar'])->name('revisiones.completar');
-    Route::delete('revisiones/{revision}', [RevisionController::class, 'destroy'])->name('revisiones.destroy');
+        Route::post('revisiones/crear-propuesta', [RevisionController::class, 'crearPropuesta'])->name('revisiones.crear_propuesta');
+        Route::post('revisiones/solicitar', [RevisionController::class, 'solicitar'])->name('revisiones.solicitar');
+        Route::post('revisiones/{revision}/retirar', [RevisionController::class, 'retirar'])->name('revisiones.retirar');
+        Route::delete('revisiones/{revision}', [RevisionController::class, 'destroy'])->name('revisiones.destroy');
+    });
+
+    Route::middleware('rol:vicerrectorado')->group(function () {
+        Route::get('revisiones/pendientes', [RevisionController::class, 'pendientes'])->name('revisiones.pendientes');
+        Route::get('revisiones/{revision}/revisar', [RevisionController::class, 'revisar'])->name('revisiones.revisar');
+        Route::post('revisiones/{revision}/procesar', [RevisionController::class, 'procesar'])->name('revisiones.procesar');
+        Route::post('revisiones/{revision}/completar', [RevisionController::class, 'completar'])->name('revisiones.completar');
+    });
 });
 
 require __DIR__.'/auth.php';

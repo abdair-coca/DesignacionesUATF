@@ -16,7 +16,7 @@ class RevisionPendientesViewTest extends TestCase
 {
     public function test_admin_ve_pendientes_con_datos(): void
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->vicerrectorado()->create();
         $carrera = Carrera::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
@@ -37,7 +37,7 @@ class RevisionPendientesViewTest extends TestCase
 
     public function test_admin_ve_revisar_con_designaciones(): void
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->vicerrectorado()->create();
         $carrera = Carrera::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
@@ -68,7 +68,7 @@ class RevisionPendientesViewTest extends TestCase
 
     public function test_usuario_normal_no_ve_revisar(): void
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create();
         $carrera = Carrera::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
@@ -89,7 +89,7 @@ class RevisionPendientesViewTest extends TestCase
 
     public function test_procesar_requiere_acciones_array(): void
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->vicerrectorado()->create();
         $carrera = Carrera::factory()->create();
         $gestion = Gestion::factory()->create();
         $periodo = Periodo::factory()->create();
