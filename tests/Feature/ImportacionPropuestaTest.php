@@ -17,6 +17,73 @@ use Tests\TestCase;
 
 class ImportacionPropuestaTest extends TestCase
 {
+    public function test_director_previsualiza_copia_para_una_propuesta_nueva_desde_la_lista(): void
+    {
+        [$director, $gestionDestino, $periodoDestino, $gestionOrigen, $periodoOrigen, $grupo, $materia] = $this->contextoCopiaNueva();
+        $docenteOrigen = Docente::factory()->create(['nombre' => 'Docente a copiar']);
+        Designacion::factory()->create([
+            'Id_docente' => $docenteOrigen->id,
+            'Id_grupo' => $grupo->id,
+            'Id_materia' => $materia->id,
+            'malla_curricular_id' => $grupo->malla_curricular_id,
+            'Id_gestion' => $gestionOrigen->id,
+            'Id_periodo' => $periodoOrigen->id,
+            'estado' => 'aprobada',
+        ]);
+
+        $this->actingAs($director)
+            ->postJson('/designaciones/copiar/previsualizar', [
+                'gestion_id' => $gestionDestino->id,
+                'periodo_id' => $periodoDestino->id,
+                'origen_gestion_id' => $gestionOrigen->id,
+                'origen_periodo_id' => $periodoOrigen->id,
+            ])
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('importables', 1)
+            ->assertJsonPath('filas.0.docente_nombre', 'Docente a copiar')
+            ->assertJsonPath('filas.0.impacto', 'Nueva asignacion');
+    }
+
+    public function test_director_crea_propuesta_nueva_copiando_designaciones_historicas(): void
+    {
+        [$director, $gestionDestino, $periodoDestino, $gestionOrigen, $periodoOrigen, $grupo, $materia] = $this->contextoCopiaNueva();
+        $docenteOrigen = Docente::factory()->create(['nombre' => 'Docente copiado']);
+        Designacion::factory()->create([
+            'Id_docente' => $docenteOrigen->id,
+            'Id_grupo' => $grupo->id,
+            'Id_materia' => $materia->id,
+            'malla_curricular_id' => $grupo->malla_curricular_id,
+            'Id_gestion' => $gestionOrigen->id,
+            'Id_periodo' => $periodoOrigen->id,
+            'estado' => 'aprobada',
+        ]);
+
+        $this->actingAs($director)
+            ->post('/designaciones/copiar', [
+                'gestion_id' => $gestionDestino->id,
+                'periodo_id' => $periodoDestino->id,
+                'descripcion' => 'Propuesta copiada',
+                'origen_gestion_id' => $gestionOrigen->id,
+                'origen_periodo_id' => $periodoOrigen->id,
+            ])
+            ->assertRedirect();
+
+        $propuesta = Propuesta::where('descripcion', 'Propuesta copiada')->firstOrFail();
+
+        $this->assertDatabaseHas('propuesta_designaciones', [
+            'propuesta_id' => $propuesta->id,
+            'grupo_id' => $grupo->id,
+            'docente_id' => $docenteOrigen->id,
+            'estado' => 'propuesta',
+        ]);
+        $this->assertDatabaseHas('propuesta_eventos', [
+            'propuesta_id' => $propuesta->id,
+            'usuario_id' => $director->id,
+            'tipo' => 'importada',
+        ]);
+    }
+
     public function test_director_previsualiza_y_confirma_importacion_historica_de_su_carrera(): void
     {
         [$director, $propuesta, $gestionOrigen, $periodoOrigen, $grupo, $materia] = $this->contextoImportacion();
@@ -226,5 +293,20 @@ class ImportacionPropuestaTest extends TestCase
         ]);
 
         return [$director, $propuesta, $gestionOrigen, $periodoOrigen, $grupo, $materia];
+    }
+
+    private function contextoCopiaNueva(): array
+    {
+        Gestion::query()->update(['es_actual' => false]);
+        $gestionDestino = Gestion::factory()->create(['es_actual' => true]);
+        $gestionOrigen = Gestion::factory()->create(['es_actual' => false]);
+        $periodoDestino = Periodo::factory()->create();
+        $periodoOrigen = Periodo::factory()->create();
+        $carrera = Carrera::factory()->create();
+        $director = User::factory()->director($carrera)->create();
+        $materia = Materia::factory()->create(['carrera_id' => $carrera->id]);
+        $grupo = Grupo::factory()->create(['materia_id' => $materia->id]);
+
+        return [$director, $gestionDestino, $periodoDestino, $gestionOrigen, $periodoOrigen, $grupo, $materia];
     }
 }

@@ -18,6 +18,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('rol:director_carrera')->group(function () {
         Route::get('designaciones', [PropuestaController::class, 'index'])->name('designaciones.index');
         Route::post('designaciones', [PropuestaController::class, 'crear'])->name('designaciones.crear');
+        Route::post('designaciones/copiar/previsualizar', [PropuestaController::class, 'previsualizarCopia'])->name('designaciones.copiar.previsualizar');
+        Route::post('designaciones/copiar', [PropuestaController::class, 'copiar'])->name('designaciones.copiar');
         Route::get('designaciones/{propuesta}/importar', [PropuestaController::class, 'importar'])->whereNumber('propuesta')->name('designaciones.importar');
         Route::post('designaciones/{propuesta}/importar/previsualizar', [PropuestaController::class, 'previsualizarImportacion'])->whereNumber('propuesta')->name('designaciones.importar.previsualizar');
         Route::post('designaciones/{propuesta}/importar', [PropuestaController::class, 'aplicarImportacion'])->whereNumber('propuesta')->name('designaciones.importar.aplicar');

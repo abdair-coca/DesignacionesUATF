@@ -95,6 +95,7 @@
                             <td class="py-3.5 px-5 border-r border-gray-200/60">
                                 <span class="font-bold text-gray-900 text-xs block" x-text="item.descripcion"></span>
                                 <span class="text-[11px] text-gray-500 font-normal">Carrera de {{ $carreraActual->nombre }}</span>
+                                <span class="text-[11px] text-gray-500 font-normal block" x-text="(item.designaciones_count || 0) + ' designaciones registradas'"></span>
                             </td>
 
                             <!-- 3. Gestión -->
@@ -187,7 +188,7 @@
                         class="flex-1 py-2.5 px-4 text-center transition-colors">
                     Crear Nueva Designación
                 </button>
-                <button @click="tabModal = 'copiar'"
+                <button @click="tabModal = 'copiar'; cargarPrevisualizacionCopia()"
                         :class="tabModal === 'copiar' ? 'bg-white text-[#348fe2] border-t-2 border-[#348fe2]' : 'text-gray-600 hover:text-gray-900'"
                         class="flex-1 py-2.5 px-4 text-center transition-colors">
                     Copiar de Gestión Anterior
@@ -305,7 +306,13 @@
                                         </tr>
                                     </template>
 
-                                    <template x-if="!cargandoPreview && previsualizacionData.length === 0">
+                                    <template x-if="!cargandoPreview && errorPreview">
+                                        <tr>
+                                            <td colspan="3" class="p-3 text-center text-rose-700 bg-rose-50 font-semibold" x-text="errorPreview"></td>
+                                        </tr>
+                                    </template>
+
+                                    <template x-if="!cargandoPreview && !errorPreview && previsualizacionData.length === 0">
                                         <tr>
                                             <td colspan="3" class="p-3 text-center text-gray-400 italic">
                                                 No existen designaciones registradas en el periodo de origen seleccionado.
@@ -457,10 +464,45 @@
 
             cargandoPreview: false,
             previsualizacionData: [],
+            errorPreview: '',
 
             cargarPrevisualizacionCopia() {
                 this.previsualizacionData = [];
-                this.cargandoPreview = false;
+                this.errorPreview = '';
+
+                if (!this.copiaForm.origen_gestion_id || !this.copiaForm.origen_periodo_id || !this.copiaForm.periodo_id) {
+                    return;
+                }
+
+                this.cargandoPreview = true;
+
+                fetch('/designaciones/copiar/previsualizar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gestion_id: {{ $gestionActualId }},
+                        periodo_id: this.copiaForm.periodo_id,
+                        origen_gestion_id: this.copiaForm.origen_gestion_id,
+                        origen_periodo_id: this.copiaForm.origen_periodo_id
+                    })
+                })
+                .then(async r => {
+                    const data = await r.json().catch(() => ({}));
+                    if (!r.ok) {
+                        throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'No se pudo cargar la previsualizacion.');
+                    }
+                    this.previsualizacionData = data.filas || [];
+                })
+                .catch(error => {
+                    this.errorPreview = error.message || 'No se pudo cargar la previsualizacion.';
+                })
+                .finally(() => {
+                    this.cargandoPreview = false;
+                });
             },
 
             propuestas: propuestasIniciales,
@@ -479,6 +521,8 @@
             abrirModalNuevaPropuesta() {
                 this.nuevaForm.descripcion = '';
                 this.copiaForm.descripcion = '';
+                this.previsualizacionData = [];
+                this.errorPreview = '';
                 this.modalNuevaOpen = true;
             },
 
@@ -520,6 +564,11 @@
             },
 
             solicitarRevisionEspecifica(item) {
+                if ((item.designaciones_count || 0) === 0) {
+                    this.mostrarNotificacion('No se Puede Enviar', 'Primero asigna al menos un docente en esta propuesta.', 'error');
+                    return;
+                }
+
                 this.mostrarConfirmacion(
                     'Enviar Propuesta a Vicerrectorado',
                     '¿Deseas enviar la propuesta "' + item.descripcion + '" al Vicerrectorado para su evaluación y aprobación?',
@@ -530,15 +579,18 @@
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': CSRF_TOKEN,
-                                'Accept': 'text/html'
+                                'Accept': 'application/json'
                             }
                         })
-                        .then(r => {
-                            if (!r.ok) throw new Error();
+                        .then(async r => {
+                            if (!r.ok) {
+                                const data = await r.json().catch(() => ({}));
+                                throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'Ocurrió un problema al enviar la propuesta.');
+                            }
                             window.location.reload();
                         })
-                        .catch(() => {
-                            this.mostrarNotificacion('No se Pudo Enviar', 'Ocurrió un problema al enviar la propuesta.', 'error');
+                        .catch(error => {
+                            this.mostrarNotificacion('No se Pudo Enviar', error.message, 'error');
                         });
                     }
                 );
@@ -557,15 +609,18 @@
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': CSRF_TOKEN,
-                                'Accept': 'text/html'
+                                'Accept': 'application/json'
                             }
                         })
-                        .then(r => {
-                            if (!r.ok) throw new Error();
+                        .then(async r => {
+                            if (!r.ok) {
+                                const data = await r.json().catch(() => ({}));
+                                throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'No se pudo retirar la solicitud.');
+                            }
                             window.location.reload();
                         })
-                        .catch(() => {
-                            this.mostrarNotificacion('Error al Retirar', 'No se pudo retirar la solicitud.', 'error');
+                        .catch(error => {
+                            this.mostrarNotificacion('Error al Retirar', error.message, 'error');
                         });
                     }
                 );
@@ -576,28 +631,36 @@
                 const form = esCopia ? this.copiaForm : this.nuevaForm;
                 const descripcion = form.descripcion.trim() || ('Propuesta de Designacion Docente I/' + anoActual + ' - ' + this.carrera.nombre);
                 const periodoId = form.periodo_id;
+                const url = esCopia ? '/designaciones/copiar' : '/designaciones';
+                const payload = {
+                    descripcion: descripcion,
+                    gestion_id: {{ $gestionActualId }},
+                    periodo_id: periodoId
+                };
 
-                fetch('/designaciones', {
+                if (esCopia) {
+                    payload.origen_gestion_id = this.copiaForm.origen_gestion_id;
+                    payload.origen_periodo_id = this.copiaForm.origen_periodo_id;
+                }
+
+                fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': CSRF_TOKEN,
-                        'Accept': 'text/html'
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        descripcion: descripcion,
-                        gestion_id: {{ $gestionActualId }},
-                        periodo_id: periodoId
-                    })
+                    body: JSON.stringify(payload)
                 })
-                .then(r => {
-                    if (!r.ok) throw new Error();
-                    window.location.href = esCopia
-                        ? r.url + '/importar?origen_gestion_id=' + this.copiaForm.origen_gestion_id + '&origen_periodo_id=' + this.copiaForm.origen_periodo_id
-                        : r.url;
+                .then(async r => {
+                    if (!r.ok) {
+                        const data = await r.json().catch(() => ({}));
+                        throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'No se pudo crear la propuesta.');
+                    }
+                    window.location.href = r.url;
                 })
-                .catch(() => {
-                    this.mostrarNotificacion('Error al Crear', 'No se pudo crear la propuesta.', 'error');
+                .catch(error => {
+                    this.mostrarNotificacion('Error al Crear', error.message, 'error');
                 });
             }
         };

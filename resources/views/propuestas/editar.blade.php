@@ -12,10 +12,10 @@
             </div>
             @if($puedeEditar)
                 <div class="flex gap-2">
-                    <a href="{{ route('designaciones.importar', $propuesta) }}" class="border border-[#007c7c] text-[#007c7c] px-4 py-2 text-sm font-semibold hover:bg-teal-50">Importar historico</a>
+                    <a href="{{ route('designaciones.importar', $propuesta) }}" class="border border-[#007c7c] text-[#007c7c] px-4 py-2 text-sm font-semibold hover:bg-teal-50">Copiar historico</a>
                     <form method="POST" action="{{ route('designaciones.enviar', $propuesta) }}">
                     @csrf
-                    <button type="submit" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Enviar revisión a revisión</button>
+                    <button type="submit" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Enviar a revisión</button>
                     </form>
                 </div>
             @endif

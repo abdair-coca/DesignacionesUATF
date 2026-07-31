@@ -10,8 +10,10 @@ use App\Models\Propuesta;
 use App\Models\PropuestaVersion;
 use App\Services\ImportacionPropuestaService;
 use App\Services\PropuestaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -28,6 +30,7 @@ class PropuestaController extends Controller
         $gestionActual = $gestiones->firstWhere('es_actual', true) ?? $gestiones->first();
         $gestionId = $request->integer('gestion_id') ?: $gestionActual?->id;
         $propuestas = Propuesta::with(['gestion', 'periodo', 'versiones' => fn ($query) => $query->latest('numero')])
+            ->withCount('designaciones')
             ->where('carrera_id', $request->user()->carrera_id)
             ->when($gestionId, fn ($query) => $query->where('gestion_id', $gestionId))
             ->latest('updated_at')
@@ -49,6 +52,7 @@ class PropuestaController extends Controller
                     : ($versionPendiente ? 'enviado' : ($versionObservada ? 'con_observaciones' : 'propuesta')),
                 'observacion' => $versionObservada?->observaciones,
                 'version_pendiente_id' => $versionPendiente?->id,
+                'designaciones_count' => $propuesta->designaciones_count,
                 'created_at' => $propuesta->created_at?->toIso8601String(),
             ];
         });
@@ -80,6 +84,62 @@ class PropuestaController extends Controller
 
         return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', 'Borrador listo para editar.');
+    }
+
+    public function previsualizarCopia(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
+            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
+            'origen_gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
+            'origen_periodo_id' => ['required', 'integer', 'exists:periodos,id'],
+        ]);
+
+        $filas = $this->importaciones->previsualizarNueva(
+            $request->user(),
+            Gestion::findOrFail($data['gestion_id']),
+            Periodo::findOrFail($data['periodo_id']),
+            Gestion::findOrFail($data['origen_gestion_id']),
+            Periodo::findOrFail($data['origen_periodo_id']),
+        );
+
+        return response()->json([
+            'filas' => $filas,
+            'total' => $filas->count(),
+            'importables' => $filas->where('importable', true)->count(),
+        ]);
+    }
+
+    public function copiar(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
+            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
+            'descripcion' => ['nullable', 'string', 'max:255'],
+            'origen_gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
+            'origen_periodo_id' => ['required', 'integer', 'exists:periodos,id'],
+        ]);
+
+        [$propuesta, $filas] = DB::transaction(function () use ($request, $data): array {
+            $propuesta = $this->propuestas->crearBorrador(
+                $request->user(),
+                Gestion::findOrFail($data['gestion_id']),
+                Periodo::findOrFail($data['periodo_id']),
+                $data['descripcion'] ?? null,
+            );
+
+            $filas = $this->importaciones->aplicar(
+                $propuesta,
+                Gestion::findOrFail($data['origen_gestion_id']),
+                Periodo::findOrFail($data['origen_periodo_id']),
+                $request->user(),
+            );
+
+            return [$propuesta, $filas];
+        });
+
+        return redirect()->route('designaciones.editar', $propuesta)
+            ->with('success', "Propuesta creada con {$filas} designaciones copiadas.");
     }
 
     public function editar(Propuesta $propuesta): View

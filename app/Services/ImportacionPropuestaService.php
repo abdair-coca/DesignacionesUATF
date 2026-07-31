@@ -46,6 +46,31 @@ class ImportacionPropuestaService
             ->values();
     }
 
+    public function previsualizarNueva(
+        User $usuario,
+        Gestion $gestionDestino,
+        Periodo $periodoDestino,
+        Gestion $gestionOrigen,
+        Periodo $periodoOrigen,
+    ): Collection {
+        if (! $gestionDestino->es_actual) {
+            throw ValidationException::withMessages([
+                'gestion_id' => 'Solo se puede crear una propuesta para la gestion actual.',
+            ]);
+        }
+
+        $this->validarOrigenIds($gestionDestino->id, $periodoDestino->id, $gestionOrigen->id, $periodoOrigen->id);
+
+        return $this->filasOrigenPorCarrera($usuario->carrera_id, $gestionOrigen, $periodoOrigen)
+            ->map(fn (array $origen) => [
+                ...$origen,
+                'docente_actual' => null,
+                'importable' => true,
+                'impacto' => 'Nueva asignacion',
+            ])
+            ->values();
+    }
+
     public function aplicar(
         Propuesta $propuesta,
         Gestion $gestionOrigen,
@@ -109,10 +134,15 @@ class ImportacionPropuestaService
 
     private function filasOrigen(Propuesta $propuesta, Gestion $gestionOrigen, Periodo $periodoOrigen): Collection
     {
+        return $this->filasOrigenPorCarrera($propuesta->carrera_id, $gestionOrigen, $periodoOrigen);
+    }
+
+    private function filasOrigenPorCarrera(int $carreraId, Gestion $gestionOrigen, Periodo $periodoOrigen): Collection
+    {
         $desdePropuestaOficial = PropuestaDesignacion::query()
             ->with(['docente', 'materia', 'grupo.mallaCurricular'])
             ->whereHas('propuesta', fn ($query) => $query
-                ->where('carrera_id', $propuesta->carrera_id)
+                ->where('carrera_id', $carreraId)
                 ->where('gestion_id', $gestionOrigen->id)
                 ->where('periodo_id', $periodoOrigen->id)
                 ->where('estado', 'oficial'))
@@ -135,7 +165,7 @@ class ImportacionPropuestaService
             ->where('Id_gestion', $gestionOrigen->id)
             ->where('Id_periodo', $periodoOrigen->id)
             ->where('estado', '!=', 'rechazada')
-            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $propuesta->carrera_id))
+            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $carreraId))
             ->whereHas('grupo', fn ($query) => $query->where('estado', 'habilitado'))
             ->when($gruposOficiales->isNotEmpty(), fn ($query) => $query->whereNotIn('Id_grupo', $gruposOficiales))
             ->get()
@@ -181,7 +211,12 @@ class ImportacionPropuestaService
 
     private function validarOrigen(Propuesta $propuesta, Gestion $gestionOrigen, Periodo $periodoOrigen): void
     {
-        if ($propuesta->gestion_id === $gestionOrigen->id && $propuesta->periodo_id === $periodoOrigen->id) {
+        $this->validarOrigenIds($propuesta->gestion_id, $propuesta->periodo_id, $gestionOrigen->id, $periodoOrigen->id);
+    }
+
+    private function validarOrigenIds(int $gestionDestinoId, int $periodoDestinoId, int $gestionOrigenId, int $periodoOrigenId): void
+    {
+        if ($gestionDestinoId === $gestionOrigenId && $periodoDestinoId === $periodoOrigenId) {
             throw ValidationException::withMessages([
                 'origen_gestion_id' => 'El origen debe corresponder a otra gestion o periodo historico.',
             ]);
