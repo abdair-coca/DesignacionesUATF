@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             GestionSeeder::class,
             PeriodoSeeder::class,
             DesignacionSeeder::class,
+            DemoDesignacionesSeeder::class,
         ]);
     }
 }

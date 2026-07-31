@@ -9,10 +9,13 @@ class GestionSeeder extends Seeder
 {
     public function run(): void
     {
-        Gestion::insert([
-            ['nombre' => '2024'],
-            ['nombre' => '2025'],
-            ['nombre' => '2026'],
-        ]);
+        Gestion::query()->update(['es_actual' => false]);
+
+        foreach (['2024', '2025', '2026'] as $nombre) {
+            Gestion::updateOrCreate(
+                ['nombre' => $nombre],
+                ['es_actual' => $nombre === '2026'],
+            );
+        }
     }
 }
