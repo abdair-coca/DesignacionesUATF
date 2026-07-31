@@ -1,1 +1,168 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boceto · Designaciones UATF</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"></head><body><div class="shell"><aside><div class="brand"><span>U</span><div><b>UATF</b><small>Designaciones docentes</small></div></div><section class="user-card"><i id="sideInitial">M</i><div><b id="sideName">Mgtr. María Quispe</b><small id="sideCareer">Directora · Ingeniería Informática</small></div></section><p class="nav-caption">Navegación</p><button class="nav active"><em>▤</em>Mis propuestas</button><button class="nav"><em>♧</em>Notificaciones <strong>3</strong></button><footer>Gestión académica 2026<br><small>Universidad Autónoma Tomás Frías</small></footer></aside><section class="work"><header><div><small>GESTIÓN ACADÉMICA · <span id="headerSigla">INF</span></small><h1>Mis propuestas de designación</h1></div><div class="header-actions"><div class="drop-wrap"><button class="bell" id="bell">♧<sup>3</sup></button><div class="drop notifications" id="notifications"><b>Notificaciones</b><a>Propuesta observada por Vicerrectorado</a><a>Versión enviada correctamente</a><a>Gestión 2026 habilitada</a><button>Marcar todas como leídas</button></div></div><div class="drop-wrap"><button class="avatar" id="avatar"><span id="avatarInitial">M</span>⌄</button><div class="drop profile" id="profile"><small>VISTA DE DEMOSTRACIÓN</small><label for="role">Cambiar usuario</label><select id="role"><option value="inf">Mgtr. María Quispe · Informática</option><option value="civ">Ing. Carlos Flores · Civil</option><option value="med">Dra. Ana Rojas · Medicina</option></select></div></div></div></header><main><div class="intro"><div><div class="title-line"><span>CARRERA</span><h2>Designaciones Docentes — <strong id="careerName">Ingeniería Informática</strong> (<strong id="careerSigla">INF</strong>)</h2></div><p>Gestión oficial de propuestas docentes correspondientes al año 2026.</p><label>Filtrar Gestión: <select><option>Gestión 2026</option><option>Gestión 2025</option></select></label></div><button class="primary" id="openNew">＋ Nueva Propuesta de Designación</button></div><section class="panel"><div class="panel-title">Propuestas de Designación <b>GESTIÓN 2026</b><div><i>⛶</i><i>↻</i><i>−</i><i>×</i></div></div><table><thead><tr><th>#</th><th>Descripción</th><th>Gestión</th><th>Periodo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="rows"></tbody></table></section><p class="stage-note"><b>Boceto · Etapa 1.</b> Esta pantalla define el patrón visual para el resto del sistema. Las acciones muestran estados simulados; aún no navegan a otras vistas.</p></main></section></div><div class="overlay" id="modal"><section class="modal"><header>Nueva Propuesta de Designación <button data-close>×</button></header><main><p>Elige cómo deseas iniciar esta propuesta para la gestión 2026.</p><button class="option"><b>Crear propuesta vacía</b><small>Comienza asignando docentes por materia y grupo.</small></button><button class="option"><b>Copiar una propuesta anterior</b><small>Usa otra gestión y período como punto de partida.</small></button></main><footer><button class="secondary" data-close>Cancelar</button></footer></section></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Boceto · Designación de Docentes UATF</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        coloradmin: {
+                            sidebar: '#2d353c',
+                            active: '#20252a',
+                            hover: '#23282c',
+                            text: '#a8b6c1',
+                            teal: '#00acac',
+                            tealdark: '#008a8a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Instrument Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#2d353c] font-sans antialiased text-gray-900 min-h-screen flex flex-col select-none">
+    <div class="flex flex-1 min-h-screen bg-gray-100">
+        <!-- Sidebar estilo Color Admin v2 -->
+        <aside class="w-64 bg-[#2d353c] text-[#a8b6c1] flex flex-col min-h-screen shrink-0 font-sans shadow-xl select-none">
+            <!-- Header de Perfil / Universidad estilo Color Admin v2 -->
+            <div class="relative p-4 bg-cover bg-center border-b border-black/20" style="background-image: linear-gradient(rgba(45, 53, 60, 0.75), rgba(45, 53, 60, 0.95)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80');">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-[#00acac] text-white font-black text-xl flex items-center justify-center shadow-lg border-2 border-white/20">
+                            U
+                        </div>
+                        <div class="overflow-hidden">
+                            <h2 class="text-white font-bold text-sm leading-tight truncate" title="Universidad Autónoma Tomás Frías">
+                                Universidad Autónoma Tomás Frías
+                            </h2>
+                            <p id="sidebarSubtitle" class="text-[11px] text-gray-300 mt-0.5 truncate font-medium">
+                                Sistema de Designaciones
+                            </p>
+                        </div>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Navegación Principal -->
+            <nav class="flex-1 px-0 py-3 overflow-y-auto space-y-1 text-xs font-medium">
+                <div class="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                    Navegación
+                </div>
+
+                <div id="sidebarNavItems">
+                    <!-- Dynamic navigation items rendered by app.js -->
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Contenedor Principal -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <!-- Header Superior -->
+            <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+                <div class="flex items-center gap-4">
+                    <!-- Título Institucional / Contexto -->
+                    <div class="flex items-center gap-2">
+                        <span class="bg-[#00acac] text-white text-xs font-bold px-2 py-0.5 rounded shadow-sm">UATF</span>
+                        <h1 class="text-gray-800 text-sm font-semibold tracking-tight hidden sm:block">
+                            Sistema de Designación Docente
+                        </h1>
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas & Perfil de Usuario -->
+                <div class="flex items-center gap-4">
+                    <!-- Notificaciones Desplegable -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors relative cursor-pointer" title="Notificaciones">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span id="notifBadge" class="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#00acac] text-white text-[9px] font-bold rounded-full flex items-center justify-center">3</span>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-transition
+                             class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 py-2 text-xs text-gray-700 z-50">
+                            <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+                                <span class="font-bold text-gray-900">Notificaciones</span>
+                                <button onclick="markAllRead()" class="text-[10px] text-[#00acac] hover:underline font-semibold cursor-pointer">Marcar leídas</button>
+                            </div>
+                            <div id="notifList" class="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                                <!-- Dynamic notifications rendered by app.js -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usuario Logueado (Director de Carrera / Vicerrectorado) -->
+                    <div class="flex items-center gap-3 border-l border-gray-200 pl-4" x-data="{ open: false }">
+                        <div class="text-right hidden sm:block">
+                            <p id="headerUserName" class="text-xs font-bold text-gray-800 leading-tight">Mgtr. María Quispe</p>
+                            <p id="headerUserEmail" class="text-[10px] text-gray-500 font-medium">maria.quispe@uatf.edu.bo</p>
+                        </div>
+                        
+                        <div class="relative">
+                            <button @click="open = !open" class="flex items-center gap-2 focus:outline-none cursor-pointer">
+                                <div id="headerAvatarCircle" class="h-8 w-8 rounded-full bg-[#2d353c] text-white font-bold text-xs flex items-center justify-center ring-2 ring-[#00acac]/30">
+                                    M
+                                </div>
+                            </button>
+
+                            <!-- Menú desplegable Perfil -->
+                            <div x-show="open" @click.away="open = false" x-transition 
+                                 class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 py-1 text-xs text-gray-700 z-50">
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <p id="dropdownUserName" class="font-semibold text-gray-900">Mgtr. María Quispe</p>
+                                    <p id="dropdownUserRole" class="text-[11px] text-gray-400">Rol: Director de Carrera</p>
+                                </div>
+                                <div class="px-4 py-2 border-b border-gray-100 bg-gray-50">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Simular Usuario (Demo):</label>
+                                    <select id="userSelector" onchange="switchUser(this.value)" class="w-full bg-white border border-gray-300 rounded px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#00acac]">
+                                        <option value="inf">Mgtr. María Quispe · INF</option>
+                                        <option value="civ">Ing. Carlos Flores · CIV</option>
+                                        <option value="med">Dra. Ana Rojas · MED</option>
+                                        <option value="vic">Dr. Ricardo Villca · Vicerrectorado</option>
+                                    </select>
+                                </div>
+                                <a href="#" onclick="alert('Demostración interactiva. El cambio de usuario se realiza con el selector superior.'); return false;" class="px-4 py-2 text-red-600 hover:bg-red-50 font-medium flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    Cerrar Sesión (Simulado)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Contenido Dinámico de la Página -->
+            <main id="mainContent" class="flex-1 p-6 overflow-y-auto">
+                <!-- Main view content rendered by app.js -->
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

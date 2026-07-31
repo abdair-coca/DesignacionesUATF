@@ -10,6 +10,18 @@
 - Las observaciones devuelven el mismo borrador al Director; el reenvio crea una nueva version.
 - La aprobacion final bloquea la propuesta y sus filas. Las notificaciones informan al Director y sus enlaces usan rutas vigentes.
 
+## Boceto de validacion visual
+
+Existe un boceto independiente en `/boceto-designaciones/` para revisar el flujo sin inicio de sesion ni backend. Reune en una sola pagina las vistas del Director y Vicerrectorado, con datos simulados y patron visual Color Admin V2.
+
+- El selector del avatar alterna entre tres Directores de Carrera y Vicerrectorado.
+- Director puede crear/copia una propuesta, editar, importar, guardar, enviar, retirar envio y consultar el historial.
+- Vicerrectorado solo puede revisar, observar o aprobar; no puede editar designaciones.
+- Una observacion por designacion bloquea la aprobacion total hasta que el Director corrija y reenvie.
+- La aprobacion final del boceto bloquea visualmente la propuesta y sus designaciones.
+
+Los detalles de uso y alcance estan en [Boceto interactivo](BOCETO_INTERACTIVO.md).
+
 ## Pendiente para completar el flujo integral
 
 La funcionalidad esta construida, pero todavia falta la validacion integral de aceptacion con usuarios y datos representativos. Esta es la condicion pendiente para declarar el flujo completo de Designaciones como operativo:

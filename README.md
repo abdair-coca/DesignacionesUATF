@@ -49,6 +49,18 @@ Para reiniciar completamente la base de pruebas:
 php artisan migrate:fresh --seed --env=testing
 ```
 
+## Boceto interactivo del flujo
+
+El repositorio incluye un boceto independiente para revisar la experiencia de usuario sin modificar la interfaz operativa ni requerir inicio de sesion o backend.
+
+Con el servidor local iniciado, abra:
+
+```text
+http://127.0.0.1:8000/boceto-designaciones/
+```
+
+El avatar superior permite alternar entre tres Direcciones de Carrera y Vicerrectorado. El boceto simula el recorrido completo: crear o copiar una propuesta, editar, importar, guardar, enviar a revision, observar una designacion, corregir, reenviar y aprobar. La aprobacion final bloquea la propuesta. Todos los datos y transiciones son simulados.
+
 ## Calidad
 
 ```bash
@@ -62,6 +74,7 @@ php artisan academico:verificar-normalizacion
 
 - [Modelo de datos](docs/ERD.md)
 - [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md)
+- [Boceto interactivo](docs/BOCETO_INTERACTIVO.md)
 - [Plan frontend](docs/PLAN_FRONTEND.md)
 - [Higiene del repositorio](docs/HIGIENE_REPOSITORIO.md)
 
