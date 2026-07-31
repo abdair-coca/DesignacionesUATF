@@ -31,7 +31,7 @@ Thumbs.db
 # Base de datos local (SQLite de desarrollo, no se versiona)
 /database/database.sqlite
 
-# Estado local de herramientas de asistencia de código (no se sube al repo)
+# Estado local de herramientas auxiliares (no se sube al repo)
 /.claude/
 /.gemini/
 CLAUDE.md
@@ -41,5 +41,5 @@ opencode.md
 /docs/bitacora/
 /docs/PLAN_ELEVACION_PROYECTO.md
 
-# Cache regenerable de Graphify; el grafo y manifiesto se versionan.
+# Salidas regenerables de analisis del proyecto
 /graphify-out/

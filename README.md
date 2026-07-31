@@ -13,7 +13,7 @@ Sistema web para gestionar propuestas, revisiones y versiones de designaciones d
 
 ## Stack
 
-- PHP 8.3
+- PHP 8.4
 - Laravel 13
 - PostgreSQL
 - Blade
@@ -63,6 +63,7 @@ php artisan academico:verificar-normalizacion
 - [Modelo de datos](docs/ERD.md)
 - [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md)
 - [Plan frontend](docs/PLAN_FRONTEND.md)
+- [Higiene del repositorio](docs/HIGIENE_REPOSITORIO.md)
 
 ## Licencia
 
