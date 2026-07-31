@@ -1,4 +1,4 @@
-// Sistema de Designación Docente UATF - Prototipo Interactivo (Ajuste Final: Botón Imprimir en todas las propuestas)
+// Sistema de Designación Docente UATF - Prototipo Interactivo (Ajuste Vicerrectorado: Botón Único 'Confirmar revisión' + Checkbox Aprobar Todas)
 
 const USERS = {
     inf: {
@@ -300,7 +300,7 @@ function renderMainView() {
 }
 
 // --------------------------------------------------------------------------
-// PANTALLA 1: LISTA DE PROPUESTAS CON BOTÓN IMPRIMIR EN ACCIONES
+// PANTALLA 1: LISTA DE PROPUESTAS CON BOTÓN IMPRIMIR
 // --------------------------------------------------------------------------
 function renderListaDirectorView(container, u) {
     const misPropuestas = propuestas.filter(p => p.carreraId === u.careerId);
@@ -368,7 +368,6 @@ function renderListaDirectorView(container, u) {
                                             ${getBadgeEstado(p.estado)}
                                         </td>
                                         <td class="py-3.5 px-4 text-center space-x-1">
-                                            <!-- BOTÓN IMPRIMIR PRESENTE EN CUALQUIER ESTADO -->
                                             <button onclick="imprimirPropuesta(${p.id})" class="px-2.5 py-1 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded text-[11px] cursor-pointer inline-flex items-center gap-1">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -499,7 +498,6 @@ function renderEditorCarreraView(container, u) {
 
     container.innerHTML = `
         <div class="space-y-4 text-xs text-gray-800">
-            <!-- ENCABEZADO DEL MÓDULO -->
             <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-3.5 rounded border border-gray-200 shadow-2xs">
                 <div>
                     <div class="flex items-center gap-2">
@@ -574,7 +572,6 @@ function renderEditorCarreraView(container, u) {
                 </div>
             ` : ''}
 
-            <!-- DATATABLE DE DESIGNACIÓN -->
             <div class="rounded-lg border border-gray-200/80 bg-white shadow-md overflow-hidden">
                 <div class="bg-[#2d353c] text-white px-4 py-2.5 flex items-center justify-between font-bold text-xs">
                     <div class="flex items-center gap-2">
@@ -757,7 +754,6 @@ function renderImportarPropuestaView(container, u) {
             <div id="stepPreview" class="hidden bg-white border border-gray-200 rounded p-5 space-y-4 shadow-2xs">
                 <h3 class="font-bold text-gray-900 text-sm border-b border-gray-100 pb-2">2. Previsualización de Cambios a Aplicar al Borrador</h3>
                 <div id="tablaDiferenciasImportacion" class="overflow-x-auto">
-                    <!-- Dynamic preview table -->
                 </div>
 
                 <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
@@ -987,7 +983,7 @@ function filtrarInbox(val) {
 }
 
 // --------------------------------------------------------------------------
-// PANTALLA REVISAR VERSIÓN EN VICERRECTORADO
+// PANTALLA REVISAR VERSIÓN EN VICERRECTORADO (BOTÓN ÚNICO 'Confirmar revisión')
 // --------------------------------------------------------------------------
 function renderRevisarVersionView(container, u) {
     const prop = propuestas.find(p => p.id === activePropuestaId) || propuestas[0];
@@ -1025,8 +1021,14 @@ function renderRevisarVersionView(container, u) {
                     </section>
 
                     <section class="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
-                        <div class="bg-[#2d353c] text-white px-4 py-2.5 font-bold text-xs">
-                            Snapshot de Designaciones Enviadas &bull; Versión ${prop.numeroVersion}
+                        <div class="bg-[#2d353c] text-white px-4 py-2.5 font-bold text-xs flex justify-between items-center">
+                            <span>Snapshot de Designaciones Enviadas &bull; Versión ${prop.numeroVersion}</span>
+
+                            <!-- CHECKBOX GLOBAL PARA APROBAR / RECHAZAR TODAS LAS FILAS -->
+                            <label class="flex items-center gap-2 bg-[#20252a] px-3 py-1 rounded text-white font-bold text-xs cursor-pointer hover:bg-black/30 transition-colors">
+                                <input type="checkbox" id="checkAprobarTodos" onchange="toggleAprobarTodasLasFilas(this.checked)" checked class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                                <span>Aprobar todas las filas</span>
+                            </label>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
@@ -1057,8 +1059,8 @@ function renderRevisarVersionView(container, u) {
                                                     </td>
                                                 ` : `
                                                     <td class="px-4 py-3 min-w-40 text-center">
-                                                        <select id="dec_${g.id}" class="w-full border border-gray-300 rounded px-2 py-1 font-bold text-xs bg-white">
-                                                            <option value="aprobada" ${g.estado === 'editable' ? 'selected' : ''}>Aprobar</option>
+                                                        <select id="dec_${g.id}" class="select-decision w-full border border-gray-300 rounded px-2 py-1 font-bold text-xs bg-white">
+                                                            <option value="aprobada" ${g.estado === 'editable' || g.estado === 'aprobada' ? 'selected' : ''}>Aprobar</option>
                                                             <option value="observada" ${g.estado === 'observada' ? 'selected' : ''}>Observar</option>
                                                         </select>
                                                     </td>
@@ -1074,12 +1076,13 @@ function renderRevisarVersionView(container, u) {
                         </div>
                     </section>
 
-                    <div class="flex flex-wrap justify-end gap-3 pt-2">
-                        <button onclick="guardarDecisionesFilas(${prop.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 text-xs rounded shadow-2xs cursor-pointer">
-                            Registrar Decisiones por Fila
-                        </button>
-                        <button onclick="aprobarRevisionCompleta(${prop.id})" class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-4 py-2 text-xs rounded shadow-2xs cursor-pointer">
-                            Aprobar Revisión Completa
+                    <!-- UN SOLO BOTÓN DE ACCIÓN: CONFIRMAR REVISIÓN -->
+                    <div class="flex justify-end pt-2">
+                        <button onclick="confirmarRevisionUnica(${prop.id})" class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-6 py-2.5 text-xs rounded shadow-md transition-colors cursor-pointer flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Confirmar Revisión</span>
                         </button>
                     </div>
                 </form>
@@ -1133,7 +1136,16 @@ function renderRevisarVersionView(container, u) {
     `;
 }
 
-function guardarDecisionesFilas(propId) {
+// TOGGLE SELECT ALL ROWS AS APPROVED OR OBSERVED (SÓLO CAMBIA ESTADO EN PANTALLA, NO ENVÍA)
+function toggleAprobarTodasLasFilas(checked) {
+    const selects = document.querySelectorAll('.select-decision');
+    selects.forEach(s => {
+        s.value = checked ? 'aprobada' : 'observada';
+    });
+}
+
+// UNIFICACIÓN EN UN SOLO BOTÓN 'Confirmar revisión'
+function confirmarRevisionUnica(propId) {
     const prop = propuestas.find(p => p.id === propId);
     const grupos = rosterGruposPorPropuesta[prop.id] || [];
     const obsGeneral = document.getElementById('obs_general_input').value;
@@ -1147,45 +1159,37 @@ function guardarDecisionesFilas(propId) {
             if (decSelect && obsInput) {
                 g.estado = decSelect.value;
                 g.observacion = obsInput.value || null;
-                if (g.estado === 'observada') hayObservada = true;
+                if (g.estado === 'observada') {
+                    hayObservada = true;
+                } else if (g.estado === 'aprobada') {
+                    g.estado = 'aprobada_previamente';
+                }
             }
         }
     });
 
-    prop.observacionGeneral = obsGeneral || (hayObservada ? 'Existen designaciones observadas que requieren corrección.' : 'Propuesta aprobada por Vicerrectorado.');
-    prop.estado = hayObservada ? 'observada' : 'aprobada';
+    if (hayObservada) {
+        prop.estado = 'observada';
+        prop.observacionGeneral = obsGeneral || 'Existen materias observadas en la propuesta que requieren corrección.';
+        notifications.unshift({
+            id: Date.now(),
+            text: `Vicerrectorado devolvió la propuesta de ${USERS[prop.carreraId === 1 ? 'inf' : prop.carreraId === 2 ? 'civ' : 'med'].carreraSigla} con observaciones.`,
+            time: 'Justo ahora',
+            unread: true
+        });
+        alert('Revisión confirmada: La propuesta ha sido devuelta al Director con observaciones.');
+    } else {
+        prop.estado = 'aprobada';
+        prop.observacionGeneral = obsGeneral || 'Aprobada oficialmente por Vicerrectorado Académico.';
+        notifications.unshift({
+            id: Date.now(),
+            text: `Propuesta de ${USERS[prop.carreraId === 1 ? 'inf' : prop.carreraId === 2 ? 'civ' : 'med'].carreraSigla} APROBADA oficialmente.`,
+            time: 'Justo ahora',
+            unread: true
+        });
+        alert('Revisión confirmada: La propuesta y sus materias han sido APROBADAS oficialmente de forma inmutable.');
+    }
 
-    notifications.unshift({
-        id: Date.now(),
-        text: `Vicerrectorado registró decisiones para la propuesta de ${USERS[prop.carreraId === 1 ? 'inf' : prop.carreraId === 2 ? 'civ' : 'med'].carreraSigla}.`,
-        time: 'Justo ahora',
-        unread: true
-    });
-
-    alert(hayObservada ? 'La propuesta fue marcada como OBSERVADA y devuelta al Director con las anotaciones correspondientes.' : 'Todas las designaciones fueron APROBADAS exitosamente.');
-    switchView('bandeja_vicerrectorado');
-}
-
-function aprobarRevisionCompleta(propId) {
-    const prop = propuestas.find(p => p.id === propId);
-    const grupos = rosterGruposPorPropuesta[prop.id] || [];
-
-    grupos.forEach(g => {
-        g.estado = 'aprobada_previamente';
-        g.observacion = null;
-    });
-
-    prop.estado = 'aprobada';
-    prop.observacionGeneral = 'Aprobada oficialmente por Vicerrectorado Académico.';
-
-    notifications.unshift({
-        id: Date.now(),
-        text: `Propuesta de ${USERS[prop.carreraId === 1 ? 'inf' : prop.carreraId === 2 ? 'civ' : 'med'].carreraSigla} APROBADA completamente.`,
-        time: 'Justo ahora',
-        unread: true
-    });
-
-    alert('La revisión completa ha sido APROBADA exitosamente. La propuesta y sus filas quedan bloqueadas de forma inmutable.');
     switchView('bandeja_vicerrectorado');
 }
 
