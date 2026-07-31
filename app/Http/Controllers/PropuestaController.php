@@ -150,8 +150,12 @@ class PropuestaController extends Controller
             'carrera',
             'gestion',
             'periodo',
-            'designaciones',
-            'versiones' => fn ($query) => $query->with('designaciones.decision')->latest('numero'),
+            'designaciones.docente',
+            'designaciones.materia',
+            'designaciones.grupo',
+            'versiones' => fn ($query) => $query
+                ->with(['designaciones.decision', 'remitente', 'revisor'])
+                ->latest('numero'),
         ]);
 
         $grupos = Grupo::with('mallaCurricular.materia')
@@ -161,23 +165,88 @@ class PropuestaController extends Controller
             ->orderBy('codigo')
             ->get();
 
-        $ultimaVersionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
-        $observacionesPorGrupo = $ultimaVersionObservada?->designaciones
-            ->mapWithKeys(fn ($snapshot) => [$snapshot->grupo_id => $snapshot->decision?->observacion])
-            ->filter() ?? collect();
+        $designacionesPorGrupo = $propuesta->designaciones->keyBy('grupo_id');
+        $docentesHistoricosIds = DB::table('designaciones')
+            ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
+            ->where('malla_curricular.carrera_id', $propuesta->carrera_id)
+            ->whereNotNull('designaciones.Id_docente')
+            ->pluck('designaciones.Id_docente')
+            ->unique()
+            ->all();
+        $horasOtrasCarrerasPorDocente = DB::table('designaciones')
+            ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
+            ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
+            ->where('designaciones.Id_gestion', $propuesta->gestion_id)
+            ->where('designaciones.Id_periodo', $propuesta->periodo_id)
+            ->where('malla_curricular.carrera_id', '!=', $propuesta->carrera_id)
+            ->whereNotNull('designaciones.Id_docente')
+            ->groupBy('designaciones.Id_docente')
+            ->select('designaciones.Id_docente', DB::raw('SUM(materias.horas) as total_horas'))
+            ->pluck('total_horas', 'designaciones.Id_docente');
+        $docentes = Docente::with('carreraOrigen:id,sigla')
+            ->get(['id', 'nombre', 'carrera_origen_id'])
+            ->sortBy(function (Docente $docente) use ($propuesta, $docentesHistoricosIds): string {
+                $prioridad = (int) $docente->carrera_origen_id === $propuesta->carrera_id
+                    ? 1
+                    : (in_array($docente->id, $docentesHistoricosIds) ? 2 : 3);
 
-        return view('propuestas.editar', [
+                return sprintf('%d_%s', $prioridad, strtolower($docente->nombre));
+            })
+            ->values()
+            ->map(function (Docente $docente) use ($propuesta, $docentesHistoricosIds, $horasOtrasCarrerasPorDocente): array {
+                $prioridad = (int) $docente->carrera_origen_id === $propuesta->carrera_id
+                    ? 1
+                    : (in_array($docente->id, $docentesHistoricosIds) ? 2 : 3);
+
+                return [
+                    'id' => $docente->id,
+                    'nombre' => $docente->nombre,
+                    'carreraSigla' => $docente->carreraOrigen?->sigla,
+                    'prioridad' => $prioridad,
+                    'horasOtrasCarreras' => (int) ($horasOtrasCarrerasPorDocente[$docente->id] ?? 0),
+                ];
+            });
+        $roster = $grupos->map(function (Grupo $grupo) use ($designacionesPorGrupo): array {
+            $designacion = $designacionesPorGrupo->get($grupo->id);
+
+            return [
+                'id' => $grupo->id,
+                'materia' => [
+                    'id' => $grupo->mallaCurricular->materia->id,
+                    'nombre' => $grupo->mallaCurricular->materia->nombre,
+                    'sigla' => $grupo->mallaCurricular->materia->sigla,
+                ],
+                'codigo' => $grupo->codigo,
+                'horas' => $grupo->mallaCurricular->materia->horas,
+                'designacion' => $designacion ? ['docente' => ['id' => $designacion->docente_id]] : null,
+                'bloqueada' => $designacion?->estado === 'aprobada_previamente',
+            ];
+        });
+        $versionPendiente = $propuesta->versiones->firstWhere('estado', 'pendiente');
+
+        return view('designaciones.carrera', [
             'propuesta' => $propuesta,
-            'grupos' => $grupos,
-            'docentes' => Docente::orderBy('nombre')->get(),
-            'designacionesPorGrupo' => $propuesta->designaciones->keyBy('grupo_id'),
-            'observacionesPorGrupo' => $observacionesPorGrupo,
-            'ultimaVersionObservada' => $ultimaVersionObservada,
+            'carrera' => $propuesta->carrera,
+            'designaciones' => $propuesta->designaciones,
+            'roster' => $roster,
+            'docentes' => $docentes,
+            'gestiones' => Gestion::orderByDesc('nombre')->get(),
+            'periodos' => Periodo::orderBy('nombre')->get(),
+            'revision' => $versionPendiente ? [
+                'id' => $versionPendiente->id,
+                'estado' => $versionPendiente->estado,
+                'solicitante' => $versionPendiente->remitente?->name,
+                'solicitado_en' => $versionPendiente->enviado_en?->format('d/m/Y H:i'),
+            ] : null,
+            'filtros' => [
+                'gestion_id' => (string) $propuesta->gestion_id,
+                'periodo_id' => (string) $propuesta->periodo_id,
+            ],
             'puedeEditar' => auth()->user()->can('update', $propuesta),
         ]);
     }
 
-    public function guardar(Request $request, Propuesta $propuesta): RedirectResponse
+    public function guardar(Request $request, Propuesta $propuesta): RedirectResponse|JsonResponse
     {
         Gate::authorize('update', $propuesta);
 
@@ -190,15 +259,26 @@ class PropuestaController extends Controller
 
         $this->propuestas->guardarCambios($propuesta, $data['cambios']);
 
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Borrador actualizado.']);
+        }
+
         return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', 'Borrador actualizado.');
     }
 
-    public function enviar(Request $request, Propuesta $propuesta): RedirectResponse
+    public function enviar(Request $request, Propuesta $propuesta): RedirectResponse|JsonResponse
     {
         Gate::authorize('send', $propuesta);
 
         $version = $this->propuestas->enviar($propuesta, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Version {$version->numero} enviada a revision.",
+            ]);
+        }
 
         return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', "Versión {$version->numero} enviada a revisión.");
@@ -218,12 +298,26 @@ class PropuestaController extends Controller
         ]);
     }
 
-    public function previsualizarImportacion(Request $request, Propuesta $propuesta): View
+    public function previsualizarImportacion(Request $request, Propuesta $propuesta): View|JsonResponse
     {
         Gate::authorize('update', $propuesta);
         $data = $this->validarOrigenImportacion($request);
         $gestionOrigen = Gestion::findOrFail($data['origen_gestion_id']);
         $periodoOrigen = Periodo::findOrFail($data['origen_periodo_id']);
+
+        $previsualizacion = $this->importaciones->previsualizar($propuesta, $gestionOrigen, $periodoOrigen);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'items' => $previsualizacion->map(fn (array $fila) => [
+                    ...$fila,
+                    'impactoColor' => $fila['importable']
+                        ? 'bg-cyan-100 text-cyan-800 border-cyan-200'
+                        : 'bg-amber-100 text-amber-800 border-amber-200',
+                ])->values(),
+            ]);
+        }
 
         return view('propuestas.importar', [
             'propuesta' => $propuesta->load('carrera', 'gestion', 'periodo'),
@@ -231,11 +325,11 @@ class PropuestaController extends Controller
             'periodos' => Periodo::orderBy('nombre')->get(),
             'origenGestion' => $gestionOrigen,
             'origenPeriodo' => $periodoOrigen,
-            'previsualizacion' => $this->importaciones->previsualizar($propuesta, $gestionOrigen, $periodoOrigen),
+            'previsualizacion' => $previsualizacion,
         ]);
     }
 
-    public function aplicarImportacion(Request $request, Propuesta $propuesta): RedirectResponse
+    public function aplicarImportacion(Request $request, Propuesta $propuesta): RedirectResponse|JsonResponse
     {
         Gate::authorize('update', $propuesta);
         $data = $this->validarOrigenImportacion($request);
@@ -246,15 +340,29 @@ class PropuestaController extends Controller
             $request->user(),
         );
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Importacion aplicada: {$filas} filas actualizadas en el borrador.",
+            ]);
+        }
+
         return redirect()->route('designaciones.editar', $propuesta)
             ->with('success', "Importacion aplicada: {$filas} filas actualizadas en el borrador.");
     }
 
-    public function retirar(Request $request, PropuestaVersion $version): RedirectResponse
+    public function retirar(Request $request, PropuestaVersion $version): RedirectResponse|JsonResponse
     {
         Gate::authorize('withdraw', $version);
 
         $this->propuestas->retirar($version, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'La version pendiente fue retirada. El borrador vuelve a estar disponible.',
+            ]);
+        }
 
         return redirect()->route('designaciones.editar', $version->propuesta_id)
             ->with('success', 'La versión pendiente fue retirada. El borrador vuelve a estar disponible.');

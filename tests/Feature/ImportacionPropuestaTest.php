@@ -143,6 +143,31 @@ class ImportacionPropuestaTest extends TestCase
         $this->assertDatabaseHas('designaciones', ['id' => $designacionHistorica->id, 'Id_docente' => $docenteOrigen->id]);
     }
 
+    public function test_roster_recuperado_recibe_previsualizacion_de_importacion_en_json(): void
+    {
+        [$director, $propuesta, $gestionOrigen, $periodoOrigen, $grupo, $materia] = $this->contextoImportacion();
+        $docente = Docente::factory()->create(['nombre' => 'Docente para el roster']);
+        Designacion::factory()->create([
+            'Id_docente' => $docente->id,
+            'Id_grupo' => $grupo->id,
+            'Id_materia' => $materia->id,
+            'malla_curricular_id' => $grupo->malla_curricular_id,
+            'Id_gestion' => $gestionOrigen->id,
+            'Id_periodo' => $periodoOrigen->id,
+            'estado' => 'aprobada',
+        ]);
+
+        $this->actingAs($director)
+            ->postJson("/designaciones/{$propuesta->id}/importar/previsualizar", [
+                'origen_gestion_id' => $gestionOrigen->id,
+                'origen_periodo_id' => $periodoOrigen->id,
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('items.0.docente_nombre', 'Docente para el roster')
+            ->assertJsonPath('items.0.impactoColor', 'bg-cyan-100 text-cyan-800 border-cyan-200');
+    }
+
     public function test_importacion_respeta_filas_aprobadas_previamente_y_borradores_no_editables(): void
     {
         [$director, $propuesta, $gestionOrigen, $periodoOrigen, $grupo, $materia] = $this->contextoImportacion();

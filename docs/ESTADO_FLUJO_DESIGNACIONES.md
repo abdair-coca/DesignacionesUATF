@@ -3,7 +3,8 @@
 ## Implementado
 
 - El Director trabaja en `/designaciones` y solo ve la informacion de su carrera.
-- El borrador permite asignar docentes por grupo, importar historicos y conservar filas aprobadas previamente.
+- Cada propuesta abre una pantalla detallada de asignacion por docente; permite asignar por grupo, importar historicos, enviar o retirar la version pendiente y consultar el historial de revisiones.
+- El borrador conserva filas aprobadas previamente como solo lectura.
 - Cada envio crea una version inmutable y notifica a Vicerrectorado.
 - Vicerrectorado usa `/revisiones/pendientes` para aprobar una revision completa o decidir por fila.
 - Las observaciones devuelven el mismo borrador al Director; el reenvio crea una nueva version.
