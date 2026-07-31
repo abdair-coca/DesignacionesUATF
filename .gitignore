@@ -33,8 +33,13 @@ Thumbs.db
 
 # Estado local de herramientas de asistencia de código (no se sube al repo)
 /.claude/
+/.gemini/
 CLAUDE.md
 opencode.md
+/tasks/
+/docs/TwinsTasks/
+/docs/bitacora/
+/docs/PLAN_ELEVACION_PROYECTO.md
 
 # Cache regenerable de Graphify; el grafo y manifiesto se versionan.
-/graphify-out/cache/
+/graphify-out/
