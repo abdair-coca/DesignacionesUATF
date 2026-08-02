@@ -173,6 +173,32 @@ let notifications = [
     { id: 3, text: 'Gestión 2026 habilitada oficialmente.', time: 'Ayer', unread: false }
 ];
 
+let historialVersionesPorPropuesta = {};
+
+function clonarGruposPropuesta(propuestaId) {
+    return JSON.parse(JSON.stringify(rosterGruposPorPropuesta[propuestaId] || []));
+}
+
+function registrarSnapshotVersion(propuestaId) {
+    const propuesta = propuestas.find(p => p.id === propuestaId);
+    if (!propuesta) return;
+
+    if (!historialVersionesPorPropuesta[propuestaId]) {
+        historialVersionesPorPropuesta[propuestaId] = [];
+    }
+
+    historialVersionesPorPropuesta[propuestaId].push({
+        numeroVersion: propuesta.numeroVersion,
+        estado: propuesta.estado,
+        solicitadoEn: propuesta.solicitadoEn,
+        observacionGeneral: propuesta.observacionGeneral,
+        registradoEn: new Date().toISOString(),
+        grupos: clonarGruposPropuesta(propuestaId)
+    });
+}
+
+propuestas.forEach(p => registrarSnapshotVersion(p.id));
+
 function getCurrentUser() {
     return USERS[currentUserKey];
 }
@@ -353,8 +379,9 @@ function renderListaDirectorView(container, u) {
                             ` : misPropuestas.map((p, idx) => {
                                 const gruposProp = rosterGruposPorPropuesta[p.id] || [];
                                 const asignadasCount = gruposProp.filter(g => g.docenteId !== null).length;
+                                const permiteVerObservaciones = p.estado === 'observada' || p.estado === 'aprobada';
                                 return `
-                                    <tr ondblclick="verObservacionesPropuesta(${p.id})"
+                                    <tr ${permiteVerObservaciones ? `ondblclick="verObservacionesPropuesta(${p.id})"` : ''}
                                         class="transition-colors cursor-pointer select-none ${idx % 2 === 0 ? 'bg-[#f2f4f8]' : 'bg-white hover:bg-gray-100/70'}">
                                         <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60">${idx + 1}</td>
                                         <td class="py-3.5 px-5 border-r border-gray-200/60">
@@ -1190,10 +1217,11 @@ function confirmarRevisionUnica(propId) {
         alert('Revisión confirmada: La propuesta y sus materias han sido APROBADAS oficialmente de forma inmutable.');
     }
 
+    registrarSnapshotVersion(prop.id);
     switchView('bandeja_vicerrectorado');
 }
 
-function crearBorradorVacio() {
+function crearBorradorBase(abrirImportacion = false) {
     cerrarModal('modalNuevaPropuesta');
     const u = getCurrentUser();
     const newId = Math.max(...propuestas.map(p => p.id), 0) + 1;
@@ -1224,9 +1252,24 @@ function crearBorradorVacio() {
         observacion: null
     }));
 
+    registrarSnapshotVersion(newId);
     activePropuestaId = newId;
-    alert(`Se ha creado una nueva propuesta vacía (Borrador ${newId}). Puedes designar materias a los docentes desde la tabla.`);
-    switchView('editor_carrera', newId);
+    importOrigenPropuestaId = null;
+
+    if (abrirImportacion) {
+        switchView('importar_propuesta', newId);
+    } else {
+        alert(`Se ha creado una nueva propuesta vacía (Borrador ${newId}). Puedes designar materias a los docentes desde la tabla.`);
+        switchView('editor_carrera', newId);
+    }
+}
+
+function crearBorradorVacio() {
+    crearBorradorBase(false);
+}
+
+function crearBorradorParaImportar() {
+    crearBorradorBase(true);
 }
 
 function renderModales(u) {
@@ -1244,7 +1287,7 @@ function renderModales(u) {
                             <span class="font-bold text-gray-900 block group-hover:text-[#00acac]">Crear propuesta vacía</span>
                             <span class="text-[11px] text-gray-500 block">Comenzar desde cero con 0 materias asignadas en el borrador.</span>
                         </button>
-                        <button onclick="cerrarModal('modalNuevaPropuesta'); switchView('importar_propuesta')" class="w-full text-left p-3 border border-gray-200 hover:border-[#348fe2] hover:bg-blue-50/50 rounded-lg transition-colors cursor-pointer group">
+                        <button onclick="crearBorradorParaImportar()" class="w-full text-left p-3 border border-gray-200 hover:border-[#348fe2] hover:bg-blue-50/50 rounded-lg transition-colors cursor-pointer group">
                             <span class="font-bold text-gray-900 block group-hover:text-[#348fe2]">Importar de gestión anterior</span>
                             <span class="text-[11px] text-gray-500 block">Previsualizar y copiar asignaciones históricas de una gestión previa.</span>
                         </button>
@@ -1303,6 +1346,8 @@ function cerrarModal(id) {
 
 function verObservacionesPropuesta(id) {
     const p = propuestas.find(item => item.id === id);
+    if (!p || (p.estado !== 'observada' && p.estado !== 'aprobada')) return;
+
     const contentEl = document.getElementById('modalObsContent');
     const headerTitle = document.getElementById('modalObsHeaderTitle');
 
@@ -1323,17 +1368,55 @@ function verObservacionesPropuesta(id) {
 function enviarPropuestaVicerrectorado(id) {
     const p = propuestas.find(item => item.id === id);
     if (p) {
+        const grupos = rosterGruposPorPropuesta[p.id] || [];
+        const gruposSinDocente = grupos.filter(g => g.docenteId === null || g.docenteId === undefined);
+
+        if (gruposSinDocente.length > 0) {
+            const materiasSinAsignar = gruposSinDocente
+                .slice(0, 3)
+                .map(g => `${g.materiaSigla} (Grupo ${g.codigo})`)
+                .join(', ');
+            const sufijo = gruposSinDocente.length > 3 ? ' y otras materias' : '';
+            alert(`No se puede enviar la propuesta. Hay ${gruposSinDocente.length} materia(s) sin docente asignado: ${materiasSinAsignar}${sufijo}.`);
+            return;
+        }
+
+        const horasPorDocente = {};
+        grupos.forEach(g => {
+            horasPorDocente[g.docenteId] = (horasPorDocente[g.docenteId] || 0) + g.horas;
+        });
+
+        const docentesSobrecargados = todosLosDocentesUniversidad.filter(d =>
+            (horasPorDocente[d.id] || 0) + d.horasOtrasCarreras > 32
+        );
+
+        if (docentesSobrecargados.length > 0) {
+            const detalleSobrecarga = docentesSobrecargados
+                .map(d => `${d.nombre} (${(horasPorDocente[d.id] || 0) + d.horasOtrasCarreras} hrs)`)
+                .join(', ');
+            alert(`No se puede enviar la propuesta porque existe sobrecarga horaria: ${detalleSobrecarga}.`);
+            return;
+        }
+
+        const docentesBajoMinimo = todosLosDocentesUniversidad.filter(d => {
+            const horasTotales = (horasPorDocente[d.id] || 0) + d.horasOtrasCarreras;
+            return horasTotales > 0 && horasTotales < 6;
+        });
+
+        if (docentesBajoMinimo.length > 0) {
+            const detalleBajoMinimo = docentesBajoMinimo
+                .map(d => `${d.nombre} (${(horasPorDocente[d.id] || 0) + d.horasOtrasCarreras} hrs)`)
+                .join(', ');
+            const continuar = confirm(`La propuesta contiene docentes con carga menor al mínimo de 6 horas: ${detalleBajoMinimo}. ¿Deseas continuar?`);
+            if (!continuar) return;
+        }
+
         if (p.estado === 'observada') {
             p.numeroVersion += 1;
-            const grupos = rosterGruposPorPropuesta[p.id] || [];
-            grupos.forEach(g => {
-                if (g.estado === 'editable') {
-                    g.estado = 'aprobada_previamente';
-                }
-            });
         }
         p.estado = 'pendiente';
         p.solicitadoEn = '31/07/2026 ' + new Date().toLocaleTimeString().slice(0,5);
+        registrarSnapshotVersion(p.id);
         notifications.unshift({
             id: Date.now(),
             text: `Propuesta Versión ${p.numeroVersion} de ${USERS[p.carreraId === 1 ? 'inf' : p.carreraId === 2 ? 'civ' : 'med'].carreraSigla} enviada a revisión.`,
