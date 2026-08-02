@@ -70,6 +70,7 @@ let currentUserKey = 'inf';
 let currentView = 'lista_director';
 let activePropuestaId = 1;
 let activeDocenteModalId = null;
+let modalDistribucionHoras = {};
 
 let busquedaDocente = '';
 let docenteSeleccionadoId = null;
@@ -174,6 +175,46 @@ let notifications = [
 ];
 
 let historialVersionesPorPropuesta = {};
+
+function getHorasPagadasGrupo(grupo) {
+    return Number.isInteger(grupo.horasPagadas) ? grupo.horasPagadas : grupo.horas;
+}
+
+function getHorasNoPagadasGrupo(grupo) {
+    return Number.isInteger(grupo.horasNoPagadas) ? grupo.horasNoPagadas : 0;
+}
+
+function getHorasTotalesGrupo(grupo) {
+    return getHorasPagadasGrupo(grupo) + getHorasNoPagadasGrupo(grupo);
+}
+
+function getHorasAdicionalesNoPagadasGrupo(grupo) {
+    return Math.max(0, getHorasTotalesGrupo(grupo) - grupo.horas);
+}
+
+function getDistribucionInicialGrupo(grupo) {
+    return {
+        pagadas: getHorasPagadasGrupo(grupo),
+        noPagadas: getHorasNoPagadasGrupo(grupo),
+        observacion: grupo.observacionRemuneracion || ''
+    };
+}
+
+function validarDistribucionHoras(horasOficiales, horasPagadas, horasNoPagadas) {
+    if (!Number.isInteger(horasPagadas) || !Number.isInteger(horasNoPagadas)) {
+        return 'Las horas pagadas y no pagadas deben ser números enteros.';
+    }
+    if (horasPagadas < 0 || horasNoPagadas < 0) {
+        return 'Las horas pagadas y no pagadas no pueden ser negativas.';
+    }
+    if (horasPagadas > horasOficiales) {
+        return `Las horas pagadas no pueden superar las ${horasOficiales} horas oficiales de la materia.`;
+    }
+    if (horasPagadas + horasNoPagadas < horasOficiales) {
+        return `La distribución debe cubrir al menos las ${horasOficiales} horas oficiales de la materia.`;
+    }
+    return null;
+}
 
 function clonarGruposPropuesta(propuestaId) {
     return JSON.parse(JSON.stringify(rosterGruposPorPropuesta[propuestaId] || []));
@@ -456,15 +497,21 @@ function renderEditorCarreraView(container, u) {
     const docentesConPrioridad = todosLosDocentesUniversidad.map(d => {
         const asignados = grupos.filter(g => g.docenteId === d.id);
         const materiasEtiquetas = asignados.map(g => {
+            const horasAdicionales = getHorasAdicionalesNoPagadasGrupo(g);
+            const detalleRemuneracion = getHorasNoPagadasGrupo(g) > 0
+                ? ` · ${getHorasPagadasGrupo(g)}h pagadas + ${getHorasNoPagadasGrupo(g)}h no pagadas${horasAdicionales > 0 ? ` (+${horasAdicionales}h adicionales)` : ''}`
+                : '';
             if (g.estado === 'aprobada_previamente' || prop.estado === 'aprobada') {
-                return { text: `${g.materiaSigla} (G${g.codigo})`, estado: 'aprobada' };
+                return { text: `${g.materiaSigla} (G${g.codigo})${detalleRemuneracion}`, estado: 'aprobada' };
             } else if (g.estado === 'observada') {
-                return { text: `${g.materiaSigla} (G${g.codigo})`, estado: 'observada' };
+                return { text: `${g.materiaSigla} (G${g.codigo})${detalleRemuneracion}`, estado: 'observada' };
             } else {
-                return { text: `${g.materiaSigla} (G${g.codigo})`, estado: 'editable' };
+                return { text: `${g.materiaSigla} (G${g.codigo})${detalleRemuneracion}`, estado: 'editable' };
             }
         });
-        const horasLocal = asignados.reduce((sum, g) => sum + g.horas, 0);
+        const horasPagadasLocal = asignados.reduce((sum, g) => sum + getHorasPagadasGrupo(g), 0);
+        const horasNoPagadasLocal = asignados.reduce((sum, g) => sum + getHorasNoPagadasGrupo(g), 0);
+        const horasLocal = horasPagadasLocal + horasNoPagadasLocal;
         const horasTotalGlobal = horasLocal + d.horasOtrasCarreras;
 
         let prioridad = 3;
@@ -505,6 +552,8 @@ function renderEditorCarreraView(container, u) {
             prioridadEtiqueta,
             prioridadBadgeColor,
             materiasEtiquetas,
+            horasPagadasLocal,
+            horasNoPagadasLocal,
             horasLocal,
             horasTotalGlobal,
             asignados,
@@ -690,6 +739,7 @@ function renderEditorCarreraView(container, u) {
 
                                         <td class="py-3.5 px-4 text-center border-r border-gray-200/60">
                                             <span class="font-black text-gray-900 text-xs tabular-nums">${d.horasTotalGlobal} hrs</span>
+                                            <span class="block text-[10px] text-gray-500 tabular-nums">${d.horasPagadasLocal}h pagadas + ${d.horasNoPagadasLocal}h no pagadas</span>
                                         </td>
 
                                         <td class="py-3.5 px-4 text-center border-r border-gray-200/60">
@@ -842,6 +892,9 @@ function aplicarImportacion() {
             dg.docenteId = og.docenteId;
             dg.estado = 'editable';
             dg.observacion = null;
+            dg.horasPagadas = getHorasPagadasGrupo(og);
+            dg.horasNoPagadas = getHorasNoPagadasGrupo(og);
+            dg.observacionRemuneracion = og.observacionRemuneracion || null;
         }
     });
 
@@ -1064,6 +1117,10 @@ function renderRevisarVersionView(container, u) {
                                         <th class="px-4 py-3">Docente Asignado</th>
                                         <th class="px-4 py-3">Materia</th>
                                         <th class="px-4 py-3 text-center">Grupo</th>
+                                        <th class="px-4 py-3 text-center">Oficiales</th>
+                                        <th class="px-4 py-3 text-center">Pagadas</th>
+                                        <th class="px-4 py-3 text-center">No pagadas</th>
+                                        <th class="px-4 py-3 text-center">Adicionales</th>
                                         <th class="px-4 py-3 text-center w-48">Decisión</th>
                                         <th class="px-4 py-3">Observación por Fila</th>
                                     </tr>
@@ -1072,14 +1129,22 @@ function renderRevisarVersionView(container, u) {
                                     ${grupos.map((g, idx) => {
                                         const doc = todosLosDocentesUniversidad.find(d => d.id === g.docenteId);
                                         const esAprobadaPreviamente = g.estado === 'aprobada_previamente';
+                                        const horasPagadas = getHorasPagadasGrupo(g);
+                                        const horasNoPagadas = getHorasNoPagadasGrupo(g);
+                                        const horasAdicionales = getHorasAdicionalesNoPagadasGrupo(g);
 
                                         return `
                                             <tr class="${esAprobadaPreviamente ? 'bg-emerald-50/60' : 'hover:bg-gray-50'}">
                                                 <td class="px-4 py-3 font-bold text-gray-900">${doc ? doc.nombre : 'Sin asignar'}</td>
                                                 <td class="px-4 py-3"><span class="font-bold text-gray-900">${g.materiaSigla}</span> ${g.materiaNombre}</td>
                                                 <td class="px-4 py-3 text-center font-bold text-teal-700">Grupo ${g.codigo}</td>
+                                                <td class="px-4 py-3 text-center font-bold">${g.horas}h</td>
+                                                <td class="px-4 py-3 text-center font-bold text-emerald-700">${horasPagadas}h</td>
+                                                <td class="px-4 py-3 text-center font-bold ${horasNoPagadas > 0 ? 'text-amber-700' : 'text-gray-500'}">${horasNoPagadas}h</td>
+                                                <td class="px-4 py-3 text-center font-bold ${horasAdicionales > 0 ? 'text-rose-700' : 'text-gray-500'}">${horasAdicionales}h</td>
                                                 ${esAprobadaPreviamente ? `
                                                     <td colspan="2" class="px-4 py-3">
+                                                        ${g.observacionRemuneracion ? `<span class="block mb-1 text-[10px] text-amber-800">RemuneraciÃ³n: ${g.observacionRemuneracion}</span>` : ''}
                                                         <span class="bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold px-2.5 py-1 rounded inline-flex items-center gap-1">
                                                             ✓ Aprobada previamente (Inalterable)
                                                         </span>
@@ -1093,6 +1158,7 @@ function renderRevisarVersionView(container, u) {
                                                     </td>
                                                     <td class="px-4 py-3 min-w-72">
                                                         <input id="obs_${g.id}" type="text" value="${g.observacion || ''}" class="w-full border border-gray-300 rounded px-2 py-1 text-xs" placeholder="Motivo explicativo si se observa">
+                                                        ${g.observacionRemuneracion ? `<span class="block mt-1 text-[10px] text-amber-800">RemuneraciÃ³n: ${g.observacionRemuneracion}</span>` : ''}
                                                     </td>
                                                 `}
                                             </tr>
@@ -1126,6 +1192,10 @@ function renderRevisarVersionView(container, u) {
                                     <th class="px-4 py-3">Docente</th>
                                     <th class="px-4 py-3">Materia</th>
                                     <th class="px-4 py-3">Grupo</th>
+                                    <th class="px-4 py-3 text-center">Oficiales</th>
+                                    <th class="px-4 py-3 text-center">Pagadas</th>
+                                    <th class="px-4 py-3 text-center">No pagadas</th>
+                                    <th class="px-4 py-3 text-center">Adicionales</th>
                                     <th class="px-4 py-3 text-center">Estado</th>
                                     <th class="px-4 py-3">Observación</th>
                                 </tr>
@@ -1134,11 +1204,18 @@ function renderRevisarVersionView(container, u) {
                                 ${grupos.map(g => {
                                     const doc = todosLosDocentesUniversidad.find(d => d.id === g.docenteId);
                                     const esAprobado = g.estado === 'aprobada_previamente' || prop.estado === 'aprobada';
+                                    const horasPagadas = getHorasPagadasGrupo(g);
+                                    const horasNoPagadas = getHorasNoPagadasGrupo(g);
+                                    const horasAdicionales = getHorasAdicionalesNoPagadasGrupo(g);
                                     return `
                                         <tr class="${esAprobado ? 'bg-emerald-50/50' : ''}">
                                             <td class="px-4 py-3 font-bold">${doc ? doc.nombre : 'Sin asignar'}</td>
                                             <td class="px-4 py-3"><span class="font-bold">${g.materiaSigla}</span> ${g.materiaNombre}</td>
                                             <td class="px-4 py-3 text-center font-bold text-teal-700">Grupo ${g.codigo}</td>
+                                            <td class="px-4 py-3 text-center font-bold">${g.horas}h</td>
+                                            <td class="px-4 py-3 text-center font-bold text-emerald-700">${horasPagadas}h</td>
+                                            <td class="px-4 py-3 text-center font-bold ${horasNoPagadas > 0 ? 'text-amber-700' : 'text-gray-500'}">${horasNoPagadas}h</td>
+                                            <td class="px-4 py-3 text-center font-bold ${horasAdicionales > 0 ? 'text-rose-700' : 'text-gray-500'}">${horasAdicionales}h</td>
                                             <td class="px-4 py-3 text-center font-bold">
                                                 ${esAprobado ? `
                                                     <span class="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2 py-0.5 rounded inline-flex items-center gap-1">
@@ -1150,7 +1227,7 @@ function renderRevisarVersionView(container, u) {
                                                     </span>
                                                 `}
                                             </td>
-                                            <td class="px-4 py-3 text-gray-600">${g.observacion || '-'}</td>
+                                            <td class="px-4 py-3 text-gray-600">${g.observacion || '-'}${g.observacionRemuneracion ? `<span class="block mt-1 text-[10px] text-amber-800">RemuneraciÃ³n: ${g.observacionRemuneracion}</span>` : ''}</td>
                                         </tr>
                                     `;
                                 }).join('')}
@@ -1383,7 +1460,7 @@ function enviarPropuestaVicerrectorado(id) {
 
         const horasPorDocente = {};
         grupos.forEach(g => {
-            horasPorDocente[g.docenteId] = (horasPorDocente[g.docenteId] || 0) + g.horas;
+            horasPorDocente[g.docenteId] = (horasPorDocente[g.docenteId] || 0) + getHorasTotalesGrupo(g);
         });
 
         const docentesSobrecargados = todosLosDocentesUniversidad.filter(d =>
@@ -1440,9 +1517,9 @@ function retirarEnvioPropuesta(id) {
 
 function abrirModalAsignarDocente(docenteId) {
     activeDocenteModalId = docenteId;
-    const u = getCurrentUser();
     const doc = todosLosDocentesUniversidad.find(d => d.id === docenteId);
     const grupos = rosterGruposPorPropuesta[activePropuestaId] || [];
+    modalDistribucionHoras = {};
 
     document.getElementById('modalDocenteNombre').textContent = `Designar Materias: ${doc.nombre}`;
     const listContainer = document.getElementById('modalDocenteGruposList');
@@ -1454,6 +1531,9 @@ function abrirModalAsignarDocente(docenteId) {
             g.docenteId !== undefined &&
             g.docenteId !== docenteId;
         const isDisabled = g.estado === 'aprobada_previamente' || estaAsignadaAOtroDocente;
+        modalDistribucionHoras[g.id] = getDistribucionInicialGrupo(g);
+        const distribucion = modalDistribucionHoras[g.id];
+        const controlesDeshabilitados = isDisabled || !isChecked;
         const estadoAsignacion = g.estado === 'aprobada_previamente'
             ? '<span class="text-[10px] text-emerald-800 font-bold ml-1">✓ Aprobada previamente</span>'
             : estaAsignadaAOtroDocente
@@ -1461,17 +1541,31 @@ function abrirModalAsignarDocente(docenteId) {
                 : '';
 
         return `
-            <label class="flex items-center justify-between p-2 rounded border border-gray-200 hover:bg-gray-50 ${isDisabled ? 'opacity-60 bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}">
+            <div class="p-2.5 rounded border border-gray-200 ${isDisabled ? 'opacity-60 bg-gray-100' : 'bg-white'}">
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" value="${g.id}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} onchange="recalcularModalHoras(${doc.horasOtrasCarreras})" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                    <input id="check_grupo_${g.id}" type="checkbox" value="${g.id}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} onchange="toggleModalGrupo(${g.id}, this.checked, ${doc.horasOtrasCarreras})" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
                     <div>
                         <span class="font-bold text-gray-900">${g.materiaSigla}</span> &mdash; ${g.materiaNombre}
                         <span class="text-teal-700 font-bold">(Grupo ${g.codigo})</span>
                         ${estadoAsignacion}
                     </div>
                 </div>
-                <span class="font-bold text-gray-700 tabular-nums">${g.horas} hrs</span>
-            </label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 pl-6">
+                    <label class="text-[10px] font-bold text-emerald-800">
+                        Horas pagadas
+                        <input id="horas_pagadas_${g.id}" type="number" min="0" max="${g.horas}" step="1" value="${distribucion.pagadas}" ${controlesDeshabilitados ? 'disabled' : ''} oninput="recalcularModalHoras(${doc.horasOtrasCarreras})" class="mt-0.5 w-full border border-gray-300 rounded px-2 py-1 text-xs font-bold text-gray-900">
+                    </label>
+                    <label class="text-[10px] font-bold text-amber-800">
+                        Horas no pagadas
+                        <input id="horas_no_pagadas_${g.id}" type="number" min="0" step="1" value="${distribucion.noPagadas}" ${controlesDeshabilitados ? 'disabled' : ''} oninput="recalcularModalHoras(${doc.horasOtrasCarreras})" class="mt-0.5 w-full border border-gray-300 rounded px-2 py-1 text-xs font-bold text-gray-900">
+                    </label>
+                    <label class="text-[10px] font-bold text-gray-600">
+                        JustificaciÃ³n (opcional)
+                        <input id="observacion_remuneracion_${g.id}" type="text" value="${distribucion.observacion}" ${controlesDeshabilitados ? 'disabled' : ''} placeholder="Ej. horas extra sin pago" class="mt-0.5 w-full border border-gray-300 rounded px-2 py-1 text-xs font-normal text-gray-900">
+                    </label>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-1 pl-6">La suma debe cubrir ${g.horas}h oficiales. Las horas adicionales no pagadas no tienen límite automático.</p>
+            </div>
         `;
     }).join('');
 
@@ -1479,18 +1573,38 @@ function abrirModalAsignarDocente(docenteId) {
     document.getElementById('modalAsignarDocente').classList.remove('hidden');
 }
 
+function toggleModalGrupo(grupoId, seleccionado, horasOtras = 0) {
+    const paidInput = document.getElementById(`horas_pagadas_${grupoId}`);
+    const unpaidInput = document.getElementById(`horas_no_pagadas_${grupoId}`);
+    const observationInput = document.getElementById(`observacion_remuneracion_${grupoId}`);
+    const checkbox = document.getElementById(`check_grupo_${grupoId}`);
+    const disabled = !seleccionado || (checkbox && checkbox.disabled);
+
+    [paidInput, unpaidInput, observationInput].forEach(input => {
+        if (input) input.disabled = disabled;
+    });
+    recalcularModalHoras(horasOtras);
+}
+
 function recalcularModalHoras(horasOtras = 0) {
     const checks = document.querySelectorAll('#modalDocenteGruposList input[type="checkbox"]:checked');
-    let totalLocal = 0;
+    let horasPagadasLocal = 0;
+    let horasNoPagadasLocal = 0;
     const grupos = rosterGruposPorPropuesta[activePropuestaId] || [];
 
     checks.forEach(c => {
         const g = grupos.find(item => item.id === parseInt(c.value));
-        if (g) totalLocal += g.horas;
+        if (g) {
+            const paidInput = document.getElementById(`horas_pagadas_${g.id}`);
+            const unpaidInput = document.getElementById(`horas_no_pagadas_${g.id}`);
+            horasPagadasLocal += parseInt(paidInput ? paidInput.value : getHorasPagadasGrupo(g), 10) || 0;
+            horasNoPagadasLocal += parseInt(unpaidInput ? unpaidInput.value : getHorasNoPagadasGrupo(g), 10) || 0;
+        }
     });
 
+    const totalLocal = horasPagadasLocal + horasNoPagadasLocal;
     const totalGlobal = totalLocal + horasOtras;
-    document.getElementById('modalDocenteHorasTotal').textContent = `Total Carga Horaria: ${totalGlobal} hrs (${totalLocal}h local + ${horasOtras}h otras)`;
+    document.getElementById('modalDocenteHorasTotal').textContent = `Total: ${totalGlobal}h (${horasPagadasLocal}h pagadas + ${horasNoPagadasLocal}h no pagadas; ${horasOtras}h otras)`;
 }
 
 function guardarAsignacionDocente() {
@@ -1498,19 +1612,53 @@ function guardarAsignacionDocente() {
     const selectedIds = Array.from(checks).map(c => parseInt(c.value));
     const grupos = rosterGruposPorPropuesta[activePropuestaId] || [];
 
-    grupos.forEach(g => {
-        if (g.estado !== 'aprobada_previamente') {
-            if (selectedIds.includes(g.id)) {
-                g.docenteId = activeDocenteModalId;
-                if (g.estado === 'observada') {
-                    g.estado = 'editable';
-                    g.observacion = null;
-                }
-            } else if (g.docenteId === activeDocenteModalId) {
-                g.docenteId = null;
+    try {
+        const distribucionesValidadas = [];
+        grupos.forEach(g => {
+            if (g.estado !== 'aprobada_previamente' && selectedIds.includes(g.id)) {
+                const paidInput = document.getElementById(`horas_pagadas_${g.id}`);
+                const unpaidInput = document.getElementById(`horas_no_pagadas_${g.id}`);
+                const observationInput = document.getElementById(`observacion_remuneracion_${g.id}`);
+                const paidValue = paidInput ? paidInput.value.trim() : '';
+                const unpaidValue = unpaidInput ? unpaidInput.value.trim() : '';
+                const horasPagadas = paidValue === '' ? NaN : Number(paidValue);
+                const horasNoPagadas = unpaidValue === '' ? NaN : Number(unpaidValue);
+                const errorDistribucion = validarDistribucionHoras(g.horas, horasPagadas, horasNoPagadas);
+
+                if (errorDistribucion) throw new Error(errorDistribucion);
+
+                distribucionesValidadas.push({
+                    grupo: g,
+                    horasPagadas,
+                    horasNoPagadas,
+                    observacion: observationInput ? observationInput.value.trim() || null : null
+                });
             }
-        }
-    });
+        });
+
+        distribucionesValidadas.forEach(({ grupo, horasPagadas, horasNoPagadas, observacion }) => {
+            grupo.docenteId = activeDocenteModalId;
+            grupo.horasPagadas = horasPagadas;
+            grupo.horasNoPagadas = horasNoPagadas;
+            grupo.observacionRemuneracion = observacion;
+            if (grupo.estado === 'observada') {
+                grupo.estado = 'editable';
+                grupo.observacion = null;
+            }
+        });
+
+        grupos.forEach(g => {
+            if (g.estado !== 'aprobada_previamente' && !selectedIds.includes(g.id) && g.docenteId === activeDocenteModalId) {
+                g.docenteId = null;
+                g.horasPagadas = g.horas;
+                g.horasNoPagadas = 0;
+                g.observacionRemuneracion = null;
+            }
+        });
+    } catch (error) {
+        alert(error.message);
+        return;
+    }
 
     cerrarModal('modalAsignarDocente');
     renderLayout();
