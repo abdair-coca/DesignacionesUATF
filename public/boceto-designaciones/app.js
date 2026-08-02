@@ -1449,16 +1449,25 @@ function abrirModalAsignarDocente(docenteId) {
 
     listContainer.innerHTML = grupos.map(g => {
         const isChecked = g.docenteId === docenteId;
-        const isDisabled = g.estado === 'aprobada_previamente';
+        const docenteAsignado = todosLosDocentesUniversidad.find(d => d.id === g.docenteId);
+        const estaAsignadaAOtroDocente = g.docenteId !== null &&
+            g.docenteId !== undefined &&
+            g.docenteId !== docenteId;
+        const isDisabled = g.estado === 'aprobada_previamente' || estaAsignadaAOtroDocente;
+        const estadoAsignacion = g.estado === 'aprobada_previamente'
+            ? '<span class="text-[10px] text-emerald-800 font-bold ml-1">✓ Aprobada previamente</span>'
+            : estaAsignadaAOtroDocente
+                ? `<span class="text-[10px] text-gray-500 font-bold ml-1">Asignada a ${docenteAsignado ? docenteAsignado.nombre : 'otro docente'}</span>`
+                : '';
 
         return `
-            <label class="flex items-center justify-between p-2 rounded border border-gray-200 hover:bg-gray-50 cursor-pointer ${isDisabled ? 'opacity-60 bg-gray-100' : ''}">
+            <label class="flex items-center justify-between p-2 rounded border border-gray-200 hover:bg-gray-50 ${isDisabled ? 'opacity-60 bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}">
                 <div class="flex items-center gap-2">
                     <input type="checkbox" value="${g.id}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} onchange="recalcularModalHoras(${doc.horasOtrasCarreras})" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
                     <div>
                         <span class="font-bold text-gray-900">${g.materiaSigla}</span> &mdash; ${g.materiaNombre}
                         <span class="text-teal-700 font-bold">(Grupo ${g.codigo})</span>
-                        ${isDisabled ? '<span class="text-[10px] text-emerald-800 font-bold ml-1">✓ Aprobada previamente</span>' : ''}
+                        ${estadoAsignacion}
                     </div>
                 </div>
                 <span class="font-bold text-gray-700 tabular-nums">${g.horas} hrs</span>
