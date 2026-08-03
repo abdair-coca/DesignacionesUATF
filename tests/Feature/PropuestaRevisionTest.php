@@ -32,6 +32,7 @@ class PropuestaRevisionTest extends TestCase
             ->assertSee('Aprobar todas las filas')
             ->assertSee('Confirmar Revisión')
             ->assertSee('modo_revision')
+            ->assertSee('decidir_filas')
             ->assertDontSee('Registrar decisiones por fila');
 
         $this->actingAs($director)

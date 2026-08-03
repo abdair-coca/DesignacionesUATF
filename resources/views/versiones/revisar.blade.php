@@ -55,7 +55,7 @@
                                     @else
                                         <td class="px-4 py-3 min-w-40">
                                             <input type="hidden" name="decisiones[{{ $indice }}][snapshot_id]" value="{{ $snapshot->id }}">
-                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" disabled class="w-full border border-gray-300 px-2 py-1.5 rounded disabled:bg-gray-100 disabled:text-gray-400" onchange="sincronizarObservacionFila(this)">
+                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5 rounded" onchange="sincronizarObservacionFila(this)">
                                                 <option value="aprobada">Aprobar</option>
                                                 <option value="observada">Observar</option>
                                             </select>
@@ -70,7 +70,7 @@
                 </section>
 
                 <div class="flex flex-wrap justify-end gap-3">
-                    <input type="hidden" id="modo_revision" name="modo" value="aprobar_todo">
+                    <input type="hidden" id="modo_revision" name="modo" value="decidir_filas">
                     <button type="submit" class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-6 py-2.5 text-xs rounded shadow-md transition-colors cursor-pointer flex items-center gap-2">
                         <span>Confirmar Revisión</span>
                     </button>
@@ -127,9 +127,9 @@
 
         if (!formulario || !modo) return;
 
-        modo.value = checkbox.checked ? 'aprobar_todo' : 'decidir_filas';
+        modo.value = 'decidir_filas';
         formulario.querySelectorAll('[data-decision-fila]').forEach((select) => {
-            select.disabled = checkbox.checked;
+            select.value = checkbox.checked ? 'aprobada' : 'observada';
             sincronizarObservacionFila(select);
         });
     }
