@@ -136,6 +136,12 @@ class RevisionPropuestaService
                 ]);
             }
 
+            if ($decision['decision'] === 'aprobada' && $observacion !== '') {
+                throw ValidationException::withMessages([
+                    'decisiones' => 'Una fila aprobada no puede tener observacion; selecciona Observar para devolverla al Director.',
+                ]);
+            }
+
             return [
                 $snapshot->id => [
                     'decision' => $decision['decision'],

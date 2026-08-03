@@ -707,6 +707,15 @@
 @push('scripts')
 <script>
     function designacionesCarreraData(docentesProcesados, rosterGrupos, propuestaId, gestionId, periodoId, puedeEditar, revisionData) {
+        const distribucionesIniciales = {};
+        rosterGrupos.forEach(grupo => {
+            distribucionesIniciales[grupo.id] = {
+                pagadas: Number(grupo.horas_pagadas ?? grupo.horas),
+                noPagadas: Number(grupo.horas_no_pagadas ?? 0),
+                observacion: grupo.observacion_remuneracion || '',
+            };
+        });
+
         return {
             busqueda: '',
             perPage: 10,
@@ -726,7 +735,7 @@
             cargandoGuardar: false,
             docenteActual: null,
             gruposSeleccionados: [],
-            modalDistribuciones: {},
+            modalDistribuciones: distribucionesIniciales,
             puedeEditar: puedeEditar,
             revisionData: revisionData,
 

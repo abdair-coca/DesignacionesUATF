@@ -47,12 +47,12 @@
                                     @else
                                         <td class="px-4 py-3 min-w-40">
                                             <input type="hidden" name="decisiones[{{ $indice }}][snapshot_id]" value="{{ $snapshot->id }}">
-                                            <select name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5">
+                                            <select name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5" onchange="const campo = this.closest('tr').querySelector('[data-observacion-fila]'); campo.disabled = this.value !== 'observada'; if (campo.disabled) campo.value = '';">
                                                 <option value="aprobada">Aprobar</option>
                                                 <option value="observada">Observar</option>
                                             </select>
                                         </td>
-                                        <td class="px-4 py-3 min-w-72"><input name="decisiones[{{ $indice }}][observacion]" maxlength="1000" class="w-full border border-gray-300 px-2 py-1.5" placeholder="Motivo si se observa"></td>
+                                        <td class="px-4 py-3 min-w-72"><input data-observacion-fila name="decisiones[{{ $indice }}][observacion]" maxlength="1000" disabled class="w-full border border-gray-300 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="Motivo si se observa"></td>
                                     @endif
                                 </tr>
                             @endforeach

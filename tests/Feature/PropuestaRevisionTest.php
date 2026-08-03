@@ -188,6 +188,28 @@ class PropuestaRevisionTest extends TestCase
             ->assertSessionHasErrors('decisiones');
     }
 
+    public function test_fila_aprobada_no_acepta_observacion_por_fila(): void
+    {
+        [, $vicerrectorado, , $version, $filas] = $this->propuestaEnviada(1);
+
+        $this->actingAs($vicerrectorado)
+            ->post("/revisiones/{$version->id}/decidir", [
+                'modo' => 'decidir_filas',
+                'decisiones' => [[
+                    'snapshot_id' => $filas[0]->id,
+                    'decision' => 'aprobada',
+                    'observacion' => 'No me parece, pero aprobar.',
+                ]],
+            ])
+            ->assertSessionHasErrors('decisiones');
+
+        $this->assertDatabaseCount('propuesta_version_decisiones', 0);
+        $this->assertDatabaseHas('propuesta_versiones', [
+            'id' => $version->id,
+            'estado' => 'pendiente',
+        ]);
+    }
+
     private function propuestaEnviada(int $cantidadFilas): array
     {
         Gestion::query()->update(['es_actual' => false]);
