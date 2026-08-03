@@ -68,6 +68,12 @@
     ])->values();
 
     $observacionesRevision = $rosterGrupos->filter(fn ($grupo) => $grupo['observada'])->values();
+    $gruposObservados = $observacionesRevision->pluck('id');
+    $docentesProcesados = collect($docentesProcesados)->map(function (array $docente) use ($gruposObservados): array {
+        $docente['observada'] = collect($docente['grupos_ids'])->intersect($gruposObservados)->isNotEmpty();
+
+        return $docente;
+    })->values()->all();
 
 @endphp
 
@@ -235,7 +241,7 @@
                     <template x-for="(d, index) in docentesPaginados" :key="d.id">
                         <tr @click="docenteSeleccionadoId = (docenteSeleccionadoId === d.id ? null : d.id)"
                             class="transition-colors cursor-pointer select-none"
-                            :class="docenteSeleccionadoId === d.id ? 'bg-[#fff9d6]' : (index % 2 === 0 ? 'bg-[#f2f4f8]' : 'bg-white hover:bg-gray-100/70')">
+                            :class="d.observada ? (docenteSeleccionadoId === d.id ? 'bg-rose-100 border-l-4 border-rose-500' : 'bg-rose-50 hover:bg-rose-100 border-l-4 border-rose-500') : (docenteSeleccionadoId === d.id ? 'bg-[#fff9d6]' : (index % 2 === 0 ? 'bg-[#f2f4f8]' : 'bg-white hover:bg-gray-100/70'))">
 
                             <!-- Index -->
                             <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60" x-text="(currentPage - 1) * perPage + index + 1"></td>
@@ -243,10 +249,15 @@
                             <!-- Docente Profile -->
                             <td class="py-3.5 px-4 border-r border-gray-200/60">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-8 w-8 rounded-full bg-[#00acac] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs" x-text="d.nombre.charAt(0)"></div>
+                                    <div class="h-8 w-8 rounded-full text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs"
+                                         :class="d.observada ? 'bg-rose-600' : 'bg-[#00acac]'"
+                                         x-text="d.nombre.charAt(0)"></div>
                                     <div>
                                         <div class="flex items-center gap-1.5 flex-wrap">
-                                            <p class="font-bold text-gray-900" x-text="d.nombre"></p>
+                                            <p class="font-bold" :class="d.observada ? 'text-rose-700' : 'text-gray-900'" x-text="d.nombre"></p>
+                                            <template x-if="d.observada">
+                                                <span class="bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-xs">Con observaciones</span>
+                                            </template>
                                             <template x-if="d.prioridad === 1">
                                                 <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-xs">Titular Carrera</span>
                                             </template>
