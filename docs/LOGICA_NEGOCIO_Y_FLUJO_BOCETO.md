@@ -302,10 +302,10 @@ El calculo de carga es informativo y no debe bloquear el guardado, envio,
 revision ni aprobacion por el solo hecho de superar o no alcanzar una
 cantidad de horas.
 
-Nota de implementacion: el boceto actual aun contiene umbrales visuales y una
-validacion de envio asociada a 32 y 6 horas en `enviarPropuestaVicerrectorado`.
-Esta documentacion define la regla de negocio corregida; el codigo debera
-ajustarse en una tarea posterior.
+El boceto actual aplica esta regla: la carga horaria es informativa y no
+bloquea el guardado, envio, revision ni aprobacion por superar o no alcanzar
+32 o 6 horas. La unica validacion de envio relacionada con la asignacion es
+que todas las filas tengan docente.
 
 Las horas no pagadas y las adicionales no pagadas cuentan exactamente igual
 que las pagadas para esta carga.
@@ -400,13 +400,11 @@ revision. El estado historico de origen no se copia como bloqueo.
 Antes de enviar, el boceto valida en este orden:
 
 1. no debe existir una fila sin docente;
-2. no debe existir sobrecarga global mayor a 32 horas;
-3. si existe carga positiva menor a 6 horas, solicita confirmacion;
-4. si la propuesta era `observada`, incrementa el numero de version;
-5. cambia la propuesta a `pendiente`;
-6. registra la fecha simulada de envio;
-7. crea un snapshot de la version;
-8. agrega una notificacion.
+2. si la propuesta era `observada`, incrementa el numero de version;
+3. cambia la propuesta a `pendiente`;
+4. registra la fecha simulada de envio;
+5. crea un snapshot de la version;
+6. agrega una notificacion.
 
 El snapshot conserva exactamente la distribucion de cada fila en el momento
 del envio.
@@ -504,6 +502,11 @@ grupos completos, incluyendo horas pagadas y no pagadas
 
 `clonarGruposPropuesta` usa una copia profunda JSON. Por eso la distribucion
 queda congelada dentro del snapshot aunque el borrador posterior cambie.
+
+Los snapshots se registran para conservar el estado de cada version, pero el
+boceto actual no incluye un visor de historial visible para el usuario. La
+consulta visible se limita a la version, estado y observaciones de la
+propuesta activa.
 
 En el sistema real se requiere:
 
@@ -656,3 +659,5 @@ horas pagadas, horas no pagadas y observaciones cuando correspondan.
    que en el sistema real deben convertirse en componentes de interfaz y
    respuestas de servidor.
 7. El catalogo de materias y docentes es fijo para la demostracion.
+8. Los snapshots se almacenan en memoria, pero no existe una pantalla para
+   navegar el historial completo de versiones.

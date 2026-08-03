@@ -100,6 +100,8 @@ etapa.
 
 - Los datos, perfiles, notificaciones, snapshots y estados son simulados y se
   reinician al recargar la pagina.
+- Los snapshots se registran en memoria, pero el boceto no incluye un visor
+  para navegar el historial completo de versiones.
 - No sustituye las pruebas funcionales del sistema Laravel.
 - La seguridad de roles y la inmutabilidad son reglas visuales; el sistema real
   debe imponerlas en el servidor y la base de datos.

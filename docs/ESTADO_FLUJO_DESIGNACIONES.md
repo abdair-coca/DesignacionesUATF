@@ -3,7 +3,7 @@
 ## Implementado
 
 - El Director trabaja en `/designaciones` y solo ve la informacion de su carrera.
-- Cada propuesta abre una pantalla detallada de asignacion por docente; permite asignar por grupo, importar historicos, enviar o retirar la version pendiente y consultar el historial de revisiones.
+- Cada propuesta abre una pantalla detallada de asignacion por docente; permite asignar por grupo, importar historicos, enviar o retirar la version pendiente y consultar el estado y las observaciones de la propuesta.
 - El borrador conserva filas aprobadas previamente como solo lectura.
 - Cada envio crea una version inmutable y notifica a Vicerrectorado.
 - Vicerrectorado usa `/revisiones/pendientes` para aprobar una revision completa o decidir por fila.
@@ -18,7 +18,7 @@
 Existe un boceto independiente en `/boceto-designaciones/` para revisar el flujo sin inicio de sesion ni backend. Reune en una sola pagina las vistas del Director y Vicerrectorado, con datos simulados y patron visual Color Admin V2.
 
 - El selector del avatar alterna entre tres Directores de Carrera y Vicerrectorado.
-- Director puede crear/copia una propuesta, editar, importar, guardar, enviar, retirar envio y consultar el historial.
+- Director puede crear/copiar una propuesta, editar, importar, guardar, enviar, retirar envio y consultar estado u observaciones. Los snapshots de versiones se conservan en memoria, pero el boceto no tiene visor de historial.
 - Director puede distribuir cada materia entre horas pagadas y no pagadas, incluyendo horas adicionales no pagadas sin limite automatico.
 - Vicerrectorado solo puede revisar, observar o aprobar; no puede editar designaciones ni la distribucion de horas.
 - Una observacion por designacion devuelve la propuesta al Director para que corrija y reenvie una nueva version.
@@ -40,6 +40,7 @@ La funcionalidad esta construida, pero todavia falta la validacion integral de a
 3. Verificar desde navegador la lista de Designaciones, la bandeja de Revisiones, los filtros, la busqueda, los enlaces de notificaciones y los mensajes de validacion.
 4. Registrar las observaciones de los usuarios responsables y resolverlas antes de habilitar el uso operativo con datos institucionales.
 5. Definir por separado las reglas academicas que aun no estan aprobadas, como limites de carga horaria o formatos de reporte. El sistema no debe inventarlas ni bloquear por ellas.
+6. Incorporar un visor de historial de versiones si se requiere consultar snapshots desde la interfaz del boceto.
 
 ## Criterio de cierre
 
