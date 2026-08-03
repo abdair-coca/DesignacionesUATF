@@ -119,6 +119,11 @@ horas_pagadas <= MATERIAS.horas
 horas_pagadas + horas_no_pagadas >= MATERIAS.horas
 ```
 
+No existe un limite maximo de horas totales ni de horas adicionales no
+pagadas. La carga docente se calcula y se muestra como informacion para la
+decision, pero no debe bloquear automaticamente el guardado, envio, revision
+ni aprobacion de una propuesta.
+
 Las horas adicionales no pagadas se calculan, no se almacenan como una
 segunda designacion:
 
@@ -130,3 +135,20 @@ Los snapshots deben conservar exactamente `horas_pagadas`,
 `horas_no_pagadas` y `observacion_remuneracion` para que una version enviada
 o aprobada no dependa de cambios posteriores del borrador. La migracion y los
 modelos del backend siguen siendo una tarea separada del boceto.
+
+## Equivalencia de estados entre boceto y backend
+
+Antes de implementar el flujo de remuneracion en Laravel debe definirse un
+vocabulario unico. La correspondencia actual es:
+
+| Boceto | Backend actual | Significado |
+|---|---|---|
+| `borrador` | `borrador` | Propuesta editable |
+| `pendiente` | `pendiente` | Version enviada a revision |
+| `observada` | `observada` | Version devuelta para correccion |
+| `aprobada` | `oficial` en `propuestas` y `aprobada` en `propuesta_versiones` | Propuesta cerrada |
+| `aprobada_previamente` | `oficial` en filas del borrador | Fila congelada por una decision previa |
+
+La implementacion real debe conservar una unica semantica, aunque los nombres
+de columnas puedan mantenerse por compatibilidad. La tabla de equivalencia
+debe reflejarse tambien en modelos, servicios, politicas, vistas y pruebas.

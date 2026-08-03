@@ -528,23 +528,11 @@ function renderEditorCarreraView(container, u) {
             prioridadBadgeColor = 'bg-cyan-100 text-cyan-800 border-cyan-300';
         }
 
-        let estadoCarga = 'optimo';
-        let estadoEtiqueta = 'Óptimo';
-        let estadoColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-
-        if (horasTotalGlobal === 0) {
-            estadoCarga = 'sin_asignacion';
-            estadoEtiqueta = 'Sin asignación';
-            estadoColor = 'bg-gray-100 text-gray-700 border-gray-200';
-        } else if (horasTotalGlobal < 6) {
-            estadoCarga = 'bajo_minimo';
-            estadoEtiqueta = 'Bajo mínimo (< 6h)';
-            estadoColor = 'bg-amber-100 text-amber-800 border-amber-200';
-        } else if (horasTotalGlobal > 32) {
-            estadoCarga = 'sobrecarga';
-            estadoEtiqueta = 'Sobrecarga (> 32h)';
-            estadoColor = 'bg-rose-100 text-rose-800 border-rose-200';
-        }
+        let estadoCarga = horasTotalGlobal === 0 ? 'sin_asignacion' : 'informativa';
+        let estadoEtiqueta = horasTotalGlobal === 0 ? 'Sin asignación' : 'Carga informativa';
+        let estadoColor = horasTotalGlobal === 0
+            ? 'bg-gray-100 text-gray-700 border-gray-200'
+            : 'bg-blue-100 text-blue-800 border-blue-200';
 
         return {
             ...d,
@@ -1456,36 +1444,6 @@ function enviarPropuestaVicerrectorado(id) {
             const sufijo = gruposSinDocente.length > 3 ? ' y otras materias' : '';
             alert(`No se puede enviar la propuesta. Hay ${gruposSinDocente.length} materia(s) sin docente asignado: ${materiasSinAsignar}${sufijo}.`);
             return;
-        }
-
-        const horasPorDocente = {};
-        grupos.forEach(g => {
-            horasPorDocente[g.docenteId] = (horasPorDocente[g.docenteId] || 0) + getHorasTotalesGrupo(g);
-        });
-
-        const docentesSobrecargados = todosLosDocentesUniversidad.filter(d =>
-            (horasPorDocente[d.id] || 0) + d.horasOtrasCarreras > 32
-        );
-
-        if (docentesSobrecargados.length > 0) {
-            const detalleSobrecarga = docentesSobrecargados
-                .map(d => `${d.nombre} (${(horasPorDocente[d.id] || 0) + d.horasOtrasCarreras} hrs)`)
-                .join(', ');
-            alert(`No se puede enviar la propuesta porque existe sobrecarga horaria: ${detalleSobrecarga}.`);
-            return;
-        }
-
-        const docentesBajoMinimo = todosLosDocentesUniversidad.filter(d => {
-            const horasTotales = (horasPorDocente[d.id] || 0) + d.horasOtrasCarreras;
-            return horasTotales > 0 && horasTotales < 6;
-        });
-
-        if (docentesBajoMinimo.length > 0) {
-            const detalleBajoMinimo = docentesBajoMinimo
-                .map(d => `${d.nombre} (${(horasPorDocente[d.id] || 0) + d.horasOtrasCarreras} hrs)`)
-                .join(', ');
-            const continuar = confirm(`La propuesta contiene docentes con carga menor al mínimo de 6 horas: ${detalleBajoMinimo}. ¿Deseas continuar?`);
-            if (!continuar) return;
         }
 
         if (p.estado === 'observada') {

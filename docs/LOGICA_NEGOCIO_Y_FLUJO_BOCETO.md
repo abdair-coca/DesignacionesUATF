@@ -290,19 +290,22 @@ Las horas de otras carreras se representan en el boceto por
 `docente.horasOtrasCarreras`. El desglose pagado/no pagado de esas horas no
 esta modelado en esta maqueta, pero su total si participa en la carga global.
 
-La carga se etiqueta así:
+La carga puede mostrarse con indicadores visuales para facilitar la lectura,
+pero no existe un limite maximo ni minimo automatico de horas. En particular:
 
-- sin asignacion: 0 horas;
-- bajo minimo: mas de 0 y menos de 6 horas;
-- optimo: entre 6 y 32 horas inclusive;
-- sobrecarga: mas de 32 horas.
+- una carga mayor a 32 horas no bloquea el envio;
+- una carga menor a 6 horas no bloquea el envio;
+- las horas adicionales no pagadas no tienen tope automatico;
+- Vicerrectorado decide caso por caso durante la revision.
 
-Estas etiquetas son reglas visuales y de validacion del boceto. Al enviar una
-propuesta:
+El calculo de carga es informativo y no debe bloquear el guardado, envio,
+revision ni aprobacion por el solo hecho de superar o no alcanzar una
+cantidad de horas.
 
-- cualquier docente con mas de 32 horas bloquea el envio;
-- cualquier docente con carga entre 1 y 5 horas muestra una confirmacion;
-- el Director puede continuar si confirma la carga bajo minimo.
+Nota de implementacion: el boceto actual aun contiene umbrales visuales y una
+validacion de envio asociada a 32 y 6 horas en `enviarPropuestaVicerrectorado`.
+Esta documentacion define la regla de negocio corregida; el codigo debera
+ajustarse en una tarea posterior.
 
 Las horas no pagadas y las adicionales no pagadas cuentan exactamente igual
 que las pagadas para esta carga.
@@ -653,4 +656,3 @@ horas pagadas, horas no pagadas y observaciones cuando correspondan.
    que en el sistema real deben convertirse en componentes de interfaz y
    respuestas de servidor.
 7. El catalogo de materias y docentes es fijo para la demostracion.
-
