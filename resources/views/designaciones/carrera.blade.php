@@ -63,7 +63,11 @@
         'horas_no_pagadas' => $r['designacion']['horas_no_pagadas'] ?? 0,
         'observacion_remuneracion' => $r['designacion']['observacion_remuneracion'] ?? null,
         'bloqueada' => $r['bloqueada'],
+        'observada' => $r['observada'] ?? false,
+        'observacion_revision' => $r['observacion_revision'] ?? null,
     ])->values();
+
+    $observacionesRevision = $rosterGrupos->filter(fn ($grupo) => $grupo['observada'])->values();
 
 @endphp
 
@@ -132,6 +136,22 @@
         <div class="border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             El borrador esta bloqueado mientras una version este pendiente de revision.
         </div>
+    @endif
+
+    @if(filled($observacionRevisionGeneral) || $observacionesRevision->isNotEmpty())
+        <section class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 shadow-sm">
+            <h2 class="font-bold">Observaciones de Vicerrectorado</h2>
+            @if(filled($observacionRevisionGeneral))
+                <p class="mt-1">{{ $observacionRevisionGeneral }}</p>
+            @endif
+            @if($observacionesRevision->isNotEmpty())
+                <div class="mt-2 space-y-1 text-xs">
+                    @foreach($observacionesRevision as $grupo)
+                        <p><strong>{{ $grupo['materia_sigla'] }} (G{{ $grupo['codigo'] }}):</strong> {{ $grupo['observacion_revision'] ?: 'Revisar esta designacion.' }}</p>
+                    @endforeach
+                </div>
+            @endif
+        </section>
     @endif
 
     <section class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -406,6 +426,9 @@
                                         <p class="text-[10px] text-gray-400 font-normal" x-text="g.materia_sigla"></p>
                                         <template x-if="g.bloqueada">
                                             <p class="mt-1 text-[10px] font-semibold text-emerald-800">Aprobada previamente</p>
+                                        </template>
+                                        <template x-if="g.observada">
+                                            <p class="mt-1 text-[10px] font-semibold text-rose-700">Observada: <span x-text="g.observacion_revision || 'Revisar esta designacion.'"></span></p>
                                         </template>
                                     </td>
 
@@ -851,7 +874,7 @@
                     const asignadoAlActual = (g.docente_actual_id === this.docenteActual.id) || this.gruposSeleccionados.includes(g.id);
                     const ocupadoPorOtro = gruposOcupadosPorOtros.has(g.id) || (g.docente_actual_id && g.docente_actual_id !== this.docenteActual.id);
 
-                    return asignadoAlActual || !ocupadoPorOtro;
+                    return g.observada || asignadoAlActual || !ocupadoPorOtro;
                 });
             },
 

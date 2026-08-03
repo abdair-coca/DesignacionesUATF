@@ -29,7 +29,9 @@ class PropuestaController extends Controller
         $gestiones = Gestion::orderByDesc('nombre')->get();
         $gestionActual = $gestiones->firstWhere('es_actual', true) ?? $gestiones->first();
         $gestionId = $request->integer('gestion_id') ?: $gestionActual?->id;
-        $propuestas = Propuesta::with(['gestion', 'periodo', 'versiones' => fn ($query) => $query->latest('numero')])
+        $propuestas = Propuesta::with(['gestion', 'periodo', 'versiones' => fn ($query) => $query
+            ->with('designaciones.decision')
+            ->latest('numero')])
             ->withCount('designaciones')
             ->where('carrera_id', $request->user()->carrera_id)
             ->when($gestionId, fn ($query) => $query->where('gestion_id', $gestionId))
@@ -39,6 +41,19 @@ class PropuestaController extends Controller
         $propuestasData = $propuestas->map(function (Propuesta $propuesta): array {
             $versionPendiente = $propuesta->versiones->firstWhere('estado', 'pendiente');
             $versionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
+            $observacionesFilas = $versionObservada?->designaciones
+                ->filter(fn ($fila) => $fila->getRelation('decision')?->getAttribute('decision') === 'observada')
+                ->map(function ($fila): array {
+                    $decision = $fila->getRelation('decision');
+
+                    return [
+                        'materia' => $fila->materia_sigla.' - '.$fila->materia_nombre,
+                        'grupo' => (string) $fila->grupo_codigo,
+                        'observacion' => $decision?->getAttribute('observacion'),
+                    ];
+                })
+                ->values()
+                ->all() ?? [];
 
             return [
                 'id' => $propuesta->id,
@@ -53,6 +68,7 @@ class PropuestaController extends Controller
                 'observacion' => $versionObservada?->observaciones,
                 'version_pendiente_id' => $versionPendiente?->id,
                 'designaciones_count' => $propuesta->designaciones_count,
+                'observaciones_filas' => $observacionesFilas,
                 'created_at' => $propuesta->created_at?->toIso8601String(),
             ];
         });
@@ -166,6 +182,10 @@ class PropuestaController extends Controller
             ->get();
 
         $designacionesPorGrupo = $propuesta->designaciones->keyBy('grupo_id');
+        $versionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
+        $observacionesPorGrupo = $versionObservada?->designaciones
+            ->filter(fn ($fila) => $fila->getRelation('decision')?->getAttribute('decision') === 'observada')
+            ->mapWithKeys(fn ($fila) => [$fila->grupo_id => $fila->getRelation('decision')?->getAttribute('observacion')]) ?? collect();
         $docentesHistoricosIds = DB::table('designaciones')
             ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
             ->where('malla_curricular.carrera_id', $propuesta->carrera_id)
@@ -206,7 +226,7 @@ class PropuestaController extends Controller
                     'horasOtrasCarreras' => (int) ($horasOtrasCarrerasPorDocente[$docente->id] ?? 0),
                 ];
             });
-        $roster = $grupos->map(function (Grupo $grupo) use ($designacionesPorGrupo): array {
+        $roster = $grupos->map(function (Grupo $grupo) use ($designacionesPorGrupo, $observacionesPorGrupo): array {
             $designacion = $designacionesPorGrupo->get($grupo->id);
 
             return [
@@ -225,6 +245,8 @@ class PropuestaController extends Controller
                     'observacion_remuneracion' => $designacion->observacion_remuneracion,
                 ] : null,
                 'bloqueada' => $designacion?->estado === 'aprobada_previamente',
+                'observada' => $observacionesPorGrupo->has($grupo->id),
+                'observacion_revision' => $observacionesPorGrupo->get($grupo->id),
             ];
         });
         $versionPendiente = $propuesta->versiones->firstWhere('estado', 'pendiente');
@@ -237,6 +259,7 @@ class PropuestaController extends Controller
             'docentes' => $docentes,
             'gestiones' => Gestion::orderByDesc('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
+            'observacionRevisionGeneral' => $versionObservada?->observaciones,
             'revision' => $versionPendiente ? [
                 'id' => $versionPendiente->id,
                 'estado' => $versionPendiente->estado,

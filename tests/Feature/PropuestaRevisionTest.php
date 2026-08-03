@@ -75,6 +75,7 @@ class PropuestaRevisionTest extends TestCase
             ->get("/designaciones/{$propuesta->id}")
             ->assertOk()
             ->assertSee('Corregir la primera asignación.')
+            ->assertSee('Cambiar docente.')
             ->assertSee('Aprobada previamente');
 
         $this->actingAs($director)

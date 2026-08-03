@@ -86,8 +86,8 @@
                                 <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
                                 <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
                                 <td class="px-4 py-3 text-center">{{ $adicionales }} h</td>
-                                <td class="px-4 py-3">{{ $snapshot->decision?->decision ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td>
-                                <td class="px-4 py-3">{{ $snapshot->decision?->observacion }}</td>
+                                <td class="px-4 py-3">{{ $snapshot->getRelation('decision')?->getAttribute('decision') ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td>
+                                <td class="px-4 py-3">{{ $snapshot->getRelation('decision')?->getAttribute('observacion') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

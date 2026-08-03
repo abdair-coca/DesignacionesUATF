@@ -417,6 +417,17 @@
                         <div class="bg-rose-50 border border-rose-200 rounded-xs p-3 text-xs text-rose-900 font-medium leading-relaxed">
                             <span class="font-bold block mb-1">Motivo de la Observación:</span>
                             <span x-text="itemSeleccionado?.observacion && itemSeleccionado?.observacion.trim() !== '' ? itemSeleccionado?.observacion : 'El Vicerrectorado ha devuelto la propuesta con observaciones en la carga horaria o asignación de docentes.'"></span>
+                            <template x-if="itemSeleccionado?.observaciones_filas?.length">
+                                <div class="mt-3 space-y-1.5 border-t border-rose-200 pt-2">
+                                    <span class="font-bold block">Observaciones por materia:</span>
+                                    <template x-for="fila in itemSeleccionado.observaciones_filas" :key="fila.materia + fila.grupo">
+                                        <div class="bg-white/70 border border-rose-200 rounded-xs px-2 py-1.5">
+                                            <span class="font-semibold" x-text="fila.materia + ' (G' + fila.grupo + ')' "></span>
+                                            <span class="block" x-text="fila.observacion || 'Revisar esta designación.'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </div>
                     </template>
                 </div>
