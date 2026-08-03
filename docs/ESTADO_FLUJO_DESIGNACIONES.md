@@ -9,6 +9,9 @@
 - Vicerrectorado usa `/revisiones/pendientes` para aprobar una revision completa o decidir por fila.
 - Las observaciones devuelven el mismo borrador al Director; el reenvio crea una nueva version.
 - La aprobacion final bloquea la propuesta y sus filas. Las notificaciones informan al Director y sus enlaces usan rutas vigentes.
+- La distribucion por materia/grupo conserva `horas_pagadas`, `horas_no_pagadas` y una justificacion opcional.
+- Las horas no pagadas y las horas adicionales no pagadas cuentan para la carga docente total.
+- Las horas pagadas no pueden superar las horas oficiales y la suma de ambas distribuciones debe cubrir la materia.
 
 ## Boceto de validacion visual
 
@@ -16,11 +19,17 @@ Existe un boceto independiente en `/boceto-designaciones/` para revisar el flujo
 
 - El selector del avatar alterna entre tres Directores de Carrera y Vicerrectorado.
 - Director puede crear/copia una propuesta, editar, importar, guardar, enviar, retirar envio y consultar el historial.
-- Vicerrectorado solo puede revisar, observar o aprobar; no puede editar designaciones.
-- Una observacion por designacion bloquea la aprobacion total hasta que el Director corrija y reenvie.
+- Director puede distribuir cada materia entre horas pagadas y no pagadas, incluyendo horas adicionales no pagadas sin limite automatico.
+- Vicerrectorado solo puede revisar, observar o aprobar; no puede editar designaciones ni la distribucion de horas.
+- Una observacion por designacion devuelve la propuesta al Director para que corrija y reenvie una nueva version.
 - La aprobacion final del boceto bloquea visualmente la propuesta y sus designaciones.
 
-Los detalles de uso y alcance estan en [Boceto interactivo](BOCETO_INTERACTIVO.md).
+Los detalles de uso y alcance estan en [Boceto interactivo](BOCETO_INTERACTIVO.md) y la especificacion completa esta en [Logica de negocio y flujo del boceto](LOGICA_NEGOCIO_Y_FLUJO_BOCETO.md).
+
+La distribucion de remuneracion descrita arriba esta implementada actualmente
+en el boceto. La migracion de base de datos, snapshots, modelos, servicios y
+validaciones de servidor para el sistema real debe seguir la especificacion
+canonica antes de habilitarla en produccion.
 
 ## Pendiente para completar el flujo integral
 

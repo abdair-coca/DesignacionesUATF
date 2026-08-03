@@ -9,6 +9,7 @@ Sistema web para gestionar propuestas, revisiones y versiones de designaciones d
 - Revision de propuestas con estados de aprobacion u observacion.
 - Roles diferenciados para Direccion de Carrera y Vicerrectorado.
 - Notificaciones internas para cambios relevantes del flujo.
+- Flujo de boceto para distribuir cada materia entre horas pagadas, no pagadas y horas adicionales no pagadas.
 - Normalizacion academica de carreras, materias, mallas curriculares, grupos y docentes.
 
 ## Stack
@@ -75,6 +76,8 @@ php artisan academico:verificar-normalizacion
 - [Modelo de datos](docs/ERD.md)
 - [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md)
 - [Boceto interactivo](docs/BOCETO_INTERACTIVO.md)
+- [Logica de negocio y flujo completo del boceto](docs/LOGICA_NEGOCIO_Y_FLUJO_BOCETO.md)
+- [Grafo de conocimiento](docs/GRAFO_CONOCIMIENTO.md)
 - [Plan frontend](docs/PLAN_FRONTEND.md)
 - [Higiene del repositorio](docs/HIGIENE_REPOSITORIO.md)
 

@@ -97,3 +97,36 @@ erDiagram
 - Las decisiones pueden ser por fila o para toda la revision; el historial de eventos se conserva en `propuesta_eventos`.
 - Las notificaciones se almacenan en `notifications` y su URL lleva a la ruta canonica.
 - `designaciones`, `designaciones_historial` y `revisiones` son datos heredados. No participan en el flujo operativo; `designaciones` puede servir como origen de importaciones historicas.
+
+## Campos requeridos por el flujo de remuneracion del boceto
+
+El boceto define una distribucion por materia/grupo entre horas pagadas y no
+pagadas. La implementacion persistente debe agregar estos campos a
+`PROPUESTA_DESIGNACIONES` y a `PROPUESTA_VERSION_DESIGNACIONES`:
+
+```text
+horas_pagadas integer not null
+horas_no_pagadas integer not null
+observacion_remuneracion text nullable
+```
+
+Reglas de validacion:
+
+```text
+horas_pagadas >= 0
+horas_no_pagadas >= 0
+horas_pagadas <= MATERIAS.horas
+horas_pagadas + horas_no_pagadas >= MATERIAS.horas
+```
+
+Las horas adicionales no pagadas se calculan, no se almacenan como una
+segunda designacion:
+
+```text
+max(0, horas_pagadas + horas_no_pagadas - MATERIAS.horas)
+```
+
+Los snapshots deben conservar exactamente `horas_pagadas`,
+`horas_no_pagadas` y `observacion_remuneracion` para que una version enviada
+o aprobada no dependa de cambios posteriores del borrador. La migracion y los
+modelos del backend siguen siendo una tarea separada del boceto.
