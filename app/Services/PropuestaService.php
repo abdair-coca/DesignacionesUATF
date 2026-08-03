@@ -22,26 +22,14 @@ class PropuestaService
         $this->validarGestionActual($gestion);
 
         return DB::transaction(function () use ($user, $gestion, $periodo, $descripcion) {
-            $propuesta = Propuesta::firstOrCreate(
-                [
-                    'carrera_id' => $user->carrera_id,
-                    'gestion_id' => $gestion->id,
-                    'periodo_id' => $periodo->id,
-                ],
-                [
-                    'creado_por' => $user->id,
-                    'descripcion' => $descripcion,
-                    'estado' => 'borrador',
-                ],
-            );
-
-            if ($propuesta->creado_por !== $user->id) {
-                throw ValidationException::withMessages([
-                    'gestion_id' => 'Ya existe una propuesta para esta carrera, gestión y período.',
-                ]);
-            }
-
-            return $propuesta;
+            return Propuesta::create([
+                'carrera_id' => $user->carrera_id,
+                'gestion_id' => $gestion->id,
+                'periodo_id' => $periodo->id,
+                'creado_por' => $user->id,
+                'descripcion' => $descripcion,
+                'estado' => 'borrador',
+            ]);
         });
     }
 

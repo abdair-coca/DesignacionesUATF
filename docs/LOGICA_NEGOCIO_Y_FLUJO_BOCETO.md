@@ -333,6 +333,11 @@ para otro docente dentro de la misma propuesta.
 `lista_director` muestra las propuestas de la carrera del usuario simulado,
 con estado, version, cantidad de materias asignadas y acciones disponibles.
 
+Pueden coexistir varias propuestas de la misma carrera, gestion y periodo.
+Crear una propuesta vacia o copiar una propuesta historica siempre genera un
+nuevo registro; las designaciones posteriores se guardan unicamente dentro de
+la propuesta abierta.
+
 Acciones principales:
 
 - abrir propuesta;

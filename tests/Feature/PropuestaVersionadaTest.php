@@ -18,7 +18,7 @@ use Tests\TestCase;
 
 class PropuestaVersionadaTest extends TestCase
 {
-    public function test_director_crea_un_unico_borrador_para_su_gestion_y_periodo_actual(): void
+    public function test_director_puede_crear_multiples_propuestas_para_su_gestion_y_periodo_actual(): void
     {
         [$director, $gestion, $periodo] = $this->contextoDirector();
 
@@ -34,17 +34,19 @@ class PropuestaVersionadaTest extends TestCase
             ->post('/designaciones', [
                 'gestion_id' => $gestion->id,
                 'periodo_id' => $periodo->id,
-                'descripcion' => 'No debe duplicarse',
+                'descripcion' => 'Segunda propuesta',
             ])
             ->assertRedirect();
 
-        $this->assertSame(1, Propuesta::where('carrera_id', $director->carrera_id)->count());
+        $this->assertSame(2, Propuesta::where('carrera_id', $director->carrera_id)->count());
         $this->assertDatabaseHas('propuestas', ['descripcion' => 'Propuesta inicial', 'estado' => 'borrador']);
+        $this->assertDatabaseHas('propuestas', ['descripcion' => 'Segunda propuesta', 'estado' => 'borrador']);
 
         $this->actingAs($director)
             ->get('/designaciones')
             ->assertOk()
-            ->assertSee('Propuesta inicial');
+            ->assertSee('Propuesta inicial')
+            ->assertSee('Segunda propuesta');
     }
 
     public function test_no_se_puede_abrir_borrador_para_una_gestion_no_actual(): void

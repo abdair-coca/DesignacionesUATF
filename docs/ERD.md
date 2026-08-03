@@ -98,7 +98,10 @@ erDiagram
 
 ## Reglas importantes
 
-- Una propuesta es unica para una combinacion de carrera, gestion y periodo.
+- Pueden existir varias propuestas para una misma combinacion de carrera,
+  gestion y periodo. Cada propuesta se identifica por su propio `id` y sus
+  designaciones, versiones, decisiones, eventos y notificaciones quedan
+  aislados por esa referencia.
 - El borrador editable vive en `propuesta_designaciones`; cada envio copia sus valores a `propuesta_version_designaciones`.
 - PostgreSQL impide actualizar o borrar snapshots y decisiones ya registrados.
 - Las decisiones pueden ser por fila o para toda la revision; el historial de eventos se conserva en `propuesta_eventos`.
