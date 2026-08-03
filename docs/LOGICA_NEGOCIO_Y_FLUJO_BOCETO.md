@@ -557,38 +557,38 @@ stateDiagram-v2
 
 ### Distribucion
 
-- [ ] Materia de 6 horas con `6 + 0` se guarda.
-- [ ] Materia de 6 horas con `4 + 2` se guarda.
-- [ ] Materia de 6 horas con `0 + 6` se guarda.
-- [ ] Materia de 6 horas con `6 + 2` se guarda y muestra 2 adicionales.
-- [ ] `5 + 0` para una materia de 6 horas se rechaza.
-- [ ] Horas negativas se rechazan.
-- [ ] Decimales se rechazan.
-- [ ] Horas pagadas mayores a las oficiales se rechazan.
-- [ ] La justificacion puede omitirse.
-- [ ] Las horas no pagadas aparecen en la carga total.
+- [x] Materia de 6 horas con `6 + 0` se guarda.
+- [x] Materia de 6 horas con `4 + 2` se guarda.
+- [x] Materia de 6 horas con `0 + 6` se guarda.
+- [x] Materia de 6 horas con `6 + 2` se guarda y muestra 2 adicionales.
+- [x] `5 + 0` para una materia de 6 horas se rechaza.
+- [x] Horas negativas se rechazan.
+- [x] Decimales se rechazan.
+- [x] Horas pagadas mayores a las oficiales se rechazan.
+- [x] La justificacion puede omitirse.
+- [x] Las horas no pagadas aparecen en la carga total.
 
 ### Asignacion
 
 - [ ] Una materia asignada a otro docente no aparece como seleccionable.
 - [ ] Una materia aprobada previamente no se puede editar.
 - [ ] Quitar una materia devuelve la fila a sin docente y reinicia su distribucion.
-- [ ] Importar copia tambien la distribucion de remuneracion.
+- [x] Importar copia tambien la distribucion de remuneracion.
 
 ### Revision y versionado
 
-- [ ] Vicerrectorado ve las cuatro columnas de horas.
-- [ ] Vicerrectorado no puede editar las horas.
+- [x] Vicerrectorado ve las cuatro columnas de horas.
+- [x] Vicerrectorado no puede editar las horas.
 - [ ] Observar una fila devuelve la propuesta al Director.
 - [ ] Corregir una fila observada la vuelve editable.
 - [ ] Reenviar incrementa la version.
-- [ ] Aprobar congela propuesta, filas y distribucion.
-- [ ] Los snapshots conservan los valores exactos de cada version.
+- [x] Aprobar congela propuesta, filas y distribucion.
+- [x] Los snapshots conservan los valores exactos de cada version.
 
 ## 18. Requisitos para el sistema real
 
-El sistema real debe conservar el mismo comportamiento visible, pero llevar
-las reglas al servidor. Como minimo debe contemplar:
+El sistema real conserva el mismo comportamiento visible y lleva las reglas al
+servidor:
 
 ### Designacion editable
 

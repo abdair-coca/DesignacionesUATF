@@ -63,6 +63,9 @@ erDiagram
     int grupo_id FK
     int malla_curricular_id FK
     string estado
+    int horas_pagadas
+    int horas_no_pagadas
+    text observacion_remuneracion
   }
   PROPUESTA_VERSIONES {
     int id PK
@@ -78,6 +81,10 @@ erDiagram
     int grupo_id
     string docente_nombre
     string materia_nombre
+    int materia_horas
+    int horas_pagadas
+    int horas_no_pagadas
+    text observacion_remuneracion
     string estado
   }
   PROPUESTA_VERSION_DECISIONES {
@@ -101,7 +108,7 @@ erDiagram
 ## Campos requeridos por el flujo de remuneracion del boceto
 
 El boceto define una distribucion por materia/grupo entre horas pagadas y no
-pagadas. La implementacion persistente debe agregar estos campos a
+pagadas. La implementacion persistente agrega estos campos a
 `PROPUESTA_DESIGNACIONES` y a `PROPUESTA_VERSION_DESIGNACIONES`:
 
 ```text
@@ -133,13 +140,14 @@ max(0, horas_pagadas + horas_no_pagadas - MATERIAS.horas)
 
 Los snapshots deben conservar exactamente `horas_pagadas`,
 `horas_no_pagadas` y `observacion_remuneracion` para que una version enviada
-o aprobada no dependa de cambios posteriores del borrador. La migracion y los
-modelos del backend siguen siendo una tarea separada del boceto.
+o aprobada no dependa de cambios posteriores del borrador. La migracion realiza
+backfill seguro de horas oficiales pagadas, cero horas no pagadas y observacion
+nula. Las designaciones heredadas no reciben estos campos.
 
 ## Equivalencia de estados entre boceto y backend
 
-Antes de implementar el flujo de remuneracion en Laravel debe definirse un
-vocabulario unico. La correspondencia actual es:
+El flujo de remuneracion usa el siguiente vocabulario unico. La correspondencia
+actual es:
 
 | Boceto | Backend actual | Significado |
 |---|---|---|

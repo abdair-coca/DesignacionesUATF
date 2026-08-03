@@ -218,7 +218,12 @@ class PropuestaController extends Controller
                 ],
                 'codigo' => $grupo->codigo,
                 'horas' => $grupo->mallaCurricular->materia->horas,
-                'designacion' => $designacion ? ['docente' => ['id' => $designacion->docente_id]] : null,
+                'designacion' => $designacion ? [
+                    'docente' => ['id' => $designacion->docente_id],
+                    'horas_pagadas' => (int) ($designacion->horas_pagadas ?? $grupo->mallaCurricular->materia->horas),
+                    'horas_no_pagadas' => (int) ($designacion->horas_no_pagadas ?? 0),
+                    'observacion_remuneracion' => $designacion->observacion_remuneracion,
+                ] : null,
                 'bloqueada' => $designacion?->estado === 'aprobada_previamente',
             ];
         });
@@ -255,6 +260,9 @@ class PropuestaController extends Controller
             'cambios.*.grupo_id' => ['required', 'exists:grupos,id'],
             'cambios.*.materia_id' => ['required', 'exists:materias,id'],
             'cambios.*.docente_id' => ['nullable', 'exists:docentes,id'],
+            'cambios.*.horas_pagadas' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'cambios.*.horas_no_pagadas' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'cambios.*.observacion_remuneracion' => ['sometimes', 'nullable', 'string', 'max:1000'],
         ]);
 
         $this->propuestas->guardarCambios($propuesta, $data['cambios']);

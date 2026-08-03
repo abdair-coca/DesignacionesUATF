@@ -26,10 +26,9 @@ Existe un boceto independiente en `/boceto-designaciones/` para revisar el flujo
 
 Los detalles de uso y alcance estan en [Boceto interactivo](BOCETO_INTERACTIVO.md) y la especificacion completa esta en [Logica de negocio y flujo del boceto](LOGICA_NEGOCIO_Y_FLUJO_BOCETO.md).
 
-La distribucion de remuneracion descrita arriba esta implementada actualmente
-en el boceto. La migracion de base de datos, snapshots, modelos, servicios y
-validaciones de servidor para el sistema real debe seguir la especificacion
-canonica antes de habilitarla en produccion.
+La distribucion de remuneracion descrita arriba esta implementada en el boceto
+y en el sistema real. Migracion, modelos, servicios, validaciones de servidor,
+snapshots, importacion y revision conservan los tres campos definidos.
 
 ## Pendiente para completar el flujo integral
 
@@ -40,7 +39,7 @@ La funcionalidad esta construida, pero todavia falta la validacion integral de a
 3. Verificar desde navegador la lista de Designaciones, la bandeja de Revisiones, los filtros, la busqueda, los enlaces de notificaciones y los mensajes de validacion.
 4. Registrar las observaciones de los usuarios responsables y resolverlas antes de habilitar el uso operativo con datos institucionales.
 5. Definir por separado las reglas academicas que aun no estan aprobadas, como limites de carga horaria o formatos de reporte. El sistema no debe inventarlas ni bloquear por ellas.
-6. Incorporar un visor de historial de versiones si se requiere consultar snapshots desde la interfaz del boceto.
+6. Incorporar un visor de historial de snapshots dentro de la interfaz del boceto si se requiere paridad total con el sistema real.
 
 ## Criterio de cierre
 

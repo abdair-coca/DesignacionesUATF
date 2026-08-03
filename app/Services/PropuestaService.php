@@ -53,7 +53,7 @@ class PropuestaService
             $propuesta = Propuesta::lockForUpdate()->findOrFail($propuesta->id);
             $this->asegurarEditable($propuesta);
 
-            $grupos = Grupo::with('mallaCurricular')
+            $grupos = Grupo::with('mallaCurricular.materia')
                 ->whereIn('id', collect($cambios)->pluck('grupo_id')->unique())
                 ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $propuesta->carrera_id))
                 ->get()
@@ -85,6 +85,13 @@ class PropuestaService
                     continue;
                 }
 
+                $horasOficiales = (int) $grupo->mallaCurricular->materia->horas;
+                [$horasPagadas, $horasNoPagadas] = $this->validarDistribucion(
+                    $horasOficiales,
+                    $cambio['horas_pagadas'] ?? $horasOficiales,
+                    $cambio['horas_no_pagadas'] ?? 0,
+                );
+
                 PropuestaDesignacion::updateOrCreate(
                     ['propuesta_id' => $propuesta->id, 'grupo_id' => $grupo->id],
                     [
@@ -92,6 +99,11 @@ class PropuestaService
                         'materia_id' => $grupo->mallaCurricular->materia_id,
                         'malla_curricular_id' => $grupo->malla_curricular_id,
                         'estado' => 'propuesta',
+                        'horas_pagadas' => $horasPagadas,
+                        'horas_no_pagadas' => $horasNoPagadas,
+                        'observacion_remuneracion' => blank($cambio['observacion_remuneracion'] ?? null)
+                            ? null
+                            : trim((string) $cambio['observacion_remuneracion']),
                     ],
                 );
             }
@@ -119,6 +131,19 @@ class PropuestaService
             if ($filas->isEmpty()) {
                 throw ValidationException::withMessages([
                     'propuesta' => 'El borrador debe contener al menos una designación antes de enviarse.',
+                ]);
+            }
+
+            $gruposEsperados = Grupo::query()
+                ->where('estado', 'habilitado')
+                ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $propuesta->carrera_id))
+                ->pluck('id');
+            $gruposEnPropuesta = $filas->pluck('grupo_id');
+            $gruposSinDocente = $gruposEsperados->diff($gruposEnPropuesta);
+
+            if ($gruposSinDocente->isNotEmpty() || $filas->contains(fn (PropuestaDesignacion $fila): bool => $fila->docente_id === null)) {
+                throw ValidationException::withMessages([
+                    'propuesta' => 'Todas las materias y grupos habilitados deben tener un docente antes de enviar la propuesta.',
                 ]);
             }
 
@@ -231,7 +256,36 @@ class PropuestaService
             'periodo_id' => $propuesta->periodo->id,
             'periodo_nombre' => $propuesta->periodo->nombre,
             'estado' => $fila->estado,
+            'horas_pagadas' => $fila->horas_pagadas,
+            'horas_no_pagadas' => $fila->horas_no_pagadas,
+            'observacion_remuneracion' => $fila->observacion_remuneracion,
         ]);
+    }
+
+    private function validarDistribucion(int $horasOficiales, mixed $horasPagadas, mixed $horasNoPagadas): array
+    {
+        $pagadas = filter_var($horasPagadas, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
+        $noPagadas = filter_var($horasNoPagadas, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
+
+        if ($pagadas === null || $noPagadas === null || $pagadas < 0 || $noPagadas < 0) {
+            throw ValidationException::withMessages([
+                'cambios' => 'Las horas pagadas y no pagadas deben ser enteros no negativos.',
+            ]);
+        }
+
+        if ($pagadas > $horasOficiales) {
+            throw ValidationException::withMessages([
+                'cambios' => 'Las horas pagadas no pueden superar las horas oficiales.',
+            ]);
+        }
+
+        if ($pagadas + $noPagadas < $horasOficiales) {
+            throw ValidationException::withMessages([
+                'cambios' => 'La distribución debe cubrir todas las horas oficiales.',
+            ]);
+        }
+
+        return [$pagadas, $noPagadas];
     }
 
     private function notificarVicerrectorado(PropuestaVersion $version, string $evento): void

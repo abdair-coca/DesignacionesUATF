@@ -111,7 +111,7 @@ decisión de diseño.
 ### Modal Asignación de Materias (Color Admin v2)
 
 - **Header de Modal**: Bar con `bg-[#2d353c] text-white px-5 py-3.5 font-bold text-sm flex justify-between`.
-- **Muestra Numérica de Carga Horaria**: Muestra las horas numéricas directamente (`X hrs` de 32 hrs máx), **sin utilizar barra de progreso gráfica**.
+- **Muestra Numérica de Carga Horaria**: Muestra horas oficiales, pagadas, no pagadas y globales directamente; carga sirve como información para decisión y no bloquea por umbrales de 6 o 32 horas. Sin barra de progreso gráfica.
 - **Footer de Modal**: `bg-gray-100 border-t border-gray-200 px-5 py-3 flex justify-between`, con botón "Guardar Designación" en `bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-5 py-2 rounded text-xs`.
 
 ### Dashboard General (Color Admin v2 Analytics & Stat Tiles)

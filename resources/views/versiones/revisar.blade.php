@@ -24,13 +24,24 @@
 
                 <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600"><tr><th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th><th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación por fila</th></tr></thead>
+                        <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
+                            <tr>
+                                <th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th>
+                                <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th>
+                                <th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación por fila</th>
+                            </tr>
+                        </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($version->designaciones as $indice => $snapshot)
+                                @php($adicionales = max(0, $snapshot->horas_pagadas + $snapshot->horas_no_pagadas - $snapshot->materia_horas))
                                 <tr>
                                     <td class="px-4 py-3">{{ $snapshot->docente_nombre }}</td>
                                     <td class="px-4 py-3"><span class="font-semibold">{{ $snapshot->materia_sigla }}</span> {{ $snapshot->materia_nombre }}</td>
                                     <td class="px-4 py-3">{{ $snapshot->grupo_codigo }}</td>
+                                    <td class="px-4 py-3 text-center">{{ $snapshot->materia_horas }} h</td>
+                                    <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
+                                    <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
+                                    <td class="px-4 py-3 text-center font-semibold {{ $adicionales ? 'text-rose-700' : 'text-gray-500' }}">{{ $adicionales }} h</td>
                                     @if($snapshot->estado === 'aprobada_previamente')
                                         <td colspan="2" class="px-4 py-3"><span class="bg-emerald-100 text-emerald-900 text-xs font-semibold px-2 py-1">Aprobada previamente</span></td>
                                     @else
@@ -51,16 +62,36 @@
 
                 <div class="flex flex-wrap justify-end gap-3">
                     <button type="submit" name="modo" value="decidir_filas" class="bg-amber-600 text-white px-4 py-2 text-sm font-semibold hover:bg-amber-700">Registrar decisiones por fila</button>
-                    <button type="submit" name="modo" value="aprobar_todo" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Aprobar revisión completa</button>
+                    <button type="submit" name="modo" value="aprobar_todo" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Aprobar todas las filas</button>
                 </div>
             </form>
         @else
             <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
-                <table class="w-full text-sm"><thead class="bg-gray-50 text-left text-xs uppercase text-gray-600"><tr><th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th><th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación</th></tr></thead><tbody class="divide-y divide-gray-100">
-                    @foreach($version->designaciones as $snapshot)
-                        <tr><td class="px-4 py-3">{{ $snapshot->docente_nombre }}</td><td class="px-4 py-3">{{ $snapshot->materia_sigla }} {{ $snapshot->materia_nombre }}</td><td class="px-4 py-3">{{ $snapshot->grupo_codigo }}</td><td class="px-4 py-3">{{ $snapshot->decision?->decision ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td><td class="px-4 py-3">{{ $snapshot->decision?->observacion }}</td></tr>
-                    @endforeach
-                </tbody></table>
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
+                        <tr>
+                            <th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th>
+                            <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th>
+                            <th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($version->designaciones as $snapshot)
+                            @php($adicionales = max(0, $snapshot->horas_pagadas + $snapshot->horas_no_pagadas - $snapshot->materia_horas))
+                            <tr>
+                                <td class="px-4 py-3">{{ $snapshot->docente_nombre }}</td>
+                                <td class="px-4 py-3">{{ $snapshot->materia_sigla }} {{ $snapshot->materia_nombre }}</td>
+                                <td class="px-4 py-3">{{ $snapshot->grupo_codigo }}</td>
+                                <td class="px-4 py-3 text-center">{{ $snapshot->materia_horas }} h</td>
+                                <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
+                                <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
+                                <td class="px-4 py-3 text-center">{{ $adicionales }} h</td>
+                                <td class="px-4 py-3">{{ $snapshot->decision?->decision ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td>
+                                <td class="px-4 py-3">{{ $snapshot->decision?->observacion }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </section>
         @endif
     </div>

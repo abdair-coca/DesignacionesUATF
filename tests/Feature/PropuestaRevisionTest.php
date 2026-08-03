@@ -29,7 +29,7 @@ class PropuestaRevisionTest extends TestCase
         $this->actingAs($vicerrectorado)
             ->get("/revisiones/{$version->id}/revisar")
             ->assertOk()
-            ->assertSee('Aprobar revisión completa');
+            ->assertSee('Aprobar todas las filas');
 
         $this->actingAs($director)
             ->get('/revisiones/pendientes')

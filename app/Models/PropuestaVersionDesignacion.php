@@ -12,6 +12,15 @@ class PropuestaVersionDesignacion extends Model
 
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'materia_horas' => 'integer',
+            'horas_pagadas' => 'integer',
+            'horas_no_pagadas' => 'integer',
+        ];
+    }
+
     public function version(): BelongsTo
     {
         return $this->belongsTo(PropuestaVersion::class, 'propuesta_version_id');

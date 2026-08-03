@@ -9,8 +9,8 @@ datos ni llamadas al backend.
 
 La especificacion funcional detallada esta en
 [Logica de negocio y flujo completo del boceto](LOGICA_NEGOCIO_Y_FLUJO_BOCETO.md).
-Ese documento es la referencia para trasladar el comportamiento a un sistema
-real.
+El boceto es la fuente visual principal; el sistema real implementa sus reglas
+funcionales con persistencia, autorizacion y snapshots.
 
 ## Acceso local
 
@@ -69,6 +69,18 @@ de seleccion. Las filas aprobadas previamente tambien son inmutables.
 La aprobacion bloquea la propuesta y sus designaciones. La distribucion de
 horas queda incluida en el snapshot de la version.
 
+## Paridad con el sistema real
+
+El editor real refleja esta pantalla con carga local, otras carreras y carga
+global; modal de distribucion; filas bloqueadas; historial de versiones;
+importacion; bandeja y revision de Vicerrectorado. La revision real muestra
+horas oficiales, pagadas, no pagadas y adicionales en modo solo lectura.
+
+La base de datos real conserva la distribucion en
+`propuesta_designaciones` y `propuesta_version_designaciones`. Las filas
+heredadas de `designaciones` se importan como horas oficiales pagadas, cero
+horas no pagadas y observacion nula.
+
 ## Distribucion de horas
 
 Para una materia de 6 horas, el boceto acepta:
@@ -103,8 +115,8 @@ etapa.
 - Los snapshots se registran en memoria, pero el boceto no incluye un visor
   para navegar el historial completo de versiones.
 - No sustituye las pruebas funcionales del sistema Laravel.
-- La seguridad de roles y la inmutabilidad son reglas visuales; el sistema real
-  debe imponerlas en el servidor y la base de datos.
+- La seguridad de roles y la inmutabilidad son reglas visuales en el boceto; el
+  sistema real las impone en servidor y base de datos.
 - No existe una bolsa monetaria ni calculo salarial.
 - Las horas de otras carreras se representan como un total, sin desglose de
   remuneracion.

@@ -100,7 +100,13 @@ class ImportacionPropuestaService
                     continue;
                 }
 
-                if ($actual && (int) $actual->docente_id === (int) $origen['docente_id']) {
+                if (
+                    $actual
+                    && (int) $actual->docente_id === (int) $origen['docente_id']
+                    && (int) $actual->horas_pagadas === (int) $origen['horas_pagadas']
+                    && (int) $actual->horas_no_pagadas === (int) $origen['horas_no_pagadas']
+                    && $actual->observacion_remuneracion === $origen['observacion_remuneracion']
+                ) {
                     continue;
                 }
 
@@ -111,6 +117,9 @@ class ImportacionPropuestaService
                         'materia_id' => $origen['materia_id'],
                         'malla_curricular_id' => $origen['malla_curricular_id'],
                         'estado' => 'propuesta',
+                        'horas_pagadas' => $origen['horas_pagadas'],
+                        'horas_no_pagadas' => $origen['horas_no_pagadas'],
+                        'observacion_remuneracion' => $origen['observacion_remuneracion'],
                     ],
                 );
                 $aplicadas++;
@@ -157,6 +166,10 @@ class ImportacionPropuestaService
                 $fila->materia?->sigla,
                 $fila->materia?->nombre,
                 $fila->docente?->nombre,
+                (int) ($fila->materia?->horas ?? 0),
+                (int) $fila->horas_pagadas,
+                (int) $fila->horas_no_pagadas,
+                $fila->observacion_remuneracion,
             ));
 
         $gruposOficiales = $desdePropuestaOficial->pluck('grupo_id');
@@ -178,6 +191,10 @@ class ImportacionPropuestaService
                 $fila->materia?->sigla,
                 $fila->materia?->nombre,
                 $fila->docente?->nombre,
+                (int) ($fila->materia?->horas ?? 0),
+                (int) ($fila->materia?->horas ?? 0),
+                0,
+                null,
             ));
 
         return $desdePropuestaOficial
@@ -196,6 +213,10 @@ class ImportacionPropuestaService
         ?string $materiaSigla,
         ?string $materiaNombre,
         ?string $docenteNombre,
+        int $horas,
+        int $horasPagadas,
+        int $horasNoPagadas,
+        ?string $observacionRemuneracion,
     ): array {
         return [
             'grupo_id' => $grupoId,
@@ -206,6 +227,10 @@ class ImportacionPropuestaService
             'materia_sigla' => $materiaSigla,
             'materia_nombre' => $materiaNombre,
             'docente_nombre' => $docenteNombre,
+            'horas' => $horas,
+            'horas_pagadas' => $horasPagadas,
+            'horas_no_pagadas' => $horasNoPagadas,
+            'observacion_remuneracion' => $observacionRemuneracion,
         ];
     }
 

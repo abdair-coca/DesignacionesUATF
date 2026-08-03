@@ -8,7 +8,9 @@
     $docentesProcesados = [];
     foreach ($docentes as $d) {
         $desigDocente = $designaciones->filter(fn($des) => (string)$des->docente_id === (string)$d['id']);
-        $horasLocal = $desigDocente->sum(fn($des) => $des->materia?->horas ?? 0);
+        $horasPagadasLocal = $desigDocente->sum(fn($des) => (int) ($des->horas_pagadas ?? ($des->materia?->horas ?? 0)));
+        $horasNoPagadasLocal = $desigDocente->sum(fn($des) => (int) ($des->horas_no_pagadas ?? 0));
+        $horasLocal = $horasPagadasLocal + $horasNoPagadasLocal;
         $horasOtrasCarreras = (int)($d['horasOtrasCarreras'] ?? 0);
         $horasTotalGlobal = $horasLocal + $horasOtrasCarreras;
         $materiasSiglas = $desigDocente->map(fn($des) => ($des->materia?->sigla ?? '') . ' (G' . ($des->grupo?->codigo ?? '') . ')')->filter()->values()->all();
@@ -36,6 +38,8 @@
             'nombre' => $d['nombre'],
             'carreraSigla' => $d['carreraSigla'] ?? $carrera->sigla,
             'horasLocal' => $horasLocal,
+            'horasPagadasLocal' => $horasPagadasLocal,
+            'horasNoPagadasLocal' => $horasNoPagadasLocal,
             'horasOtrasCarreras' => $horasOtrasCarreras,
             'horas' => $horasTotalGlobal,
             'materias' => $materiasSiglas,
@@ -55,6 +59,9 @@
         'codigo' => $r['codigo'],
         'horas' => $r['horas'],
         'docente_actual_id' => $r['designacion']['docente']['id'] ?? null,
+        'horas_pagadas' => $r['designacion']['horas_pagadas'] ?? $r['horas'],
+        'horas_no_pagadas' => $r['designacion']['horas_no_pagadas'] ?? 0,
+        'observacion_remuneracion' => $r['designacion']['observacion_remuneracion'] ?? null,
         'bloqueada' => $r['bloqueada'],
     ])->values();
 
@@ -246,9 +253,11 @@
 
                             <!-- Carga Horaria Numérica Global -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60">
-                                <span class="font-black text-gray-900 text-xs tabular-nums" x-text="d.horas + ' hrs'"></span>
-                                <template x-if="d.horasOtrasCarreras > 0">
-                                    <span class="block text-[9px] text-cyan-800 font-bold mt-0.5" x-text="'(' + d.horasLocal + 'h local + ' + d.horasOtrasCarreras + 'h en otras carreras)'"></span>
+                                <span class="block text-[10px] text-gray-600" x-text="'Local: ' + d.horasLocal + 'h'"></span>
+                                <span class="block text-[10px] text-cyan-800" x-text="'Otras carreras: ' + d.horasOtrasCarreras + 'h'"></span>
+                                <span class="block font-black text-gray-900 text-xs tabular-nums" x-text="'Global: ' + d.horas + 'h'"></span>
+                                <template x-if="d.horasNoPagadasLocal > 0">
+                                    <span class="block text-[9px] text-amber-700 font-bold mt-0.5" x-text="d.horasNoPagadasLocal + 'h no pagadas'"></span>
                                 </template>
                             </td>
 
@@ -311,7 +320,7 @@
 
     <!-- MODAL ESTILO COLOR ADMIN V2 (Asignación de Materias a Docente) -->
     <div x-show="modalAbierta" x-transition.opacity class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
-        <div @click.away="cerrarModal()" class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div @click.away="cerrarModal()" class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
 
             <!-- Modal Header Color Admin v2 Style -->
             <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between shrink-0">
@@ -334,7 +343,7 @@
                     <template x-if="docenteActual?.horasOtrasCarreras > 0">
                         <span class="text-sky-700 font-bold text-[11px] ml-1" x-text="'(incluye ' + (docenteActual?.horasOtrasCarreras || 0) + 'h en otras carreras)'"></span>
                     </template>
-                    <span class="text-gray-400 text-[11px] font-normal ml-1">(Límite máximo: 32 hrs)</span>
+                    <span class="text-gray-500 text-[11px] font-normal ml-1" x-text="'(' + horasPagadasSeleccionadas + 'h pagadas + ' + horasNoPagadasSeleccionadas + 'h no pagadas; carga informativa)'"></span>
                 </div>
                 <div>
                     <template x-if="totalHorasSeleccionadas === 0">
@@ -363,13 +372,16 @@
                                 <th class="py-2.5 px-3 text-center w-10 border-r border-gray-200">Sel.</th>
                                 <th class="py-2.5 px-4 border-r border-gray-200">Materia</th>
                                 <th class="py-2.5 px-3 text-center w-16 border-r border-gray-200">Grupo</th>
-                                <th class="py-2.5 px-3 text-center w-20">Horas</th>
+                                <th class="py-2.5 px-3 text-center w-20 border-r border-gray-200">Oficiales</th>
+                                <th class="py-2.5 px-3 text-center w-24 border-r border-gray-200">Pagadas</th>
+                                <th class="py-2.5 px-3 text-center w-24 border-r border-gray-200">No pagadas</th>
+                                <th class="py-2.5 px-3 text-center w-44">Justificación</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200/70 text-gray-700">
                             <template x-if="gruposDisponiblesParaDocente.length === 0">
                                 <tr>
-                                    <td colspan="4" class="py-6 text-center text-gray-400 italic font-normal">
+                                    <td colspan="7" class="py-6 text-center text-gray-400 italic font-normal">
                                         No hay materias ni grupos disponibles. Todos los grupos libres ya han sido asignados a otros docentes.
                                     </td>
                                 </tr>
@@ -401,7 +413,26 @@
                                     <td class="py-2.5 px-3 text-center font-bold text-gray-800 border-r border-gray-200/40" x-text="'G' + g.codigo"></td>
 
                                     <!-- Horas -->
-                                    <td class="py-2.5 px-3 text-center font-bold text-gray-900 tabular-nums" x-text="g.horas + ' hrs'"></td>
+                                    <td class="py-2.5 px-3 text-center font-bold text-gray-900 tabular-nums border-r border-gray-200/40" x-text="g.horas + ' hrs'"></td>
+
+                                    <td class="py-2.5 px-2 border-r border-gray-200/40" @click.stop>
+                                        <input type="number" min="0" step="1" :max="g.horas"
+                                               x-model.number="modalDistribuciones[g.id].pagadas"
+                                               :disabled="!gruposSeleccionados.includes(g.id) || g.bloqueada"
+                                               class="w-full rounded border border-gray-300 px-2 py-1 text-center text-xs disabled:bg-gray-100 disabled:text-gray-400">
+                                    </td>
+                                    <td class="py-2.5 px-2 border-r border-gray-200/40" @click.stop>
+                                        <input type="number" min="0" step="1"
+                                               x-model.number="modalDistribuciones[g.id].noPagadas"
+                                               :disabled="!gruposSeleccionados.includes(g.id) || g.bloqueada"
+                                               class="w-full rounded border border-gray-300 px-2 py-1 text-center text-xs disabled:bg-gray-100 disabled:text-gray-400">
+                                    </td>
+                                    <td class="py-2.5 px-2" @click.stop>
+                                        <input type="text" maxlength="1000" placeholder="Motivo opcional"
+                                               x-model="modalDistribuciones[g.id].observacion"
+                                               :disabled="!gruposSeleccionados.includes(g.id) || g.bloqueada"
+                                               class="w-full rounded border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400">
+                                    </td>
                                 </tr>
                             </template>
                         </tbody>
@@ -485,14 +516,16 @@
                                     <th class="py-2 px-3 text-center w-8 border-r border-gray-200">#</th>
                                     <th class="py-2 px-3 border-r border-gray-200">Materia / Grupo</th>
                                     <th class="py-2 px-3 border-r border-gray-200">Docente a Asignar</th>
-                                    <th class="py-2 px-3 text-center w-16 border-r border-gray-200">Horas</th>
+                                    <th class="py-2 px-3 text-center w-16 border-r border-gray-200">Oficiales</th>
+                                    <th class="py-2 px-3 text-center w-16 border-r border-gray-200">Pagadas</th>
+                                    <th class="py-2 px-3 text-center w-16 border-r border-gray-200">No pagadas</th>
                                     <th class="py-2 px-3 text-center border-r border-gray-200">Impacto</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200/70 text-gray-700">
                                 <template x-if="cargandoPreview">
                                     <tr>
-                                        <td colspan="5" class="py-6 text-center text-gray-500 italic">
+                                        <td colspan="7" class="py-6 text-center text-gray-500 italic">
                                             <div class="flex items-center justify-center gap-2">
                                                 <svg class="w-4 h-4 animate-spin text-[#348fe2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -505,7 +538,7 @@
 
                                 <template x-if="!cargandoPreview && previewItems.length === 0">
                                     <tr>
-                                        <td colspan="5" class="py-6 text-center text-gray-400 italic">No hay designaciones en la gestión/periodo origen seleccionado.</td>
+                                        <td colspan="7" class="py-6 text-center text-gray-400 italic">No hay designaciones en la gestión/periodo origen seleccionado.</td>
                                     </tr>
                                 </template>
 
@@ -519,6 +552,8 @@
                                             </td>
                                             <td class="py-2 px-3 font-bold text-gray-900 border-r border-gray-200/40" x-text="item.docente_nombre"></td>
                                             <td class="py-2 px-3 text-center font-bold text-gray-800 border-r border-gray-200/40 tabular-nums" x-text="item.horas + ' hrs'"></td>
+                                            <td class="py-2 px-3 text-center font-bold text-emerald-700 border-r border-gray-200/40 tabular-nums" x-text="item.horas_pagadas + ' hrs'"></td>
+                                            <td class="py-2 px-3 text-center font-bold text-amber-700 border-r border-gray-200/40 tabular-nums" x-text="item.horas_no_pagadas + ' hrs'"></td>
                                             <td class="py-2 px-3 text-center">
                                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold border" :class="item.impactoColor" x-text="item.impacto"></span>
                                             </td>
@@ -657,11 +692,16 @@
             cargandoGuardar: false,
             docenteActual: null,
             gruposSeleccionados: [],
+            modalDistribuciones: {},
             puedeEditar: puedeEditar,
             revisionData: revisionData,
 
             todosDocentes: docentesProcesados,
             todosGrupos: rosterGrupos,
+
+            init() {
+                this.todosGrupos.forEach(g => this.inicializarDistribucion(g));
+            },
 
             modalNotificacionOpen: false,
             modalNotificacionData: { titulo: '', mensaje: '', tipo: 'info', reload: false },
@@ -745,6 +785,8 @@
             abrirModalAsignacion(docente) {
                 this.docenteActual = docente;
                 this.gruposSeleccionados = [...docente.grupos_ids];
+                this.modalDistribuciones = {};
+                this.todosGrupos.forEach(g => this.inicializarDistribucion(g));
                 this.modalAbierta = true;
             },
 
@@ -752,6 +794,7 @@
                 this.modalAbierta = false;
                 this.docenteActual = null;
                 this.gruposSeleccionados = [];
+                this.modalDistribuciones = {};
             },
 
             abrirModalCopiarAnterior() {
@@ -813,17 +856,31 @@
             },
 
             get totalHorasSeleccionadas() {
-                const horasLocales = this.gruposSeleccionados.length
-                    ? this.todosGrupos
-                        .filter(g => this.gruposSeleccionados.includes(g.id))
-                        .reduce((sum, g) => sum + g.horas, 0)
-                    : 0;
-                return horasLocales + (this.docenteActual?.horasOtrasCarreras || 0);
+                return this.horasPagadasSeleccionadas + this.horasNoPagadasSeleccionadas + (this.docenteActual?.horasOtrasCarreras || 0);
+            },
+
+            get horasPagadasSeleccionadas() {
+                return this.gruposSeleccionados.reduce((sum, id) => sum + Number(this.modalDistribuciones[id]?.pagadas || 0), 0);
+            },
+
+            get horasNoPagadasSeleccionadas() {
+                return this.gruposSeleccionados.reduce((sum, id) => sum + Number(this.modalDistribuciones[id]?.noPagadas || 0), 0);
+            },
+
+            inicializarDistribucion(grupo) {
+                if (!this.modalDistribuciones[grupo.id]) {
+                    this.modalDistribuciones[grupo.id] = {
+                        pagadas: Number(grupo.horas_pagadas ?? grupo.horas),
+                        noPagadas: Number(grupo.horas_no_pagadas ?? 0),
+                        observacion: grupo.observacion_remuneracion || '',
+                    };
+                }
             },
 
             toggleGrupo(grupoId) {
                 const grupo = this.todosGrupos.find(item => item.id === grupoId);
                 if (grupo?.bloqueada) return;
+                this.inicializarDistribucion(grupo);
 
                 if (this.gruposSeleccionados.includes(grupoId)) {
                     this.gruposSeleccionados = this.gruposSeleccionados.filter(id => id !== grupoId);
@@ -834,18 +891,37 @@
 
             guardarDesignacionDocente() {
                 if (!this.docenteActual) return;
-                this.cargandoGuardar = true;
 
                 const cambios = [];
+                let distribucionInvalida = false;
                 this.todosGrupos.forEach(g => {
                     const estaSeleccionado = this.gruposSeleccionados.includes(g.id);
                     const asignadoPreviamente = (g.docente_actual_id === this.docenteActual.id);
 
                     if (estaSeleccionado) {
+                        const distribucion = this.modalDistribuciones[g.id];
+                        const horasPagadas = Number(distribucion?.pagadas);
+                        const horasNoPagadas = Number(distribucion?.noPagadas);
+
+                        if (!Number.isInteger(horasPagadas) || !Number.isInteger(horasNoPagadas) || horasPagadas < 0 || horasNoPagadas < 0) {
+                            this.mostrarNotificacion('Distribución inválida', 'Las horas pagadas y no pagadas deben ser enteros no negativos.', 'error');
+                            distribucionInvalida = true;
+                            return;
+                        }
+
+                        if (horasPagadas > g.horas || horasPagadas + horasNoPagadas < g.horas) {
+                            this.mostrarNotificacion('Distribución inválida', 'La distribución debe cubrir horas oficiales y las pagadas no pueden superarlas.', 'error');
+                            distribucionInvalida = true;
+                            return;
+                        }
+
                         cambios.push({
                             grupo_id: g.id,
                             materia_id: g.materia_id,
-                            docente_id: this.docenteActual.id
+                            docente_id: this.docenteActual.id,
+                            horas_pagadas: horasPagadas,
+                            horas_no_pagadas: horasNoPagadas,
+                            observacion_remuneracion: distribucion?.observacion || null,
                         });
                     } else if (asignadoPreviamente) {
                         cambios.push({
@@ -855,6 +931,13 @@
                         });
                     }
                 });
+
+                if (distribucionInvalida) {
+                    this.cargandoGuardar = false;
+                    return;
+                }
+
+                this.cargandoGuardar = true;
 
                 if (cambios.length === 0) {
                     const nombreDocente = this.docenteActual.nombre;

@@ -16,7 +16,18 @@ class PropuestaDesignacion extends Model
         'grupo_id',
         'malla_curricular_id',
         'estado',
+        'horas_pagadas',
+        'horas_no_pagadas',
+        'observacion_remuneracion',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'horas_pagadas' => 'integer',
+            'horas_no_pagadas' => 'integer',
+        ];
+    }
 
     public function propuesta(): BelongsTo
     {

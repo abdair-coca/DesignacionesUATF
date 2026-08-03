@@ -76,6 +76,8 @@ class ImportacionPropuestaTest extends TestCase
             'grupo_id' => $grupo->id,
             'docente_id' => $docenteOrigen->id,
             'estado' => 'propuesta',
+            'horas_pagadas' => $materia->horas,
+            'horas_no_pagadas' => 0,
         ]);
         $this->assertDatabaseHas('propuesta_eventos', [
             'propuesta_id' => $propuesta->id,
@@ -105,6 +107,8 @@ class ImportacionPropuestaTest extends TestCase
             'grupo_id' => $grupo->id,
             'malla_curricular_id' => $grupo->malla_curricular_id,
             'estado' => 'propuesta',
+            'horas_pagadas' => $materia->horas,
+            'horas_no_pagadas' => 0,
         ]);
 
         $this->actingAs($director)
@@ -188,6 +192,8 @@ class ImportacionPropuestaTest extends TestCase
             'grupo_id' => $grupo->id,
             'malla_curricular_id' => $grupo->malla_curricular_id,
             'estado' => 'aprobada_previamente',
+            'horas_pagadas' => $materia->horas,
+            'horas_no_pagadas' => 0,
         ]);
 
         $this->actingAs($director)
@@ -260,6 +266,7 @@ class ImportacionPropuestaTest extends TestCase
     public function test_importacion_tambien_usa_propuesta_oficial_historica_de_la_carrera(): void
     {
         [$director, $propuesta, $gestionOrigen, $periodoOrigen, $grupo, $materia] = $this->contextoImportacion();
+        $materia->update(['horas' => 6]);
         $docenteOrigen = Docente::factory()->create(['nombre' => 'Docente de propuesta oficial']);
         $propuestaHistorica = Propuesta::create([
             'carrera_id' => $director->carrera_id,
@@ -275,6 +282,9 @@ class ImportacionPropuestaTest extends TestCase
             'grupo_id' => $grupo->id,
             'malla_curricular_id' => $grupo->malla_curricular_id,
             'estado' => 'oficial',
+            'horas_pagadas' => 4,
+            'horas_no_pagadas' => 2,
+            'observacion_remuneracion' => 'Distribución oficial',
         ]);
 
         $this->actingAs($director)
@@ -295,6 +305,9 @@ class ImportacionPropuestaTest extends TestCase
         $this->assertDatabaseHas('propuesta_designaciones', [
             'propuesta_id' => $propuesta->id,
             'docente_id' => $docenteOrigen->id,
+            'horas_pagadas' => 4,
+            'horas_no_pagadas' => 2,
+            'observacion_remuneracion' => 'Distribución oficial',
         ]);
     }
 
