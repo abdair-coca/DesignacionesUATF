@@ -17,12 +17,20 @@
         @if($puedeDecidir)
             <form method="POST" action="{{ route('revisiones.decidir', $version) }}" class="space-y-5">
                 @csrf
-                <section class="bg-white border border-gray-200 shadow-sm p-4">
+                <section class="bg-white border border-gray-200 shadow-sm p-4 rounded-lg">
                     <label for="observacion_general" class="block text-sm font-semibold text-gray-900">Observación general</label>
                     <textarea id="observacion_general" name="observacion_general" rows="3" maxlength="2000" class="w-full mt-2 border border-gray-300 p-2 text-sm" placeholder="Visible para el Director cuando la revisión sea observada."></textarea>
                 </section>
 
-                <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
+                <section class="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                    <div class="bg-[#2d353c] text-white px-4 py-2.5 font-bold text-xs flex justify-between items-center">
+                        <span>Snapshot de Designaciones Enviadas &bull; Versión {{ $version->numero }}</span>
+                        <label class="flex items-center gap-2 bg-[#20252a] px-3 py-1 rounded text-white font-bold text-xs cursor-pointer hover:bg-black/30 transition-colors">
+                            <input id="aprobar_todas_filas" type="checkbox" checked onchange="actualizarModoRevision(this)" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
+                            <span>Aprobar todas las filas</span>
+                        </label>
+                    </div>
+                    <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
                             <tr>
@@ -47,7 +55,7 @@
                                     @else
                                         <td class="px-4 py-3 min-w-40">
                                             <input type="hidden" name="decisiones[{{ $indice }}][snapshot_id]" value="{{ $snapshot->id }}">
-                                            <select name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5" onchange="const campo = this.closest('tr').querySelector('[data-observacion-fila]'); campo.disabled = this.value !== 'observada'; if (campo.disabled) campo.value = '';">
+                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" disabled class="w-full border border-gray-300 px-2 py-1.5 rounded disabled:bg-gray-100 disabled:text-gray-400" onchange="sincronizarObservacionFila(this)">
                                                 <option value="aprobada">Aprobar</option>
                                                 <option value="observada">Observar</option>
                                             </select>
@@ -58,11 +66,14 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </section>
 
                 <div class="flex flex-wrap justify-end gap-3">
-                    <button type="submit" name="modo" value="decidir_filas" class="bg-amber-600 text-white px-4 py-2 text-sm font-semibold hover:bg-amber-700">Registrar decisiones por fila</button>
-                    <button type="submit" name="modo" value="aprobar_todo" class="bg-[#00acac] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008a8a]">Aprobar todas las filas</button>
+                    <input type="hidden" id="modo_revision" name="modo" value="aprobar_todo">
+                    <button type="submit" class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-6 py-2.5 text-xs rounded shadow-md transition-colors cursor-pointer flex items-center gap-2">
+                        <span>Confirmar Revisión</span>
+                    </button>
                 </div>
             </form>
         @else
@@ -96,3 +107,31 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    function sincronizarObservacionFila(select) {
+        const formulario = select.closest('form');
+        const aprobarTodas = formulario?.querySelector('#aprobar_todas_filas')?.checked ?? false;
+        const observacion = select.closest('tr')?.querySelector('[data-observacion-fila]');
+
+        if (!observacion) return;
+
+        observacion.disabled = aprobarTodas || select.value !== 'observada';
+        if (observacion.disabled && select.value !== 'observada') observacion.value = '';
+    }
+
+    function actualizarModoRevision(checkbox) {
+        const formulario = checkbox.closest('form');
+        const modo = formulario?.querySelector('#modo_revision');
+
+        if (!formulario || !modo) return;
+
+        modo.value = checkbox.checked ? 'aprobar_todo' : 'decidir_filas';
+        formulario.querySelectorAll('[data-decision-fila]').forEach((select) => {
+            select.disabled = checkbox.checked;
+            sincronizarObservacionFila(select);
+        });
+    }
+</script>
+@endpush
