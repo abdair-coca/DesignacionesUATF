@@ -12,6 +12,7 @@
 - La distribucion por materia/grupo conserva `horas_pagadas`, `horas_no_pagadas` y una justificacion opcional.
 - Las horas no pagadas y las horas adicionales no pagadas cuentan para la carga docente total.
 - Las horas pagadas no pueden superar las horas oficiales y la suma de ambas distribuciones debe cubrir la materia.
+- La aceptación punta-a-punta con dos carreras está automatizada en `tests/Feature/DesignacionesAceptacionTest.php`: copia histórica, observación, corrección, reenvío, aprobación, notificaciones, snapshots, bloqueo y aislamiento.
 
 ## Boceto de validacion visual
 
