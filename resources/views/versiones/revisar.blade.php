@@ -120,7 +120,7 @@
 
         if (!observacion) return;
 
-        observacion.disabled = aprobarTodas || select.value !== 'observada';
+        observacion.disabled = aprobarTodas;
         if (observacion.disabled && select.value !== 'observada') observacion.value = '';
     }
 
