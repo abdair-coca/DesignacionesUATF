@@ -35,7 +35,7 @@ class PropuestaRevisionTest extends TestCase
             ->assertSee('Confirmar Revisión')
             ->assertSee('modo_revision')
             ->assertSee('decidir_filas')
-            ->assertSee('observacion.disabled = aprobarTodas;')
+            ->assertSee("observacion.disabled = aprobarTodas || select.value !== 'observada';", false)
             ->assertSee('checkbox.checked = false;')
             ->assertSee('sincronizarObservacionFila(select, false);')
             ->assertDontSee('Registrar decisiones por fila');
@@ -206,7 +206,7 @@ class PropuestaRevisionTest extends TestCase
             ->assertSessionHasErrors('decisiones');
     }
 
-    public function test_fila_aprobada_acepta_observacion_por_fila(): void
+    public function test_fila_aprobada_no_acepta_observacion_por_fila(): void
     {
         [, $vicerrectorado, , $version, $filas] = $this->propuestaEnviada(1);
 
@@ -219,16 +219,12 @@ class PropuestaRevisionTest extends TestCase
                     'observacion' => 'No me parece, pero aprobar.',
                 ]],
             ])
-            ->assertRedirect('/revisiones/pendientes');
+            ->assertSessionHasErrors('decisiones');
 
-        $this->assertDatabaseHas('propuesta_version_decisiones', [
-            'propuesta_version_designacion_id' => $filas[0]->id,
-            'decision' => 'aprobada',
-            'observacion' => 'No me parece, pero aprobar.',
-        ]);
+        $this->assertDatabaseCount('propuesta_version_decisiones', 0);
         $this->assertDatabaseHas('propuesta_versiones', [
             'id' => $version->id,
-            'estado' => 'aprobada',
+            'estado' => 'pendiente',
         ]);
     }
 
