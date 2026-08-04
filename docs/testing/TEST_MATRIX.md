@@ -8,6 +8,11 @@ Estados: `CUBIERTA`, `PENDIENTE`, `NEEDS_BUSINESS_CONFIRMATION`.
 | ENV-002 | Entorno | Recrear base desde cero | P0 | Integración | `TestingPhase0` | CUBIERTA |
 | ENV-003 | Entorno | Rollback completo de migraciones | P0 | Integración | `TestingPhase0` | CUBIERTA |
 | ENV-004 | Entorno | No enviar correo ni broadcast real | P0 | Integración | `TestingPhase0` | CUBIERTA |
+| STATIC-001 | Repositorio | Validar `composer.json` y dependencias instaladas | P1 | Estática | `composer validate`, `composer audit` | CUBIERTA |
+| STATIC-002 | Rutas | Detectar rutas duplicadas | P1 | Estática | `route:list --json` | CUBIERTA |
+| STATIC-003 | Suite | Ejecutar suite backend completa | P0 | Salud | `composer test` | CUBIERTA |
+| STATIC-004 | Frontend | Detectar pipeline frontend | P1 | Estática | Sin `package.json` | CUBIERTA |
+| STATIC-005 | Análisis | Verificar PHPStan/Pest | P1 | Estática | No configurados | CUBIERTA |
 | AUTH-001 | Autenticación | Usuario no autenticado accede a flujo protegido | P0 | Feature | Por crear | PENDIENTE |
 | AUTH-002 | Permisos | Director no accede a revisión de otra carrera | P0 | Seguridad | Por crear | PENDIENTE |
 | AUTH-003 | Permisos | Usuario sin rol no aprueba una versión | P0 | Seguridad | Por crear | PENDIENTE |

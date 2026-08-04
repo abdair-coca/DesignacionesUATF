@@ -20,7 +20,7 @@ flujos críticos y comportamiento operativo del Sistema de Designación Docente.
 | Fase | Alcance | Salida | Estado |
 | --- | --- | --- | --- |
 | 0 | Protección, base, storage y dependencias externas | Entorno reproducible | COMPLETA |
-| 1 | Salud estática del repositorio | Instalación, rutas y suite base | PENDIENTE |
+| 1 | Salud estática del repositorio | Instalación, rutas y suite base | COMPLETA |
 | 2 | Reglas unitarias de dominio | Casos válidos, inválidos y límites | PENDIENTE |
 | 3 | Feature backend | Flujos, permisos y persistencia | PENDIENTE |
 | 4 | Base de datos e integridad | Constraints, rollback y concurrencia | PENDIENTE |
