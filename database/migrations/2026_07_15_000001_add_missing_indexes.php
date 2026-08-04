@@ -25,8 +25,8 @@ return new class extends Migration
         });
 
         Schema::table('designaciones', function (Blueprint $table) {
-            $table->dropIndex('Id_docente');
-            $table->dropIndex('Id_grupo');
+            $table->dropIndex(['Id_docente']);
+            $table->dropIndex(['Id_grupo']);
         });
     }
 };

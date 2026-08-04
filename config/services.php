@@ -2,6 +2,8 @@
 
 return [
 
+    'external_mode' => env('EXTERNAL_SERVICES_MODE', 'live'),
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
