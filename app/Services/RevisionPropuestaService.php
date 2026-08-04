@@ -44,6 +44,8 @@ class RevisionPropuestaService
 
             $decisionesPorSnapshot = $this->resolverDecisiones($filasRevisables, $modo, $decisiones, $observacionGeneral);
             $hayObservaciones = $decisionesPorSnapshot->contains(fn (array $decision) => $decision['decision'] === 'observada');
+            $filasObservadas = $decisionesPorSnapshot->where('decision', 'observada')->count();
+            $filasAprobadas = $decisionesPorSnapshot->where('decision', 'aprobada')->count();
 
             foreach ($filasRevisables as $snapshot) {
                 $decision = $decisionesPorSnapshot->get($snapshot->id);
@@ -98,11 +100,14 @@ class RevisionPropuestaService
             ]);
 
             $version->load('propuesta.carrera', 'propuesta.gestion', 'propuesta.periodo', 'propuesta.creador');
-            $this->notificarDirector($version, $hayObservaciones ? 'observada' : 'aprobada_final');
-
-            if ($hayObservaciones && $decisionesPorSnapshot->contains(fn (array $decision) => $decision['decision'] === 'aprobada')) {
-                $this->notificarDirector($version, 'aprobacion_parcial');
-            }
+            $this->notificarDirector(
+                $version,
+                $hayObservaciones ? 'observada' : 'aprobada_final',
+                [
+                    'filas_observadas' => $filasObservadas,
+                    'filas_aprobadas' => $filasAprobadas,
+                ],
+            );
         });
     }
 
@@ -151,8 +156,8 @@ class RevisionPropuestaService
         });
     }
 
-    private function notificarDirector(PropuestaVersion $version, string $evento): void
+    private function notificarDirector(PropuestaVersion $version, string $evento, array $resumen = []): void
     {
-        $version->propuesta->creador?->notify(new PropuestaActualizadaNotification($version, $evento));
+        $version->propuesta->creador?->notify(new PropuestaActualizadaNotification($version, $evento, $resumen));
     }
 }

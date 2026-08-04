@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Designación de Docentes UATF')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>[x-cloak] { display: none !important; }</style>
     <script>
         const CSRF_TOKEN = '{{ csrf_token() }}';
     </script>

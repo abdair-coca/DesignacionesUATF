@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::post('notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas'])->name('notificaciones.leer_todas');
     Route::post('notificaciones/{notificacion}/leer', [NotificacionController::class, 'marcarLeida'])->name('notificaciones.leer');
 
     Route::middleware('rol:vicerrectorado')->group(function () {

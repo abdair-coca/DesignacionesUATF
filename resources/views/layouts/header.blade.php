@@ -12,14 +12,46 @@
     <!-- Acciones Rápidas & Perfil de Usuario -->
     <div class="flex items-center gap-4">
         @php($notificacionesNoLeidas = Auth::user()?->unreadNotifications()->count() ?? 0)
-        <a href="{{ route('notificaciones.index') }}" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors relative" title="Notificaciones">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            @if($notificacionesNoLeidas > 0)
-                <span class="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#00acac] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{{ $notificacionesNoLeidas }}</span>
-            @endif
-        </a>
+        <div class="relative" x-data="{ open: false }">
+            <button type="button" @click="open = !open" @keydown.escape.window="open = false" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors relative" title="Notificaciones" aria-label="Notificaciones" :aria-expanded="open">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                @if($notificacionesNoLeidas > 0)
+                    <span class="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#00acac] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{{ $notificacionesNoLeidas }}</span>
+                @endif
+            </button>
+
+            <div x-cloak x-show="open" @click.outside="open = false" x-transition class="absolute right-0 top-full mt-3 w-[min(24rem,calc(100vw-2rem))] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
+                <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-gray-900">Notificaciones</h2>
+                    @if($notificacionesNoLeidas > 0)
+                        <form method="POST" action="{{ route('notificaciones.leer_todas') }}">
+                            @csrf
+                            <button type="submit" class="text-xs font-semibold text-[#008a8a] hover:underline">Marcar leídas</button>
+                        </form>
+                    @endif
+                </div>
+
+                @php($notificacionesRecientes = Auth::user()?->unreadNotifications()->latest()->limit(5)->get() ?? collect())
+                @forelse($notificacionesRecientes as $notificacion)
+                    <form method="POST" action="{{ route('notificaciones.leer', $notificacion) }}" class="border-b border-gray-100 last:border-b-0">
+                        @csrf
+                        <button type="submit" @click="open = false" class="block w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors">
+                            <p class="text-sm font-semibold text-gray-900 line-clamp-2">{{ $notificacion->data['titulo'] ?? 'Actualización' }}</p>
+                            <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ $notificacion->data['detalle'] ?? '' }}</p>
+                            <p class="text-[11px] text-gray-400 mt-1">{{ $notificacion->created_at->format('d/m/Y H:i') }}</p>
+                        </button>
+                    </form>
+                @empty
+                    <p class="px-4 py-6 text-center text-xs text-gray-500">No hay notificaciones nuevas.</p>
+                @endforelse
+
+                <div class="px-4 py-3 bg-gray-50 text-center">
+                    <a href="{{ route('notificaciones.index') }}" class="text-xs font-bold text-[#008a8a] hover:underline">Ver todo</a>
+                </div>
+            </div>
+        </div>
 
         <!-- Usuario Logueado (Director de Carrera / Admin) -->
         <div class="flex items-center gap-3 border-l border-gray-200 pl-4" x-data="{ open: false }">

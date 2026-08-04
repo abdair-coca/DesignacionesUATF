@@ -11,6 +11,7 @@ use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\PropuestaVersion;
 use App\Models\User;
+use App\Notifications\PropuestaActualizadaNotification;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -34,7 +35,8 @@ class NotificacionPropuestaTest extends TestCase
         $this->actingAs($vicerrectorado)
             ->get('/notificaciones')
             ->assertOk()
-            ->assertSee('enviada a revision');
+            ->assertSee('enviada a revision')
+            ->assertSee('Ver todo');
 
         $this->actingAs($director)
             ->post("/notificaciones/{$notificacion->id}/leer")
@@ -62,7 +64,7 @@ class NotificacionPropuestaTest extends TestCase
         $this->assertSame($propuesta->id, $notificacion->data['propuesta_id']);
     }
 
-    public function test_observacion_y_aprobacion_parcial_notifican_al_director(): void
+    public function test_revision_parcial_envia_una_notificacion_resumida_al_director(): void
     {
         [$director, $vicerrectorado, $propuesta] = $this->propuestaLista(2);
         $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
@@ -79,9 +81,44 @@ class NotificacionPropuestaTest extends TestCase
             ])
             ->assertRedirect('/revisiones/pendientes');
 
-        $eventos = DatabaseNotification::where('notifiable_id', $director->id)->get()->pluck('data.evento');
-        $this->assertTrue($eventos->contains('observada'));
-        $this->assertTrue($eventos->contains('aprobacion_parcial'));
+        $notificaciones = DatabaseNotification::where('notifiable_id', $director->id)->get();
+
+        $this->assertCount(1, $notificaciones);
+        $this->assertSame('observada', $notificaciones->first()->data['evento']);
+        $this->assertSame(1, $notificaciones->first()->data['resumen']['filas_observadas']);
+        $this->assertSame(1, $notificaciones->first()->data['resumen']['filas_aprobadas']);
+        $this->assertStringContainsString('y filas aprobadas', $notificaciones->first()->data['titulo']);
+    }
+
+    public function test_misma_notificacion_no_se_duplica_para_un_destinatario(): void
+    {
+        [$director, $vicerrectorado, $propuesta] = $this->propuestaLista();
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
+        $version = PropuestaVersion::where('propuesta_id', $propuesta->id)->firstOrFail();
+
+        $vicerrectorado->notify(new PropuestaActualizadaNotification($version, 'enviada'));
+        $vicerrectorado->notify(new PropuestaActualizadaNotification($version, 'enviada'));
+
+        $notificaciones = DatabaseNotification::where('notifiable_id', $vicerrectorado->id)
+            ->get()
+            ->filter(fn (DatabaseNotification $notificacion): bool => $notificacion->data['version_id'] === $version->id
+                && $notificacion->data['evento'] === 'enviada');
+
+        $this->assertCount(1, $notificaciones);
+    }
+
+    public function test_puede_marcar_todas_las_notificaciones_como_leidas(): void
+    {
+        [$director, $vicerrectorado, $propuesta] = $this->propuestaLista();
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar");
+
+        $this->assertSame(1, $vicerrectorado->unreadNotifications()->count());
+
+        $this->actingAs($vicerrectorado)
+            ->post('/notificaciones/leer-todas')
+            ->assertRedirect();
+
+        $this->assertSame(0, $vicerrectorado->fresh()->unreadNotifications()->count());
     }
 
     public function test_retiro_notifica_a_vicerrectorado(): void

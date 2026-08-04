@@ -15,6 +15,13 @@ class NotificacionController extends Controller
         ]);
     }
 
+    public function marcarTodasLeidas(): RedirectResponse
+    {
+        auth()->user()->unreadNotifications()->update(['read_at' => now()]);
+
+        return back();
+    }
+
     public function marcarLeida(DatabaseNotification $notificacion): RedirectResponse
     {
         abort_unless((int) $notificacion->notifiable_id === (int) auth()->id()
