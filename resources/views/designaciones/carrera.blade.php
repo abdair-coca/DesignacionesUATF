@@ -894,7 +894,7 @@
                     const asignadoAlActual = (g.docente_actual_id === this.docenteActual.id) || this.gruposSeleccionados.includes(g.id);
                     const ocupadoPorOtro = gruposOcupadosPorOtros.has(g.id) || (g.docente_actual_id && g.docente_actual_id !== this.docenteActual.id);
 
-                    return g.observada || asignadoAlActual || !ocupadoPorOtro;
+                    return asignadoAlActual || !ocupadoPorOtro;
                 });
             },
 

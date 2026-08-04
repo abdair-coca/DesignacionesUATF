@@ -160,6 +160,9 @@
                                     {{ $p['cant_designaciones'] }} materias
                                 </span>
                             </div>
+                            <p class="text-[11px] text-gray-700 truncate mt-0.5" title="{{ $p['descripcion'] ?: 'Sin descripción' }}">
+                                <span class="font-semibold">Descripción:</span> {{ $p['descripcion'] ?: 'Sin descripción' }}
+                            </p>
                             <p class="text-[11px] text-gray-500 truncate mt-0.5">
                                 <span class="font-medium text-gray-700">De: {{ $p['solicitante'] }}</span> &bull;
                                 Propuesta de Designación Docente — Gestión {{ $p['gestion_nombre'] }} (Periodo {{ $p['periodo_nombre'] }})

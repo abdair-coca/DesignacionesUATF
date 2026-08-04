@@ -8,6 +8,9 @@
             <a href="{{ route('revisiones.pendientes') }}" class="text-sm text-[#007c7c] hover:underline">Volver a la bandeja</a>
             <h1 class="text-xl font-bold text-gray-900 mt-2">{{ $version->propuesta->carrera->nombre }} · Revisión {{ $version->numero }}</h1>
             <p class="text-sm text-gray-600 mt-1">Enviada por {{ $version->remitente->name }} el {{ $version->enviado_en?->format('d/m/Y H:i') }}.</p>
+            @if(filled($version->propuesta->descripcion))
+                <p class="text-sm text-gray-700 mt-2"><span class="font-semibold">Descripci&oacute;n:</span> {{ $version->propuesta->descripcion }}</p>
+            @endif
         </div>
 
         @if($version->observaciones)

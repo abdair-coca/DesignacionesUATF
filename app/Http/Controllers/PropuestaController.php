@@ -185,6 +185,19 @@ class PropuestaController extends Controller
         $versionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
         $observacionesPorGrupo = $versionObservada?->designaciones
             ->filter(fn ($fila) => $fila->getRelation('decision')?->getAttribute('decision') === 'observada')
+            ->filter(function ($fila) use ($designacionesPorGrupo): bool {
+                $actual = $designacionesPorGrupo->get($fila->grupo_id);
+
+                if (! $actual) {
+                    return false;
+                }
+
+                return (int) $actual->docente_id === (int) $fila->docente_id
+                    && (int) $actual->materia_id === (int) $fila->materia_id
+                    && (int) $actual->horas_pagadas === (int) $fila->horas_pagadas
+                    && (int) $actual->horas_no_pagadas === (int) $fila->horas_no_pagadas
+                    && trim((string) $actual->observacion_remuneracion) === trim((string) $fila->observacion_remuneracion);
+            })
             ->mapWithKeys(fn ($fila) => [$fila->grupo_id => $fila->getRelation('decision')?->getAttribute('observacion')]) ?? collect();
         $docentesHistoricosIds = DB::table('designaciones')
             ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
@@ -259,7 +272,9 @@ class PropuestaController extends Controller
             'docentes' => $docentes,
             'gestiones' => Gestion::orderByDesc('nombre')->get(),
             'periodos' => Periodo::orderBy('nombre')->get(),
-            'observacionRevisionGeneral' => $versionObservada?->observaciones,
+            'observacionRevisionGeneral' => $observacionesPorGrupo->isNotEmpty()
+                ? $versionObservada?->observaciones
+                : null,
             'revision' => $versionPendiente ? [
                 'id' => $versionPendiente->id,
                 'estado' => $versionPendiente->estado,

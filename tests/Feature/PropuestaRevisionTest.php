@@ -24,11 +24,13 @@ class PropuestaRevisionTest extends TestCase
         $this->actingAs($vicerrectorado)
             ->get('/revisiones/pendientes')
             ->assertOk()
-            ->assertSee($propuesta->carrera->nombre);
+            ->assertSee($propuesta->carrera->nombre)
+            ->assertSee($propuesta->descripcion);
 
         $this->actingAs($vicerrectorado)
             ->get("/revisiones/{$version->id}/revisar")
             ->assertOk()
+            ->assertSee($propuesta->descripcion)
             ->assertSee('Aprobar todas las filas')
             ->assertSee('Confirmar Revisión')
             ->assertSee('modo_revision')
@@ -80,7 +82,8 @@ class PropuestaRevisionTest extends TestCase
             ->assertOk()
             ->assertSee('Corregir la primera asignación.')
             ->assertSee('Cambiar docente.')
-            ->assertSee('Aprobada previamente');
+            ->assertSee('Aprobada previamente')
+            ->assertSee('return asignadoAlActual || !ocupadoPorOtro;');
 
         $this->actingAs($director)
             ->put("/designaciones/{$propuesta->id}/asignaciones", [
@@ -102,6 +105,14 @@ class PropuestaRevisionTest extends TestCase
                 ]],
             ])
             ->assertRedirect();
+
+        $respuestaEditada = $this->actingAs($director)
+            ->get("/designaciones/{$propuesta->id}");
+
+        $respuestaEditada->assertOk();
+        $contenidoEditado = html_entity_decode(html_entity_decode($respuestaEditada->getContent()));
+        $this->assertStringNotContainsString('Cambiar docente.', $contenidoEditado);
+        $this->assertStringContainsString('"observada":false', $contenidoEditado);
 
         $this->actingAs($director)
             ->post("/designaciones/{$propuesta->id}/enviar")
@@ -227,6 +238,7 @@ class PropuestaRevisionTest extends TestCase
             'gestion_id' => $gestion->id,
             'periodo_id' => $periodo->id,
             'creado_por' => $director->id,
+            'descripcion' => 'Propuesta de prueba para revisión',
             'estado' => 'borrador',
         ]);
 

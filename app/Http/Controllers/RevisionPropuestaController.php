@@ -40,6 +40,7 @@ class RevisionPropuestaController extends Controller
             'id' => $version->id,
             'carrera_nombre' => $version->propuesta->carrera->nombre,
             'carrera_sigla' => $version->propuesta->carrera->sigla,
+            'descripcion' => $version->propuesta->descripcion,
             'cant_designaciones' => $version->designaciones_count,
             'solicitante' => $version->remitente->name,
             'gestion_nombre' => $version->propuesta->gestion->nombre,
