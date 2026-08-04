@@ -12,6 +12,14 @@
 - La distribucion por materia/grupo conserva `horas_pagadas`, `horas_no_pagadas` y una justificacion opcional.
 - Las horas no pagadas y las horas adicionales no pagadas cuentan para la carga docente total.
 - Las horas pagadas no pueden superar las horas oficiales y la suma de ambas distribuciones debe cubrir la materia.
+- La bandeja de Vicerrectorado muestra la descripcion de cada propuesta para distinguir versiones con el mismo nombre.
+- La revision real replica la cabecera oscura del boceto, el checkbox `Aprobar todas las filas` y el unico boton `Confirmar Revision`.
+- El checkbox marcado aplica `Aprobar` a todas las filas; desmarcado aplica `Observar` y habilita sus motivos.
+- Los selects siguen siendo editables individualmente; cambiar una fila manualmente desmarca el checkbox para evitar estados mixtos.
+- El motivo por fila solo esta disponible cuando la decision es `Observar`; el servidor rechaza una fila `Aprobar` con motivo.
+- Una fila observada asignada a otro docente no aparece como elegible para modificarla desde el docente equivocado.
+- Al corregir una fila observada desaparecen su resaltado rojo y observacion del editor; la observacion original permanece en el historial.
+- La descripcion de la propuesta tambien aparece en la cabecera de la pantalla de revision.
 - La aceptación punta-a-punta con dos carreras está automatizada en `tests/Feature/DesignacionesAceptacionTest.php`: copia histórica, observación, corrección, reenvío, aprobación, notificaciones, snapshots, bloqueo y aislamiento.
 
 ## Boceto de validacion visual
@@ -30,6 +38,13 @@ Los detalles de uso y alcance estan en [Boceto interactivo](BOCETO_INTERACTIVO.m
 La distribucion de remuneracion descrita arriba esta implementada en el boceto
 y en el sistema real. Migracion, modelos, servicios, validaciones de servidor,
 snapshots, importacion y revision conservan los tres campos definidos.
+
+## Verificacion automatizada actual
+
+- `php artisan test`: 60 pruebas y 316 aserciones.
+- `vendor/bin/pint --test`: correcto.
+- `composer audit --locked`: sin vulnerabilidades.
+- `php artisan academico:verificar-normalizacion`: correcto.
 
 ## Pendiente para completar el flujo integral
 

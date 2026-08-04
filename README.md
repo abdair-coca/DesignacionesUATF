@@ -10,6 +10,7 @@ Sistema web para gestionar propuestas, revisiones y versiones de designaciones d
 - Roles diferenciados para Direccion de Carrera y Vicerrectorado.
 - Notificaciones internas para cambios relevantes del flujo.
 - Flujo de boceto para distribuir cada materia entre horas pagadas, no pagadas y horas adicionales no pagadas.
+- Bandeja de Vicerrectorado con descripcion de propuesta y revision visual alineada al boceto.
 - Normalizacion academica de carreras, materias, mallas curriculares, grupos y docentes.
 
 ## Stack

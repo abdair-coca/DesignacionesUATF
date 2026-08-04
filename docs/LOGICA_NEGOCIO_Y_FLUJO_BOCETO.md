@@ -207,6 +207,11 @@ Al corregir una fila observada mediante el modal, el boceto:
 La observacion general de la propuesta se conserva hasta que se reemplace
 por una nueva decision.
 
+En el sistema real, la observacion y el resaltado rojo se muestran mientras
+exista al menos una fila observada que no haya cambiado. Si todas las filas
+observadas se corrigen, dejan de mostrarse en el editor, pero permanecen en el
+historial de la version revisada.
+
 ## 9. Reglas de horas pagadas y no pagadas
 
 ### 9.1 Campos y formulas
@@ -463,6 +468,14 @@ son la decision y las observaciones de Vicerrectorado.
 El checkbox global `Aprobar todas las filas` cambia visualmente las decisiones
 de las filas editables. La decision final se aplica unicamente al confirmar
 la revision.
+
+La cabecera muestra la descripcion de la propuesta y la bandeja tambien la
+incluye para distinguir propuestas con la misma carrera, gestion y periodo.
+Cuando el checkbox esta marcado, todas las filas toman `Aprobar`; cuando esta
+desmarcado, toman `Observar`. Los selects no se bloquean: al cambiar una fila
+manualmente, el checkbox se desmarca para evitar un estado mixto ambiguo.
+El campo de observacion por fila solo se habilita cuando la decision es
+`Observar`. Una fila `Aprobar` con observacion se rechaza en servidor.
 
 ### 13.3 Confirmar revision
 

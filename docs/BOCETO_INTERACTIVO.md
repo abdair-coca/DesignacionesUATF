@@ -69,6 +69,13 @@ de seleccion. Las filas aprobadas previamente tambien son inmutables.
 La aprobacion bloquea la propuesta y sus designaciones. La distribucion de
 horas queda incluida en el snapshot de la version.
 
+La revision real muestra la descripcion en la bandeja y en la cabecera de la
+revision. El checkbox `Aprobar todas las filas` aplica `Aprobar` cuando esta
+marcado y `Observar` cuando esta desmarcado; los selects siguen editables y un
+cambio manual desmarca el checkbox. La revision se envia con un unico boton
+`Confirmar Revision` y los motivos por fila solo aplican a decisiones de
+observacion.
+
 ## Paridad con el sistema real
 
 El editor real refleja esta pantalla con carga local, otras carreras y carga
