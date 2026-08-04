@@ -36,6 +36,8 @@ class PropuestaRevisionTest extends TestCase
             ->assertSee('modo_revision')
             ->assertSee('decidir_filas')
             ->assertSee('observacion.disabled = aprobarTodas;')
+            ->assertSee('checkbox.checked = false;')
+            ->assertSee('sincronizarObservacionFila(select, false);')
             ->assertDontSee('Registrar decisiones por fila');
 
         $this->actingAs($director)

@@ -58,7 +58,7 @@
                                     @else
                                         <td class="px-4 py-3 min-w-40">
                                             <input type="hidden" name="decisiones[{{ $indice }}][snapshot_id]" value="{{ $snapshot->id }}">
-                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5 rounded" onchange="sincronizarObservacionFila(this)">
+                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5 rounded" onchange="sincronizarObservacionFila(this, true)">
                                                 <option value="aprobada">Aprobar</option>
                                                 <option value="observada">Observar</option>
                                             </select>
@@ -113,8 +113,12 @@
 
 @push('scripts')
 <script>
-    function sincronizarObservacionFila(select) {
+    function sincronizarObservacionFila(select, cambioManual = true) {
         const formulario = select.closest('form');
+        const checkbox = formulario?.querySelector('#aprobar_todas_filas');
+
+        if (cambioManual && checkbox?.checked) checkbox.checked = false;
+
         const aprobarTodas = formulario?.querySelector('#aprobar_todas_filas')?.checked ?? false;
         const observacion = select.closest('tr')?.querySelector('[data-observacion-fila]');
 
@@ -133,7 +137,7 @@
         modo.value = 'decidir_filas';
         formulario.querySelectorAll('[data-decision-fila]').forEach((select) => {
             select.value = checkbox.checked ? 'aprobada' : 'observada';
-            sincronizarObservacionFila(select);
+            sincronizarObservacionFila(select, false);
         });
     }
 </script>
