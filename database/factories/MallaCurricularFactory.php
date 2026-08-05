@@ -21,4 +21,14 @@ class MallaCurricularFactory extends Factory
             'materia_id' => Materia::factory(),
         ];
     }
+
+    public function forCarrera(Carrera|int $carrera): static
+    {
+        return $this->state(['carrera_id' => $carrera]);
+    }
+
+    public function forMateria(Materia|int $materia): static
+    {
+        return $this->state(['materia_id' => $materia]);
+    }
 }

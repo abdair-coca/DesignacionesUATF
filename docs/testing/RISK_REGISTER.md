@@ -1,0 +1,27 @@
+# Registro de riesgos
+
+Escala: P0 bloquea seguridad/integridad crítica; P1 puede afectar flujo principal; P2 afecta operación o mantenimiento; P3 afecta comodidad/documentación. Estado describe análisis, no aceptación del riesgo.
+
+| ID | Riesgo | Módulo | Probabilidad | Impacto | Evidencia | Mitigación sugerida | Estado |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| R-001 | Acceso de Director a datos de otra carrera | Autorización | Media | Alto | `PropuestaPolicy`, `CarreraPolicy`, `PropuestaController` | Casos de aislamiento P0; mantener Policy + filtros por carrera | Abierto |
+| R-002 | Vicerrectorado tiene alcance global no confirmado | Revisión | Media | Alto | `EnsureRole`, `PropuestaVersionPolicy@view`, `RevisionPropuestaController` | Confirmar modelo organizativo; probar alcance esperado | NEEDS_BUSINESS_CONFIRMATION |
+| R-003 | Dos fuentes de designaciones con precedencia compleja | Importación/legado | Alta | Alto | `ImportacionPropuestaService`, tablas `designaciones` y `propuesta_*` | Documentar fuente canónica, conflictos y trazabilidad; pruebas P0 | Abierto |
+| R-004 | Estados distribuidos y parcialmente derivados | Dominio | Media | Alto | Services, Policies, `PropuestaController@index`, migrations | Formalizar tabla de transición tras confirmar reglas; pruebas de transiciones | Abierto |
+| R-005 | Límite horario configurado no aplicado | Reglas de carga | Alta | Alto | `config/designaciones.php`, `PropuestaService`, test `DesignacionesAceptacionTest` | Confirmar mínimo/máximo; no implementar antes de decisión | NEEDS_BUSINESS_CONFIRMATION |
+| R-006 | Múltiples propuestas en mismo contexto | Versionado | Media | Alto | Migration `2026_08_03_120000...` elimina unique carrera/gestión/periodo | Confirmar cardinalidad y política de propuesta vigente | NEEDS_BUSINESS_CONFIRMATION |
+| R-007 | Snapshot depende de triggers PostgreSQL | Persistencia | Baja en entorno actual | Alto | Migrations de `propuesta_version_designaciones` y decisiones | Mantener pruebas PostgreSQL; verificar respaldo/restore; no asumir portabilidad | Abierto |
+| R-008 | Notificación repetida o enlace incorrecto por normalización heurística | Notificaciones | Media | Medio/alto | `NotificacionController@marcarLeida`, services de propuesta/revisión, `notifications` | Definir clave de idempotencia y URL canónica; conservar regresión existente | Abierto |
+| R-009 | `public/storage` no enlazado | Archivos | Alta en testing | Alto si se habilitan archivos | `php artisan about --env=testing`; `config/filesystems.php` | Antes de archivos, crear link en entorno controlado y pruebas de autorización/lectura/escritura | Abierto |
+| R-010 | Rutas storage sin autenticación | Archivos | Media | Alto si hay archivos sensibles | `FilesystemServiceProvider`, `route:list`: GET/PUT `/storage/{path}` | No guardar archivos sensibles en disco público; proteger endpoint antes de uso | Abierto |
+| R-011 | CDN externo para Tailwind/Alpine/fuentes | Frontend | Media | Medio | `resources/views/layouts/app.blade.php` | Definir política offline/CSP y pipeline si se requiere despliegue aislado | Abierto |
+| R-012 | Sin `package.json`, lint, build o typecheck frontend | Frontend | Alta | Medio | ausencia de `package.json`, `resources/js`, Vite | Mantener alcance Blade explícito o adoptar pipeline en fase separada | Documentado |
+| R-013 | Consultas y migraciones específicas de PostgreSQL | Infraestructura | Baja en entorno actual | Medio | `ilike` en revisión; SQL/triggers en migrations | Ejecutar siempre con PostgreSQL; no prometer portabilidad | Abierto |
+| R-014 | Auditoría no registra cada edición de borrador | Auditoría | Media | Medio | `propuesta_eventos` registra eventos de flujo; `guardarCambios` no produce historial por campo | Confirmar requerimiento de trazabilidad; diseñar auditoría antes de cambiar | NEEDS_BUSINESS_CONFIRMATION |
+| R-015 | Documentación histórica menciona pantallas no presentes | Documentación | Media | Bajo/medio | `docs/PLAN_FRONTEND.md` versus `resources/views` | Actualizar documentación de producto después de confirmar alcance | Abierto |
+| R-016 | No existe reporte/exportación implementado | Reportes | Alta | Medio/alto | rutas, controllers y búsqueda de `Storage`, download, export | Confirmar si reportes pertenecen al producto; no inventar requisito | NEEDS_BUSINESS_CONFIRMATION |
+| R-017 | Seeder ejecutado sobre base existente puede chocar con unicidades | Datasets | Media | Medio/alto | `TestingDatasetSupport`, CI/códigos deterministas | Usar `migrate:fresh --env=testing`; no ejecutar sobre datos institucionales | Documentado |
+| R-018 | Perfil large completo no medido en esta fase | Datasets | Baja | Medio | Large `0.8` validado con 32.768 designaciones | Medir duración/memoria en Fase 8; ajustar multiplicador | Abierto |
+| R-019 | Factory debe respetar snapshots inmutables | Factories | Baja | Alto | Trigger `propuesta_version_designaciones_inmutables`; smoke test detectó y corrigió update posterior | Calcular contexto antes de insert; conservar smoke test | Mitigado |
+| R-020 | Seeders estándar contienen datos demo institucionales | Seeders | Media | Alto | `database/seeders/UserSeeder.php`, `DemoDesignacionesSeeder.php` | No invocar `DatabaseSeeder` para testing; usar namespace Testing | Documentado |
+| R-021 | Comando de Fase 0 vacía el dataset al validar | Operación testing | Alta | Alto | `TestingPhase0` ejecuta `migrate:fresh`; BUG-002 | Usar `pg_ctl` para iniciar normalmente; sembrar después de Fase 0 | Documentado |

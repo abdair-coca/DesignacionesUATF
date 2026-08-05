@@ -19,6 +19,20 @@ class PageAccessTest extends TestCase
             ->assertRedirect('/designaciones');
     }
 
+    public function test_login_de_director_persiste_la_sesion_en_la_siguiente_peticion(): void
+    {
+        $this->assertSame('file', config('session.driver'));
+
+        $director = User::factory()->director(Carrera::factory()->create())->create(['password' => bcrypt('secret')]);
+
+        $this->post('/login', ['email' => $director->email, 'password' => 'secret'])
+            ->assertRedirect('/designaciones');
+
+        $this->get('/designaciones')
+            ->assertOk()
+            ->assertSee('Designaciones');
+    }
+
     public function test_raiz_y_login_dirigen_a_revisiones_para_vicerrectorado(): void
     {
         $vicerrectorado = User::factory()->vicerrectorado()->create(['password' => bcrypt('secret')]);

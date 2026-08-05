@@ -10,6 +10,8 @@ flujos críticos y comportamiento operativo del Sistema de Designación Docente.
 - El alcance es local, testing o staging autorizado. Producción está prohibida.
 - La configuración base es `.env.testing`.
 - El entorno destructivo se prepara con `composer test:phase0`.
+- Para iniciar y conservar datos existentes, usar `pg_ctl` y no `composer test:phase0`.
+- `composer test:phase0` ejecuta `migrate:fresh`, rollback y migracion; requiere volver a sembrar antes de probar manualmente.
 - Los efectos externos deben permanecer simulados o desactivados.
 - Todo fallo debe reproducirse antes de corregirse.
 - Las reglas no documentadas se registran como `NEEDS_BUSINESS_CONFIRMATION`.

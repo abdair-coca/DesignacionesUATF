@@ -2,7 +2,16 @@
 
 ## Estado general
 
-**EN PROGRESO — Fase 1 completa. Fase 2 pendiente.**
+### Estado operativo actualizado
+
+- Base testing: `designaciones_uatf_testing` en `127.0.0.1:55432`.
+- Inicio normal: `pg_ctl stop/start`; conserva los registros.
+- `composer test:phase0` es destructivo para los datos: ejecuta `migrate:fresh`, rollback y migracion.
+- Dataset actual restaurado: 5 usuarios y 432 designaciones.
+- Login probado con cuentas sinteticas; sesion configurada con driver `file`.
+- Incidente documentado: [BUG-002](BUG_REPORTS/BUG-002-testing-phase0-clears-dataset.md).
+
+**EN PROGRESO — Fase 3 completa. Fase 4 pendiente.**
 
 Fecha de actualización: 2026-08-04
 
@@ -25,10 +34,19 @@ Evidencia: [PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md)
 | Comando | Resultado |
 | --- | --- |
 | `composer test:phase0` | OK |
-| `composer test` | 62/62 pruebas, 326 assertions |
+| `composer test` | 63/63 pruebas, 331 assertions |
 | `vendor/bin/pint --test` | OK |
 | `php artisan migrate:status --env=testing` | 34 migraciones OK |
 | `git diff --check` | OK |
+
+| `codegraph status --json` | 123 archivos, 1.018 nodos, 1.461 relaciones; índice inicializado |
+| `php artisan route:list --json` | 24 rutas; 21 nombradas; sin duplicados método/URI |
+| `vendor/bin/pint --test` | OK |
+| `php artisan migrate:fresh --env=testing --force` + small | OK; 432 designaciones; 1,12 s |
+| `migrate:fresh` + normal | OK; 14.400 designaciones; 3,01 s |
+| `migrate:fresh` + edge | OK; 288 designaciones; 1,58 s |
+| `migrate:fresh` + large `TESTING_LARGE_MULTIPLIER=0.8` | OK; 32.768 designaciones; 4,85 s |
+| Seeder con `--env=production` | Bloqueado; 0 cambios |
 
 ## Fase 1
 
@@ -40,18 +58,53 @@ Evidencia: [PHASE_1_REPORT.md](PHASES_REPORTS/PHASE_1_REPORT.md)
 - 24 rutas inspeccionadas, 21 nombradas, sin nombres ni combinaciones método/URI duplicadas.
 - 34 migraciones aplicadas en testing.
 - Sin avisos de vulnerabilidades en `composer audit`.
-- Suite: 62/62 pruebas, 326 assertions.
+- Suite: 63/63 pruebas, 331 assertions.
 - Pint: OK.
+
+## Fase 2
+
+Estado: **COMPLETA — análisis funcional y cartografía documentados**
+
+Evidencia: [PHASE_2_REPORT.md](PHASES_REPORTS/PHASE_2_REPORT.md)
+
+Documentos: [SYSTEM_MAP.md](SYSTEM_MAP.md), [ENDPOINT_CATALOG.md](ENDPOINT_CATALOG.md), [BUSINESS_RULES.md](BUSINESS_RULES.md), [STATE_TRANSITIONS.md](STATE_TRANSITIONS.md), [TEST_MATRIX.md](TEST_MATRIX.md), [RISK_REGISTER.md](RISK_REGISTER.md).
+
+- Se inspeccionaron rutas, controladores, servicios, middleware, Policies, modelos, relaciones, migraciones, vistas, configuración y pruebas.
+- No se modificó lógica de producción.
+- No se crearon factories/seeders, pruebas masivas, E2E ni pruebas de rendimiento.
+- Frontend confirmado: Blade + Alpine CDN + Tailwind CDN; no existe `package.json` porque no hay pipeline npm/Vite.
+- `public/storage` no está enlazado en testing; no afecta flujo actual porque no hay uploads/downloads/reportes implementados.
+- Ambigüedades marcadas `NEEDS_BUSINESS_CONFIRMATION`.
+
+Resultado suite al cierre de Fase 2: **OK — 62/62 pruebas, 326 assertions** (`composer test`, registro histórico).
+
+## Fase 3
+
+Estado: **COMPLETA — factories, seeders y datasets de testing verificados**
+
+Evidencia: [PHASE_3_REPORT.md](PHASES_REPORTS/PHASE_3_REPORT.md)
+
+Documentación: [DATASETS.md](DATASETS.md).
+
+- Factories versionadas creadas; factories existentes ampliadas con estados respaldados por código.
+- Seeders aislados en `database/seeders/Testing/`; `DatabaseSeeder` estándar no modificado.
+- Guardia valida entorno, host, puerto, nombre de base e indicadores de producción.
+- Small, normal, edge y large escalado ejecutados desde base limpia.
+- Validator comprobó roles, estados, unicidades, claves y relaciones.
+- Sin datos reales; emails usan `example.test`.
+- No se modificaron controladores, servicios, Policies, middleware ni migraciones.
+- No se crearon pruebas funcionales masivas, E2E, carga ni rendimiento.
+
+Resultado suite al cierre de Fase 3: **OK — 62/62 pruebas, 326 assertions** (`composer test`, registro histórico).
 
 ## Fase siguiente
 
-Fase 2: reglas unitarias de dominio.
+Fase 4: integridad de base de datos, rollback y concurrencia.
 
 Pendientes mínimos:
 
-- Extraer reglas desde servicios, modelos, requests y migraciones.
-- Separar reglas confirmadas de `NEEDS_BUSINESS_CONFIRMATION`.
-- Crear casos unitarios válidos, inválidos y de límite.
+- No iniciar dentro de esta ejecución.
+- Priorizar casos P0 de `TEST_MATRIX.md` usando datasets `small`/`normal`.
 
 ## Riesgos conocidos
 
@@ -63,6 +116,8 @@ Pendientes mínimos:
 
 ## Archivos y comandos de la última fase
 
-Ver [PHASE_1_REPORT.md](PHASES_REPORTS/PHASE_1_REPORT.md) y
-[PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md). No iniciar Fase 2 hasta
-registrar su alcance y resultado aquí.
+Ver [PHASE_3_REPORT.md](PHASES_REPORTS/PHASE_3_REPORT.md),
+[PHASE_2_REPORT.md](PHASES_REPORTS/PHASE_2_REPORT.md),
+[PHASE_1_REPORT.md](PHASES_REPORTS/PHASE_1_REPORT.md) y
+[PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md). Fase 3 detenida; no iniciar
+Fase 4 dentro de esta ejecución.

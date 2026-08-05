@@ -7,6 +7,7 @@ use App\Models\Docente;
 use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Periodo;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -34,5 +35,23 @@ class DesignacionFactory extends Factory
             'creado_por' => null,
             'aprobado_por' => null,
         ];
+    }
+
+    public function aprobada(): static
+    {
+        return $this->state([
+            'estado' => 'aprobada',
+            'aprobado_por' => fn (): ?int => User::query()
+                ->where('rol', User::ROL_VICERRECTORADO)
+                ->value('id'),
+        ]);
+    }
+
+    public function rechazada(string $motivo = 'Observación sintética de testing'): static
+    {
+        return $this->state([
+            'estado' => 'rechazada',
+            'motivo_rechazo' => $motivo,
+        ]);
     }
 }

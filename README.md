@@ -37,6 +37,11 @@ Configure la conexion PostgreSQL en `.env` antes de ejecutar las migraciones.
 
 ## Pruebas
 
+Para levantar el servidor con PostgreSQL de testing y conservar los datos,
+seguir [la guia de testing](docs/testing/LEVANTAR_SERVIDOR_TESTING.md). No usar
+`composer test:phase0` como inicio normal: ese comando valida Fase 0 y reinicia
+la base de datos de testing.
+
 Las pruebas usan una configuracion aislada definida en `.env.testing`.
 
 ```bash

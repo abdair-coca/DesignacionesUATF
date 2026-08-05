@@ -43,4 +43,9 @@ class GrupoFactory extends Factory
             $grupo->offsetUnset('materia_id');
         });
     }
+
+    public function disabled(): static
+    {
+        return $this->state(['estado' => 'deshabilitado']);
+    }
 }

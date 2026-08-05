@@ -16,6 +16,12 @@ class GestionFactory extends Factory
     {
         return [
             'nombre' => (string) fake()->unique()->numberBetween(3000, 3999),
+            'es_actual' => false,
         ];
+    }
+
+    public function actual(): static
+    {
+        return $this->state(['es_actual' => true]);
     }
 }
