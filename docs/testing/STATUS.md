@@ -7,7 +7,7 @@
 - Base testing: `designaciones_uatf_testing` en `127.0.0.1:55432`.
 - Inicio normal: `pg_ctl stop/start`; conserva los registros.
 - `composer test:phase0` es destructivo para los datos: ejecuta `migrate:fresh`, rollback y migracion.
-- Dataset actual restaurado: 5 usuarios y 432 designaciones.
+- Dataset actual: perfil `large` con multiplicador `0.8`; 80 usuarios, 6.400 docentes y 32.768 designaciones.
 - Login probado con cuentas sinteticas; sesion configurada con driver `file`.
 - Incidente documentado: [BUG-002](BUG_REPORTS/BUG-002-testing-phase0-clears-dataset.md).
 
