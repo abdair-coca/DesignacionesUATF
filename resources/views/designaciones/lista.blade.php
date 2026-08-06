@@ -143,6 +143,12 @@
 
                                     <!-- Botón Imprimir -->
                                     <!-- Botón Enviar / Retirar Envío Alternante -->
+                                    <button @click="abrirModalImprimir(item.descripcion)"
+                                            title="Imprimir propuesta"
+                                            class="px-2.5 py-1.5 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
+                                        Imprimir
+                                    </button>
+
                                     <template x-if="item.estado === 'propuesta' || item.estado === 'con_observaciones'">
                                         <button @click="solicitarRevisionEspecifica(item)"
                                                 title="Enviar esta propuesta al Vicerrectorado"
@@ -443,6 +449,7 @@
 
     @include('partials.modal-notificacion')
     @include('partials.modal-confirmacion')
+    @include('partials.modal-imprimir-designaciones')
 </div>
 
 @push('scripts')
@@ -457,6 +464,8 @@
             periodos: periodos,
             modalNuevaOpen: false,
             modalObservacionesOpen: false,
+            modalImprimirOpen: false,
+            modalImprimirTitulo: '',
             tabModal: 'crear',
             itemSeleccionado: null,
 
@@ -540,6 +549,11 @@
             abrirModalObservaciones(item) {
                 this.itemSeleccionado = item;
                 this.modalObservacionesOpen = true;
+            },
+
+            abrirModalImprimir(titulo = '') {
+                this.modalImprimirTitulo = titulo;
+                this.modalImprimirOpen = true;
             },
 
             modalNotificacionOpen: false,

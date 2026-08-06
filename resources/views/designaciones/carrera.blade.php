@@ -105,6 +105,12 @@
                 <span class="font-semibold">Periodo {{ $propuesta->periodo->nombre }}</span>
             </div>
 
+            <button @click="abrirModalImprimir(@js($propuesta->descripcion ?: 'Reporte de designaciones'))"
+                    title="Imprimir propuesta"
+                    class="bg-gray-700 hover:bg-gray-800 text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
+                Imprimir
+            </button>
+
             @if($puedeEditar)
             <button @click="abrirModalCopiarAnterior()"
                     class="bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
@@ -128,7 +134,7 @@
                 <button @click="modalSolicitarRevisionOpen = true"
                         class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 12 3.75 3.75 21 12l-17.25 8.25L6 12Zm0 0h7.5" />
                     </svg>
                     <span>Enviar Propuesta a Vicerrectorado</span>
                 </button>
@@ -338,13 +344,13 @@
 
             <!-- Botones Paginador Cuadrados Color Admin -->
             <div class="flex items-center gap-1">
-                <button @click="currentPage = 1" :disabled="currentPage === 1" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">«</button>
-                <button @click="currentPage--" :disabled="currentPage === 1" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">‹</button>
+                <button @click="currentPage = 1" :disabled="currentPage === 1" aria-label="Primera página" title="Primera página" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">«</button>
+                <button @click="currentPage--" :disabled="currentPage === 1" aria-label="Página anterior" title="Página anterior" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">‹</button>
 
                 <span class="px-3 py-1 rounded bg-[#2d353c] text-white text-xs font-bold" x-text="currentPage"></span>
 
-                <button @click="currentPage++" :disabled="currentPage >= totalPages" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">›</button>
-                <button @click="currentPage = totalPages" :disabled="currentPage >= totalPages" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">»</button>
+                <button @click="currentPage++" :disabled="currentPage >= totalPages" aria-label="Página siguiente" title="Página siguiente" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">›</button>
+                <button @click="currentPage = totalPages" :disabled="currentPage >= totalPages" aria-label="Última página" title="Última página" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">»</button>
             </div>
         </div>
     </div>
@@ -702,6 +708,7 @@
 
     @include('partials.modal-notificacion')
     @include('partials.modal-confirmacion')
+    @include('partials.modal-imprimir-designaciones')
 </div>
 
 @push('scripts')
@@ -725,6 +732,8 @@
             modalExitoOpen: false,
             modalCopiarOpen: false,
             modalSolicitarRevisionOpen: false,
+            modalImprimirOpen: false,
+            modalImprimirTitulo: '',
             copiarOrigenGestionId: '{{ $gestiones->first()?->id }}',
             copiarOrigenPeriodoId: '{{ $periodos->first()?->id }}',
             cargandoCopiar: false,
@@ -768,6 +777,11 @@
             mostrarConfirmacion(titulo, mensaje, botonTexto, botonColor, callback) {
                 this.modalConfirmacionData = { titulo, mensaje, botonTexto, botonColor, callback };
                 this.modalConfirmacionOpen = true;
+            },
+
+            abrirModalImprimir(titulo = '') {
+                this.modalImprimirTitulo = titulo;
+                this.modalImprimirOpen = true;
             },
 
             ejecutarConfirmacion() {

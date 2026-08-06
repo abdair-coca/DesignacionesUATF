@@ -32,6 +32,8 @@ class PropuestaRevisionTest extends TestCase
             ->assertOk()
             ->assertSee($propuesta->descripcion)
             ->assertSee('Aprobar todas las filas')
+            ->assertSee('modal-imprimir-revision', false)
+            ->assertSee('abrirModalImprimirRevision', false)
             ->assertSee('Confirmar Revisión')
             ->assertSee('modo_revision')
             ->assertSee('decidir_filas')

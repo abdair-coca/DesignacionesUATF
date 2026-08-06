@@ -11,6 +11,7 @@
             @if(filled($version->propuesta->descripcion))
                 <p class="text-sm text-gray-700 mt-2"><span class="font-semibold">Descripci&oacute;n:</span> {{ $version->propuesta->descripcion }}</p>
             @endif
+            <button type="button" onclick="abrirModalImprimirRevision()" class="mt-3 px-3.5 py-2 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded text-xs cursor-pointer">Imprimir Reporte</button>
         </div>
 
         @if($version->observaciones)
@@ -105,6 +106,22 @@
                     </div>
                 </div>
             </div>
+
+            <div id="modal-imprimir-revision" hidden class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-imprimir-revision-title">
+                <div class="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-md overflow-hidden">
+                    <div class="bg-[#2d353c] text-white px-5 py-3.5 flex items-center justify-between">
+                        <h2 id="modal-imprimir-revision-title" class="font-bold text-sm">Imprimir reporte</h2>
+                        <button type="button" onclick="cerrarModalImprimirRevision()" class="text-gray-300 hover:text-white" aria-label="Cerrar">&times;</button>
+                    </div>
+                    <div class="p-5 text-sm text-gray-700">
+                        <p class="font-semibold text-gray-900">Reporte de la revisión</p>
+                        <p class="mt-2">La generación del reporte para impresión estará disponible próximamente.</p>
+                    </div>
+                    <div class="bg-gray-50 border-t border-gray-200 px-5 py-3 flex justify-end">
+                        <button type="button" onclick="cerrarModalImprimirRevision()" class="px-4 py-1.5 bg-gray-700 hover:bg-gray-800 text-white rounded text-xs font-bold">Cerrar</button>
+                    </div>
+                </div>
+            </div>
         @else
             <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
                 <table class="w-full text-sm">
@@ -170,6 +187,26 @@
 
     function cerrarModalErrorRevision() {
         const modal = document.getElementById('modal-error-revision');
+
+        if (!modal) return;
+
+        modal.hidden = true;
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function abrirModalImprimirRevision() {
+        const modal = document.getElementById('modal-imprimir-revision');
+
+        if (!modal) return;
+
+        modal.hidden = false;
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function cerrarModalImprimirRevision() {
+        const modal = document.getElementById('modal-imprimir-revision');
 
         if (!modal) return;
 

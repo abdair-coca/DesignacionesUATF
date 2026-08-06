@@ -66,6 +66,9 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | REV-007 | Revision | Falta motivo muestra modal y conserva campos editados | P1 | `PropuestaRevisionTest`, BUG-003 | CUBIERTA |
 | REV-008 | Revision | Modal inicia oculto, abre por falta de motivo y cierra sin perder edicion | P1 | `PropuestaRevisionTest`, BUG-004, prueba navegador | CUBIERTA |
 
+| FE-004 | Frontend | Modal genérico de impresión en lista, editor y revisión | P1 | `DesignacionesInterfazTest`, `PropuestaRevisionTest`, prueba navegador | CUBIERTA |
+| FE-005 | Frontend | Paginación del editor con primera, anterior, siguiente y última | P1 | `DesignacionesInterfazTest`, prueba navegador | CUBIERTA |
+
 ## Prioridades para fase posterior
 
 - P0 primero: autorización, estados, envío/revisión, snapshots, notificaciones, importación, constraints y storage si se usa.

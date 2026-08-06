@@ -37,7 +37,7 @@ Evidencia: [PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md)
 | Comando | Resultado |
 | --- | --- |
 | `composer test:phase0` | OK |
-| `composer test -- --env=testing` | 66/66 pruebas, 353 assertions |
+| `composer test -- --env=testing` | 67/67 pruebas, 363 assertions |
 | `vendor/bin/pint --test` | OK |
 | `php artisan migrate:status --env=testing` | 34 migraciones OK |
 | `git diff --check` | OK |
@@ -121,6 +121,26 @@ Pendientes mínimos:
 
 - No iniciar dentro de esta ejecución.
 - Priorizar casos P0 de `TEST_MATRIX.md` usando datasets `small`/`normal`.
+
+## Verificación de impresión y navegación (2026-08-06)
+
+Alcance: añadir el botón de impresión en lista, editor y revisión como modal
+genérico, y verificar la navegación paginada del editor. La impresión real se
+deja pendiente; el modal informa que la generación estará disponible después.
+
+| Verificación | Resultado |
+| --- | --- |
+| Regresión backend para lista/editor | OK; `DesignacionesInterfazTest` |
+| Regresión backend para revisión | OK; `PropuestaRevisionTest` |
+| Navegador: modal de impresión en lista | OK; abre, muestra mensaje y cierra |
+| Navegador: modal de impresión en editor | OK; abre, muestra mensaje y cierra |
+| Navegador: modal de impresión en revisión | OK; abre, muestra mensaje y cierra |
+| Navegador: primera/anterior al inicio | OK; ambas deshabilitadas |
+| Navegador: siguiente y anterior | OK; cambia al siguiente bloque y regresa |
+| Navegador: última y primera | OK; llega al último bloque y vuelve al primero |
+
+La verificación usó únicamente el dataset sintético `small` en la base de
+testing local; no se conectó a producción.
 
 ## Riesgos conocidos
 
