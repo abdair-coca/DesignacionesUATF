@@ -138,6 +138,8 @@ deja pendiente; el modal informa que la generación estará disponible después.
 | Navegador: primera/anterior al inicio | OK; ambas deshabilitadas |
 | Navegador: siguiente y anterior | OK; cambia al siguiente bloque y regresa |
 | Navegador: última y primera | OK; llega al último bloque y vuelve al primero |
+| Lista: propuesta no oficial | OK; muestra `Abrir` |
+| Lista: propuesta oficial | OK; muestra `Ver detalle` junto a `Imprimir` |
 
 La verificación usó únicamente el dataset sintético `small` en la base de
 testing local; no se conectó a producción.

@@ -93,6 +93,29 @@ class DesignacionesInterfazTest extends TestCase
             ->assertSee('aria-label="Página anterior"', false);
     }
 
+    public function test_lista_muestra_abrir_y_detalle_solo_para_propuestas_oficiales(): void
+    {
+        [$director, $propuesta] = $this->propuestaBorrador();
+        Propuesta::create([
+            'carrera_id' => $propuesta->carrera_id,
+            'gestion_id' => $propuesta->gestion_id,
+            'periodo_id' => $propuesta->periodo_id,
+            'creado_por' => $director->id,
+            'estado' => 'oficial',
+            'descripcion' => 'Propuesta aprobada',
+        ]);
+
+        $this->actingAs($director)
+            ->get('/designaciones')
+            ->assertOk()
+            ->assertSee('title="Abrir asignación docente"', false)
+            ->assertSee('Abrir', false)
+            ->assertSee('x-if="item.estado === \'oficial\'"', false)
+            ->assertSee('title="Ver detalle de la asignación"', false)
+            ->assertSee('Ver detalle', false)
+            ->assertDontSee('title="Editar asignación docente"', false);
+    }
+
     private function propuestaBorrador(): array
     {
         Gestion::query()->update(['es_actual' => false]);

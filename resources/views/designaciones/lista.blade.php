@@ -135,9 +135,17 @@
                                     <!-- Botón Editar (Solo si NO está oficial/aprobada) -->
                                     <template x-if="item.estado !== 'oficial'">
                                         <a :href="'/designaciones/' + item.id"
-                                           title="Editar asignación docente"
+                                           title="Abrir asignación docente"
                                            class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors">
-                                            Editar
+                                            Abrir
+                                        </a>
+                                    </template>
+
+                                    <template x-if="item.estado === 'oficial'">
+                                        <a :href="'/designaciones/' + item.id"
+                                           title="Ver detalle de la asignación"
+                                           class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors">
+                                            Ver detalle
                                         </a>
                                     </template>
 
