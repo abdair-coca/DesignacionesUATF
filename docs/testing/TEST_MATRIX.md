@@ -58,6 +58,14 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | ENV-005 | Entorno | Reinicio normal de PostgreSQL conserva el dataset | P0 | `pg_ctl stop/start`, 5 usuarios conservados | CUBIERTA |
 | ENV-006 | Entorno | Fase 0 destructiva se distingue del inicio normal | P0 | `TestingPhase0` ejecuta `migrate:fresh` | DOCUMENTADA |
 
+## Correcciones funcionales recientes
+
+| ID | Modulo | Caso | Prioridad | Evidencia | Estado |
+| --- | --- | --- | --- | --- | --- |
+| FE-003 | Frontend | Docentes con materias asignadas primero y orden alfabetico | P1 | `DesignacionesInterfazTest` | CUBIERTA |
+| REV-007 | Revision | Falta motivo muestra modal y conserva campos editados | P1 | `PropuestaRevisionTest`, BUG-003 | CUBIERTA |
+| REV-008 | Revision | Modal inicia oculto, abre por falta de motivo y cierra sin perder edicion | P1 | `PropuestaRevisionTest`, BUG-004, prueba navegador | CUBIERTA |
+
 ## Prioridades para fase posterior
 
 - P0 primero: autorización, estados, envío/revisión, snapshots, notificaciones, importación, constraints y storage si se usa.

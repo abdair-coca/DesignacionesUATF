@@ -10,10 +10,13 @@
 - Dataset actual: perfil `large` con multiplicador `0.8`; 80 usuarios, 6.400 docentes y 32.768 designaciones.
 - Login probado con cuentas sinteticas; sesion configurada con driver `file`.
 - Incidente documentado: [BUG-002](BUG_REPORTS/BUG-002-testing-phase0-clears-dataset.md).
+- BUG-003 mitigado: revision sin motivo muestra modal y conserva edicion.
+- BUG-004 resuelto: modal de revision inicia oculto, abre ante falta de motivo y se cierra sin perder edicion.
+- Docentes asignados aparecen primero y ordenados alfabeticamente por nombre.
 
 **EN PROGRESO — Fase 3 completa. Fase 4 pendiente.**
 
-Fecha de actualización: 2026-08-04
+Fecha de actualización: 2026-08-06
 
 ## Fase 0
 
@@ -34,10 +37,23 @@ Evidencia: [PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md)
 | Comando | Resultado |
 | --- | --- |
 | `composer test:phase0` | OK |
-| `composer test` | 63/63 pruebas, 331 assertions |
+| `composer test -- --env=testing` | 66/66 pruebas, 353 assertions |
 | `vendor/bin/pint --test` | OK |
 | `php artisan migrate:status --env=testing` | 34 migraciones OK |
 | `git diff --check` | OK |
+
+## Verificacion focalizada de esta ejecucion
+
+Alcance: correccion del modal de validacion de revision. No se inicia una fase
+nueva; se cierra este cambio con evidencia especifica y se detiene el trabajo.
+
+| Comando o prueba | Resultado |
+| --- | --- |
+| `php artisan test tests/Feature/PropuestaRevisionTest.php --filter=test_revision_muestra_modal_y_conserva_edicion_si_falta_motivo` antes del cambio | FALLA esperada: faltaba la clase visual `hidden` |
+| Mismo test despues del cambio | OK; 1 prueba, 15 aserciones |
+| Navegador: carga inicial | OK; modal no visible |
+| Navegador: fila observada sin motivo + `Confirmar Revision` | OK; modal visible |
+| Navegador: `Entendido` | OK; modal oculto, decision y campo editado conservados |
 
 | `codegraph status --json` | 123 archivos, 1.018 nodos, 1.461 relaciones; índice inicializado |
 | `php artisan route:list --json` | 24 rutas; 21 nombradas; sin duplicados método/URI |

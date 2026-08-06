@@ -45,6 +45,45 @@ class PropuestaRevisionTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_revision_muestra_modal_y_conserva_edicion_si_falta_motivo(): void
+    {
+        [, $vicerrectorado, , $version, $filas] = $this->propuestaEnviada(2);
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$version->id}/revisar")
+            ->assertOk()
+            ->assertSee('id="modal-error-revision"', false)
+            ->assertSee('id="modal-error-revision" hidden class="hidden fixed', false)
+            ->assertSee('validarRevisionAntesDeEnviar', false)
+            ->assertSee('El motivo es obligatorio', false);
+
+        $this->actingAs($vicerrectorado)
+            ->post("/revisiones/{$version->id}/decidir", [
+                'modo' => 'decidir_filas',
+                'decisiones' => [
+                    ['snapshot_id' => $filas[0]->id, 'decision' => 'observada'],
+                    ['snapshot_id' => $filas[1]->id, 'decision' => 'aprobada'],
+                ],
+            ])
+            ->assertSessionHasErrors('decisiones');
+
+        $this->actingAs($vicerrectorado)
+            ->post("/revisiones/{$version->id}/decidir", [
+                'modo' => 'decidir_filas',
+                'observacion_general' => 'Editar antes de enviar',
+                'decisiones' => [
+                    ['snapshot_id' => $filas[0]->id, 'decision' => 'observada'],
+                ],
+            ])
+            ->assertSessionHasErrors('decisiones');
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$version->id}/revisar")
+            ->assertOk()
+            ->assertSee('Editar antes de enviar', false)
+            ->assertSee('value="observada" selected', false);
+    }
+
     public function test_decisiones_por_fila_observan_el_mismo_borrador_y_bloquean_las_aprobadas(): void
     {
         [$director, $vicerrectorado, $propuesta, $version, $filas] = $this->propuestaEnviada(2);
