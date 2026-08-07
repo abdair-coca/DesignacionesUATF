@@ -37,10 +37,20 @@ Evidencia: [PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md)
 | Comando | Resultado |
 | --- | --- |
 | `composer test:phase0` | OK |
-| `composer test -- --env=testing` | 67/67 pruebas, 363 assertions |
+| `composer test -- --env=testing` | 69/69 pruebas, 378 assertions |
 | `vendor/bin/pint --test` | OK |
 | `php artisan migrate:status --env=testing` | 34 migraciones OK |
 | `git diff --check` | OK |
+
+## Verificacion de lista historica y paginacion (2026-08-07)
+
+| Comando | Resultado |
+| --- | --- |
+| `composer test -- --env=testing` | OK; 69/69 pruebas, 378 assertions |
+| `vendor/bin/pint --test` | OK |
+| `php artisan academico:verificar-normalizacion --env=testing` | OK |
+| `git diff --check` | OK |
+| `composer audit --locked` | BLOQUEADO por 6 avisos actuales en `league/commonmark`; pendiente actualizar dependencia |
 
 ## Verificacion focalizada de esta ejecucion
 
@@ -140,6 +150,8 @@ deja pendiente; el modal informa que la generación estará disponible después.
 | Navegador: última y primera | OK; llega al último bloque y vuelve al primero |
 | Lista: propuesta no oficial | OK; muestra `Abrir` |
 | Lista: propuesta oficial | OK; muestra `Ver detalle` junto a `Imprimir` |
+| Lista: todas las gestiones | OK; elimina el filtro y conserva propuestas de años anteriores |
+| Lista: paginación | OK; 10 filas por página con navegación completa |
 
 La verificación usó únicamente el dataset sintético `small` en la base de
 testing local; no se conectó a producción.

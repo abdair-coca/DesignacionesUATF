@@ -116,6 +116,32 @@ class DesignacionesInterfazTest extends TestCase
             ->assertDontSee('title="Editar asignación docente"', false);
     }
 
+    public function test_lista_muestra_todas_las_gestiones_y_pagina_de_diez_filas(): void
+    {
+        [$director, $propuestaActual] = $this->propuestaBorrador();
+        $gestionAnterior = Gestion::factory()->create(['es_actual' => false]);
+        $propuestaAnterior = Propuesta::create([
+            'carrera_id' => $propuestaActual->carrera_id,
+            'gestion_id' => $gestionAnterior->id,
+            'periodo_id' => $propuestaActual->periodo_id,
+            'creado_por' => $director->id,
+            'estado' => 'borrador',
+            'descripcion' => 'Propuesta de gestion anterior',
+        ]);
+
+        $this->actingAs($director)
+            ->get('/designaciones?gestion_id='.$propuestaActual->gestion_id)
+            ->assertOk()
+            ->assertSee($propuestaActual->descripcion, false)
+            ->assertSee($propuestaAnterior->descripcion, false)
+            ->assertDontSee('Filtrar', false)
+            ->assertDontSee("gestion_id='+this.value", false)
+            ->assertSee('perPage: 10', false)
+            ->assertSee('propuestasPaginadas', false)
+            ->assertSee('@click="currentPage++"', false)
+            ->assertSee('@click="currentPage--"', false);
+    }
+
     private function propuestaBorrador(): array
     {
         Gestion::query()->update(['es_actual' => false]);

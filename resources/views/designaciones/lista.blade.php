@@ -24,18 +24,8 @@
             </div>
             <div class="flex flex-wrap items-center gap-3 mt-1">
                 <p class="text-[11px] text-gray-500">
-                    Gestión oficial de propuestas docentes correspondientes al año {{ $anoActual }}.
+                    Propuestas docentes correspondientes a todas las gestiones.
                 </p>
-                <div class="flex items-center gap-1.5 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-                    <label class="text-[11px] font-bold text-gray-700">Filtrar Gestión:</label>
-                    <select onchange="window.location.href='?gestion_id='+this.value" class="bg-white border border-gray-300 text-gray-900 text-xs rounded-xs px-1.5 py-0.5 font-bold cursor-pointer outline-none">
-                        @foreach($gestiones as $g)
-                            <option value="{{ $g->id }}" {{ (int) $g->id === (int) $gestionActualId ? 'selected' : '' }}>
-                                Gestión {{ $g->nombre }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
             </div>
         </div>
 
@@ -56,7 +46,7 @@
         <div class="bg-[#2d353c] text-white px-4 py-2.5 flex items-center justify-between font-bold text-xs">
             <div class="flex items-center gap-2">
                 <span>Propuestas de Designación</span>
-                <span class="bg-[#00acac] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-xs tracking-wider uppercase">Gestión {{ $anoActual }}</span>
+                <span class="bg-[#00acac] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-xs tracking-wider uppercase">Todas las gestiones</span>
             </div>
         </div>
 
@@ -77,19 +67,19 @@
                     <template x-if="propuestasOrdenadas.length === 0">
                         <tr>
                             <td colspan="6" class="py-8 px-4 text-center text-gray-500 italic">
-                                No existen propuestas de designación registradas para la Gestión {{ $anoActual }}.
+                                No existen propuestas de designación registradas.
                             </td>
                         </tr>
                     </template>
 
-                    <template x-for="(item, index) in propuestasOrdenadas" :key="item.id">
+                    <template x-for="(item, index) in propuestasPaginadas" :key="item.id">
                         <tr @dblclick="abrirModalObservaciones(item)"
                             title="Haga doble clic para consultar observaciones del Vicerrectorado"
                             class="transition-colors cursor-pointer select-none"
                             :class="index % 2 === 0 ? 'bg-[#f2f4f8]' : 'bg-white hover:bg-gray-100/70'">
 
                             <!-- 1. # (Nro correlativo cronológico) -->
-                            <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60" x-text="index + 1"></td>
+                            <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60" x-text="((currentPage - 1) * perPage) + index + 1"></td>
 
                             <!-- 2. Descripción -->
                             <td class="py-3.5 px-5 border-r border-gray-200/60">
@@ -180,6 +170,17 @@
                     </template>
                 </tbody>
             </table>
+        </div>
+        <div x-show="propuestasOrdenadas.length > 0" class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-2.5">
+            <span class="text-[11px] font-semibold text-gray-600">
+                Página <span x-text="currentPage"></span> de <span x-text="totalPages"></span>
+            </span>
+            <div class="flex items-center gap-1">
+                <button @click="currentPage = 1" :disabled="currentPage === 1" aria-label="Primera página" title="Primera página" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">«</button>
+                <button @click="currentPage--" :disabled="currentPage === 1" aria-label="Página anterior" title="Página anterior" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">‹</button>
+                <button @click="currentPage++" :disabled="currentPage >= totalPages" aria-label="Página siguiente" title="Página siguiente" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">›</button>
+                <button @click="currentPage = totalPages" :disabled="currentPage >= totalPages" aria-label="Última página" title="Última página" class="px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 text-xs font-bold">»</button>
+            </div>
         </div>
     </div>
 
@@ -474,6 +475,8 @@
             modalObservacionesOpen: false,
             modalImprimirOpen: false,
             modalImprimirTitulo: '',
+            perPage: 10,
+            currentPage: 1,
             tabModal: 'crear',
             itemSeleccionado: null,
 
@@ -544,6 +547,16 @@
                         if (timeA !== timeB) return timeA - timeB;
                         return (a.id || 0) - (b.id || 0);
                     });
+            },
+
+            get totalPages() {
+                return Math.max(1, Math.ceil(this.propuestasOrdenadas.length / this.perPage));
+            },
+
+            get propuestasPaginadas() {
+                const inicio = (this.currentPage - 1) * this.perPage;
+
+                return this.propuestasOrdenadas.slice(inicio, inicio + this.perPage);
             },
 
             abrirModalNuevaPropuesta() {

@@ -69,6 +69,7 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | FE-004 | Frontend | Modal genérico de impresión en lista, editor y revisión | P1 | `DesignacionesInterfazTest`, `PropuestaRevisionTest`, prueba navegador | CUBIERTA |
 | FE-005 | Frontend | Paginación del editor con primera, anterior, siguiente y última | P1 | `DesignacionesInterfazTest`, prueba navegador | CUBIERTA |
 | FE-006 | Frontend | Lista muestra Abrir para no oficiales y Ver detalle solo para oficiales | P1 | `DesignacionesInterfazTest` | CUBIERTA |
+| FE-007 | Frontend | Lista muestra propuestas de todas las gestiones y pagina 10 filas | P1 | `DesignacionesInterfazTest` | CUBIERTA |
 
 ## Prioridades para fase posterior
 

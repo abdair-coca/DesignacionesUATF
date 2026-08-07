@@ -28,13 +28,11 @@ class PropuestaController extends Controller
     {
         $gestiones = Gestion::orderByDesc('nombre')->get();
         $gestionActual = $gestiones->firstWhere('es_actual', true) ?? $gestiones->first();
-        $gestionId = $request->integer('gestion_id') ?: $gestionActual?->id;
         $propuestas = Propuesta::with(['gestion', 'periodo', 'versiones' => fn ($query) => $query
             ->with('designaciones.decision')
             ->latest('numero')])
             ->withCount('designaciones')
             ->where('carrera_id', $request->user()->carrera_id)
-            ->when($gestionId, fn ($query) => $query->where('gestion_id', $gestionId))
             ->latest('updated_at')
             ->get();
 
