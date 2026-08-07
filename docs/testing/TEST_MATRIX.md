@@ -70,6 +70,7 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | FE-005 | Frontend | Paginación del editor con primera, anterior, siguiente y última | P1 | `DesignacionesInterfazTest`, prueba navegador | CUBIERTA |
 | FE-006 | Frontend | Lista muestra Abrir para no oficiales y Ver detalle solo para oficiales | P1 | `DesignacionesInterfazTest` | CUBIERTA |
 | FE-007 | Frontend | Lista muestra propuestas de todas las gestiones y pagina 10 filas | P1 | `DesignacionesInterfazTest` | CUBIERTA |
+| FE-008 | Frontend | Detalle oficial informa que la designación ya fue aprobada | P1 | `DesignacionesInterfazTest` | CUBIERTA |
 
 ## Prioridades para fase posterior
 

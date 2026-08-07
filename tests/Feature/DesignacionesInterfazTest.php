@@ -142,6 +142,18 @@ class DesignacionesInterfazTest extends TestCase
             ->assertSee('@click="currentPage--"', false);
     }
 
+    public function test_detalle_de_propuesta_oficial_muestra_aviso_de_aprobacion(): void
+    {
+        [$director, $propuesta] = $this->propuestaBorrador();
+        $propuesta->update(['estado' => 'oficial']);
+
+        $this->actingAs($director)
+            ->get("/designaciones/{$propuesta->id}")
+            ->assertOk()
+            ->assertSee('Esta designación ya ha sido aprobada.', false)
+            ->assertDontSee('El borrador esta bloqueado mientras una version este pendiente de revision.', false);
+    }
+
     private function propuestaBorrador(): array
     {
         Gestion::query()->update(['es_actual' => false]);

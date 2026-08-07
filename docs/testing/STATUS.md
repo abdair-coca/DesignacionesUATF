@@ -152,6 +152,7 @@ deja pendiente; el modal informa que la generación estará disponible después.
 | Lista: propuesta oficial | OK; muestra `Ver detalle` junto a `Imprimir` |
 | Lista: todas las gestiones | OK; elimina el filtro y conserva propuestas de años anteriores |
 | Lista: paginación | OK; 10 filas por página con navegación completa |
+| Detalle oficial | OK; muestra aviso de aprobación y no el aviso de borrador bloqueado |
 
 La verificación usó únicamente el dataset sintético `small` en la base de
 testing local; no se conectó a producción.
