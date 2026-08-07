@@ -10,6 +10,8 @@
 - Las observaciones devuelven el mismo borrador al Director; el reenvio crea una nueva version.
 - La aprobacion final bloquea la propuesta y sus filas. Las notificaciones informan al Director y sus enlaces usan rutas vigentes.
 - La distribucion por materia/grupo conserva `horas_pagadas`, `horas_no_pagadas` y una justificacion opcional.
+- La revision de Vicerrectorado muestra `Justificacion de remuneracion` por materia/grupo en versiones pendientes, observadas y aprobadas; es solo lectura, conserva el texto completo y usa `—` cuando esta vacia.
+- La justificacion del Director se mantiene separada de las observaciones por fila y general de Vicerrectorado; cada snapshot conserva el valor de su propia version.
 - Las horas no pagadas y las horas adicionales no pagadas cuentan para la carga docente total.
 - Las horas pagadas no pueden superar las horas oficiales y la suma de ambas distribuciones debe cubrir la materia.
 - La bandeja de Vicerrectorado muestra la descripcion de cada propuesta para distinguir versiones con el mismo nombre.
@@ -41,9 +43,9 @@ snapshots, importacion y revision conservan los tres campos definidos.
 
 ## Verificacion automatizada actual
 
-- `php artisan test`: 60 pruebas y 316 aserciones.
+- `php artisan test`: 73 pruebas y 412 aserciones.
 - `vendor/bin/pint --test`: correcto.
-- `composer audit --locked`: sin vulnerabilidades.
+- `composer audit --locked`: pendiente; reporta 6 avisos en `league/commonmark` (<2.9.0), fuera del alcance de esta fase.
 - `php artisan academico:verificar-normalizacion`: correcto.
 
 ## Pendiente para completar el flujo integral

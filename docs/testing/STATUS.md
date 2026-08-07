@@ -46,7 +46,7 @@ Evidencia: [PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md)
 
 | Comando | Resultado |
 | --- | --- |
-| `composer test -- --env=testing` | OK; 69/69 pruebas, 378 assertions |
+| `composer test -- --env=testing` | OK; 73/73 pruebas, 412 assertions |
 | `vendor/bin/pint --test` | OK |
 | `php artisan academico:verificar-normalizacion --env=testing` | OK |
 | `git diff --check` | OK |
@@ -153,6 +153,32 @@ deja pendiente; el modal informa que la generación estará disponible después.
 | Lista: todas las gestiones | OK; elimina el filtro y conserva propuestas de años anteriores |
 | Lista: paginación | OK; 10 filas por página con navegación completa |
 | Detalle oficial | OK; muestra aviso de aprobación y no el aviso de borrador bloqueado |
+
+## Justificacion de remuneracion en revision (2026-08-07)
+
+La revision de Vicerrectorado muestra la justificacion registrada por el
+Director en una columna propia y de solo lectura, tanto para la version
+pendiente como para las versiones observadas o aprobadas. El texto conserva
+los saltos de linea y se muestra completo; cuando el campo es nulo o vacio se
+renderiza `—`. La justificacion no se mezcla con las observaciones de
+Vicerrectorado y los snapshots anteriores permanecen intactos al reenviar.
+
+| Comando | Resultado |
+| --- | --- |
+| Regresion focalizada de distribucion y revision | OK; 4 pruebas, 37 aserciones |
+| `composer test -- --env=testing` | OK; 73 pruebas, 412 aserciones |
+| `vendor/bin/pint --test` | OK |
+| `php artisan academico:verificar-normalizacion --env=testing` | OK |
+| `git diff --check` | OK |
+| `composer audit --locked` | BLOQUEADO por 6 avisos actuales en `league/commonmark`; pendiente actualizar dependencia |
+
+| Verificacion | Resultado |
+| --- | --- |
+| Revision pendiente con justificacion | Cubierta por `PropuestaDistribucionTest` |
+| Revision aprobada conserva justificacion | Cubierta por `PropuestaRevisionTest` |
+| Reenvio muestra justificacion corregida y conserva la anterior | Cubierta por `PropuestaRevisionTest` |
+| Justificacion vacia muestra `—` | Cubierta por `PropuestaDistribucionTest` |
+| Vicerrectorado no recibe control editable | Cubierta por `PropuestaDistribucionTest` y `PropuestaRevisionTest` |
 
 La verificación usó únicamente el dataset sintético `small` en la base de
 testing local; no se conectó a producción.

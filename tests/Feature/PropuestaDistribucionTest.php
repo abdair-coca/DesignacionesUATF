@@ -66,6 +66,35 @@ class PropuestaDistribucionTest extends TestCase
             ->assertDontSee('name="horas_pagadas"');
     }
 
+    public function test_revision_muestra_justificacion_del_director_y_guion_si_no_existe(): void
+    {
+        [$director, $propuesta, $materia, $grupo, $docente] = $this->contexto(6);
+        $vicerrectorado = User::factory()->vicerrectorado()->create();
+
+        $this->guardar($director, $propuesta, $materia, $grupo, $docente, 4, 2, 'Justificacion del director')
+            ->assertOk();
+        $this->actingAs($director)->post("/designaciones/{$propuesta->id}/enviar")->assertRedirect();
+        $version = PropuestaVersion::firstOrFail();
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$version->id}/revisar")
+            ->assertOk()
+            ->assertSee('data-justificacion-remuneracion', false)
+            ->assertSee('Justificacion del director', false)
+            ->assertDontSee('name="observacion_remuneracion"', false);
+
+        [$directorSinTexto, $propuestaSinTexto, $materiaSinTexto, $grupoSinTexto, $docenteSinTexto] = $this->contexto(6);
+        $this->guardar($directorSinTexto, $propuestaSinTexto, $materiaSinTexto, $grupoSinTexto, $docenteSinTexto, 6, 0)
+            ->assertOk();
+        $this->actingAs($directorSinTexto)->post("/designaciones/{$propuestaSinTexto->id}/enviar")->assertRedirect();
+        $versionSinTexto = PropuestaVersion::where('propuesta_id', $propuestaSinTexto->id)->firstOrFail();
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$versionSinTexto->id}/revisar")
+            ->assertOk()
+            ->assertSee('>—<', false);
+    }
+
     public function test_envio_rechaza_grupo_habilitado_sin_docente(): void
     {
         [$director, $propuesta, $materia, $grupo, $docente, $carrera] = $this->contexto(6);

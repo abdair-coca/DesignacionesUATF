@@ -45,7 +45,7 @@
                         <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
                             <tr>
                                 <th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th>
-                                <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th>
+                                <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th><th class="px-4 py-3">Justificación de remuneración</th>
                                 <th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación por fila</th>
                             </tr>
                         </thead>
@@ -62,6 +62,7 @@
                                     <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
                                     <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
                                     <td class="px-4 py-3 text-center font-semibold {{ $adicionales ? 'text-rose-700' : 'text-gray-500' }}">{{ $adicionales }} h</td>
+                                    <td data-justificacion-remuneracion class="px-4 py-3 min-w-72 max-w-md whitespace-pre-line break-words">{{ filled($snapshot->observacion_remuneracion) ? $snapshot->observacion_remuneracion : '—' }}</td>
                                     @if($snapshot->estado === 'aprobada_previamente')
                                         <td colspan="2" class="px-4 py-3"><span class="bg-emerald-100 text-emerald-900 text-xs font-semibold px-2 py-1">Aprobada previamente</span></td>
                                     @else
@@ -128,7 +129,7 @@
                     <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
                         <tr>
                             <th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th>
-                            <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th>
+                            <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th><th class="px-4 py-3">Justificación de remuneración</th>
                             <th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación</th>
                         </tr>
                     </thead>
@@ -143,6 +144,7 @@
                                 <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
                                 <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
                                 <td class="px-4 py-3 text-center">{{ $adicionales }} h</td>
+                                <td data-justificacion-remuneracion class="px-4 py-3 min-w-72 max-w-md whitespace-pre-line break-words">{{ filled($snapshot->observacion_remuneracion) ? $snapshot->observacion_remuneracion : '—' }}</td>
                                 <td class="px-4 py-3">{{ $snapshot->getRelation('decision')?->getAttribute('decision') ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td>
                                 <td class="px-4 py-3">{{ $snapshot->getRelation('decision')?->getAttribute('observacion') }}</td>
                             </tr>

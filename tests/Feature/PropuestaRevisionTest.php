@@ -199,6 +199,80 @@ class PropuestaRevisionTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_justificacion_se_mantiene_en_version_aprobada_y_es_solo_lectura(): void
+    {
+        [, $vicerrectorado, , $version] = $this->propuestaEnviada(1, 'Justificacion historica');
+
+        $this->actingAs($vicerrectorado)
+            ->post("/revisiones/{$version->id}/decidir", ['modo' => 'aprobar_todo'])
+            ->assertRedirect('/revisiones/pendientes');
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$version->id}/revisar")
+            ->assertOk()
+            ->assertSee('Justificacion historica', false)
+            ->assertDontSee('name="observacion_remuneracion"', false);
+    }
+
+    public function test_reenvio_conserva_justificacion_anterior_y_muestra_la_corregida(): void
+    {
+        [$director, $vicerrectorado, $propuesta, $version, $filas] = $this->propuestaEnviada(1, 'Justificacion original');
+        $fila = $filas[0];
+
+        $this->actingAs($vicerrectorado)
+            ->post("/revisiones/{$version->id}/decidir", [
+                'modo' => 'decidir_filas',
+                'decisiones' => [[
+                    'snapshot_id' => $fila->id,
+                    'decision' => 'observada',
+                    'observacion' => 'Actualizar justificacion.',
+                ]],
+            ])
+            ->assertRedirect('/revisiones/pendientes');
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$version->id}/revisar")
+            ->assertOk()
+            ->assertSee('Justificacion original', false)
+            ->assertDontSee('name="observacion_remuneracion"', false);
+
+        $this->actingAs($director)
+            ->put("/designaciones/{$propuesta->id}/asignaciones", [
+                'cambios' => [[
+                    'grupo_id' => $fila->grupo_id,
+                    'materia_id' => $fila->materia_id,
+                    'docente_id' => $fila->docente_id,
+                    'horas_pagadas' => $fila->horas_pagadas,
+                    'horas_no_pagadas' => $fila->horas_no_pagadas,
+                    'observacion_remuneracion' => 'Justificacion corregida',
+                ]],
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($director)
+            ->post("/designaciones/{$propuesta->id}/enviar")
+            ->assertRedirect();
+
+        $segundaVersion = PropuestaVersion::where('propuesta_id', $propuesta->id)
+            ->where('numero', 2)
+            ->firstOrFail();
+
+        $this->assertDatabaseHas('propuesta_version_designaciones', [
+            'propuesta_version_id' => $version->id,
+            'observacion_remuneracion' => 'Justificacion original',
+        ]);
+        $this->assertDatabaseHas('propuesta_version_designaciones', [
+            'propuesta_version_id' => $segundaVersion->id,
+            'observacion_remuneracion' => 'Justificacion corregida',
+        ]);
+
+        $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$segundaVersion->id}/revisar")
+            ->assertOk()
+            ->assertSee('Justificacion corregida', false)
+            ->assertDontSee('Justificacion original', false);
+    }
+
     public function test_vicerrectorado_no_puede_decidir_una_fila_que_no_pertenece_a_version(): void
     {
         [, $vicerrectorado, , $versionA] = $this->propuestaEnviada(1);
@@ -269,7 +343,7 @@ class PropuestaRevisionTest extends TestCase
         ]);
     }
 
-    private function propuestaEnviada(int $cantidadFilas): array
+    private function propuestaEnviada(int $cantidadFilas, ?string $justificacion = null): array
     {
         Gestion::query()->update(['es_actual' => false]);
         $gestion = Gestion::factory()->create(['es_actual' => true]);
@@ -294,6 +368,7 @@ class PropuestaRevisionTest extends TestCase
                     'grupo_id' => $grupo->id,
                     'materia_id' => $materia->id,
                     'docente_id' => Docente::factory()->create()->id,
+                    'observacion_remuneracion' => $justificacion,
                 ]],
             ])->assertRedirect();
         }

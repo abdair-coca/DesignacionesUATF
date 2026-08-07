@@ -459,11 +459,21 @@ las columnas:
 - horas pagadas;
 - horas no pagadas;
 - horas adicionales no pagadas;
+- justificacion de remuneracion;
 - decision;
 - observacion por fila.
 
-Los campos de distribucion son solo lectura. Los unicos controles editables
-son la decision y las observaciones de Vicerrectorado.
+La justificacion de remuneracion es el texto registrado por el Director para
+explicar la distribucion pagada/no pagada de cada materia y grupo. En la
+revision se muestra completa, con ajuste de linea, como columna de solo
+lectura. Si no existe, se muestra `—`. Los unicos controles editables son la
+decision y las observaciones de Vicerrectorado.
+
+La justificacion del Director permanece separada de la observacion por fila y
+de la observacion general de Vicerrectorado. Se lee desde el snapshot tanto
+en la revision pendiente como en la revision historica; por ello una version
+reenviada puede mostrar una justificacion corregida sin modificar la
+justificacion de la version anterior.
 
 El checkbox global `Aprobar todas las filas` cambia visualmente las decisiones
 de las filas editables. La decision final se aplica unicamente al confirmar
