@@ -11,7 +11,7 @@
 - La aprobacion final bloquea la propuesta y sus filas. Las notificaciones informan al Director y sus enlaces usan rutas vigentes.
 - La distribucion por materia/grupo conserva `horas_pagadas`, `horas_no_pagadas` y una justificacion opcional.
 - La revision de Vicerrectorado muestra `Justificacion de remuneracion` por materia/grupo en versiones pendientes, observadas y aprobadas; es solo lectura, conserva el texto completo y usa `—` cuando esta vacia.
-- La tabla de revision se ajusta al ancho disponible, evita el scroll vertical de la pantalla y pagina las filas en bloques de cuatro sin perder las decisiones del formulario.
+- La tabla de revision se ajusta al ancho disponible, evita el scroll vertical de la pantalla y pagina las filas en bloques de diez sin perder las decisiones del formulario.
 - La justificacion del Director se mantiene separada de las observaciones por fila y general de Vicerrectorado; cada snapshot conserva el valor de su propia version.
 - Las horas no pagadas y las horas adicionales no pagadas cuentan para la carga docente total.
 - Las horas pagadas no pueden superar las horas oficiales y la suma de ambas distribuciones debe cubrir la materia.
@@ -44,7 +44,7 @@ snapshots, importacion y revision conservan los tres campos definidos.
 
 ## Verificacion automatizada actual
 
-- `php artisan test`: 74 pruebas y 424 aserciones.
+- `php artisan test`: 74 pruebas y 431 aserciones.
 - `vendor/bin/pint --test`: correcto.
 - `composer audit --locked`: pendiente; reporta 6 avisos en `league/commonmark` (<2.9.0), fuera del alcance de esta fase.
 - `php artisan academico:verificar-normalizacion`: correcto.

@@ -88,7 +88,7 @@ class PropuestaRevisionTest extends TestCase
 
     public function test_revision_pagina_filas_y_ajusta_tabla_a_la_pantalla(): void
     {
-        [, $vicerrectorado, , $version] = $this->propuestaEnviada(5);
+        [, $vicerrectorado, , $version] = $this->propuestaEnviada(11);
 
         $response = $this->actingAs($vicerrectorado)
             ->get("/revisiones/{$version->id}/revisar")
@@ -96,9 +96,10 @@ class PropuestaRevisionTest extends TestCase
             ->assertSee('data-revision-paginada', false)
             ->assertSee('data-revision-pagination', false)
             ->assertSee('data-revision-next', false)
-            ->assertSee('table-fixed', false);
+            ->assertSee('table-fixed', false)
+            ->assertSee('const porPagina = 10;', false);
 
-        $this->assertSame(5, substr_count($response->getContent(), '<tr data-revision-row'));
+        $this->assertSame(11, substr_count($response->getContent(), '<tr data-revision-row'));
     }
 
     public function test_decisiones_por_fila_observan_el_mismo_borrador_y_bloquean_las_aprobadas(): void

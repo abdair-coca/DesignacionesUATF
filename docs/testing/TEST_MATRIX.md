@@ -72,7 +72,7 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | FE-007 | Frontend | Lista muestra propuestas de todas las gestiones y pagina 10 filas | P1 | `DesignacionesInterfazTest` | CUBIERTA |
 | FE-008 | Frontend | Detalle oficial informa que la designación ya fue aprobada | P1 | `DesignacionesInterfazTest` | CUBIERTA |
 | FE-009 | Frontend | Revision muestra justificacion del Director en pendiente e historico, solo lectura y con `—` si falta | P1 | `PropuestaDistribucionTest`, `PropuestaRevisionTest` | CUBIERTA |
-| FE-010 | Frontend | Tabla de revision compacta, ajustada al alto de pantalla y paginada sin perder decisiones | P1 | `PropuestaRevisionTest`, prueba navegador local | CUBIERTA |
+| FE-010 | Frontend | Tabla de revision compacta, ajustada al alto de pantalla y paginada de 10 en 10 sin perder decisiones | P1 | `PropuestaRevisionTest`, prueba navegador local | CUBIERTA |
 
 ## Prioridades para fase posterior
 

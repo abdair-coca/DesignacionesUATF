@@ -477,7 +477,7 @@ justificacion de la version anterior.
 
 Para evitar el desplazamiento vertical de la pantalla, la tabla se presenta
 en formato compacto, ajustada al ancho disponible, y pagina las filas en
-bloques de cuatro. Cambiar de pagina solo oculta filas visualmente; todas las
+bloques de diez. Cambiar de pagina solo oculta filas visualmente; todas las
 filas y sus controles permanecen en el formulario para conservar las
 decisiones al confirmar la revision.
 

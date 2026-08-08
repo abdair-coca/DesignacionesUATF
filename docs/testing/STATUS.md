@@ -46,7 +46,7 @@ Evidencia: [PHASE_0_REPORT.md](PHASES_REPORTS/PHASE_0_REPORT.md)
 
 | Comando | Resultado |
 | --- | --- |
-| `composer test -- --env=testing` | OK; 74/74 pruebas, 424 assertions |
+| `composer test -- --env=testing` | OK; 74/74 pruebas, 431 assertions |
 | `vendor/bin/pint --test` | OK |
 | `php artisan academico:verificar-normalizacion --env=testing` | OK |
 | `git diff --check` | OK |
@@ -165,8 +165,8 @@ Vicerrectorado y los snapshots anteriores permanecen intactos al reenviar.
 
 | Comando | Resultado |
 | --- | --- |
-| Regresion focalizada de distribucion y revision | OK; 4 pruebas, 37 aserciones |
-| `composer test -- --env=testing` | OK; 74 pruebas, 424 aserciones |
+| Regresion focalizada de distribucion y revision | OK; 4 pruebas, 55 aserciones |
+| `composer test -- --env=testing` | OK; 74 pruebas, 431 aserciones |
 | `vendor/bin/pint --test` | OK |
 | `php artisan academico:verificar-normalizacion --env=testing` | OK |
 | `git diff --check` | OK |
@@ -182,18 +182,18 @@ Vicerrectorado y los snapshots anteriores permanecen intactos al reenviar.
 
 ## Ajuste visual de la tabla de revision (2026-08-07)
 
-La tabla ahora usa un layout compacto de ancho fijo y muestra cuatro filas por
+La tabla ahora usa un layout compacto de ancho fijo y muestra diez filas por
 pagina. Las filas restantes no se eliminan del formulario: solo se ocultan
 visualmente, por lo que sus decisiones y observaciones se conservan al
 confirmar. La verificacion en navegador local comprobo que el documento queda
-con `scrollHeight` igual al alto visible de 720 px en las paginas 1, 2 y 3.
+con `scrollHeight` igual al alto visible de 720 px en las paginas 1 y 2.
 
 | Verificacion | Resultado |
 | --- | --- |
 | Tabla compacta sin desbordamiento vertical | OK; 720/720 px en navegador local |
-| Primera pagina | OK; filas 1-4 de 12 |
-| Siguiente pagina | OK; filas 5-8 de 12 |
-| Ultima y primera pagina | OK; filas 9-12 y regreso a 1-4 |
+| Primera pagina | OK; filas 1-10 de 12 |
+| Siguiente pagina | OK; filas 11-12 de 12 |
+| Ultima y primera pagina | OK; filas 11-12 y regreso a 1-10 |
 | Regresion automatizada de paginacion | OK; `PropuestaRevisionTest` |
 
 La verificación usó únicamente el dataset sintético `small` en la base de
