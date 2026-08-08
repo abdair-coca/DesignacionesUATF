@@ -3,15 +3,17 @@
 @section('title', 'Revisar versión')
 
 @section('content')
-    <div class="max-w-7xl mx-auto space-y-6">
-        <div>
-            <a href="{{ route('revisiones.pendientes') }}" class="text-sm text-[#007c7c] hover:underline">Volver a la bandeja</a>
-            <h1 class="text-xl font-bold text-gray-900 mt-2">{{ $version->propuesta->carrera->nombre }} · Revisión {{ $version->numero }}</h1>
-            <p class="text-sm text-gray-600 mt-1">Enviada por {{ $version->remitente->name }} el {{ $version->enviado_en?->format('d/m/Y H:i') }}.</p>
-            @if(filled($version->propuesta->descripcion))
-                <p class="text-sm text-gray-700 mt-2"><span class="font-semibold">Descripci&oacute;n:</span> {{ $version->propuesta->descripcion }}</p>
-            @endif
-            <button type="button" onclick="abrirModalImprimirRevision()" class="mt-3 px-3.5 py-2 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded text-xs cursor-pointer">Imprimir Reporte</button>
+    <div class="max-w-7xl mx-auto space-y-3">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <a href="{{ route('revisiones.pendientes') }}" class="text-sm text-[#007c7c] hover:underline">Volver a la bandeja</a>
+                <h1 class="text-xl font-bold text-gray-900 mt-1 truncate">{{ $version->propuesta->carrera->nombre }} · Revisión {{ $version->numero }}</h1>
+                <p class="text-sm text-gray-600 mt-1 truncate">Enviada por {{ $version->remitente->name }} el {{ $version->enviado_en?->format('d/m/Y H:i') }}.</p>
+                @if(filled($version->propuesta->descripcion))
+                    <p class="text-sm text-gray-700 mt-1 truncate"><span class="font-semibold">Descripci&oacute;n:</span> {{ $version->propuesta->descripcion }}</p>
+                @endif
+            </div>
+            <button type="button" onclick="abrirModalImprimirRevision()" class="shrink-0 px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded text-xs cursor-pointer">Imprimir Reporte</button>
         </div>
 
         @if($version->observaciones)
@@ -25,14 +27,14 @@
                 </div>
             @endif
 
-            <form id="revision-form" data-revision-form data-has-old-input="{{ old('decisiones') ? '1' : '0' }}" method="POST" action="{{ route('revisiones.decidir', $version) }}" class="space-y-5" onsubmit="return validarRevisionAntesDeEnviar(event)">
+            <form id="revision-form" data-revision-form data-has-old-input="{{ old('decisiones') ? '1' : '0' }}" method="POST" action="{{ route('revisiones.decidir', $version) }}" class="space-y-3" onsubmit="return validarRevisionAntesDeEnviar(event)">
                 @csrf
-                <section class="bg-white border border-gray-200 shadow-sm p-4 rounded-lg">
+                <section class="bg-white border border-gray-200 shadow-sm p-2.5 rounded-lg">
                     <label for="observacion_general" class="block text-sm font-semibold text-gray-900">Observación general</label>
-                    <textarea id="observacion_general" name="observacion_general" rows="3" maxlength="2000" class="w-full mt-2 border border-gray-300 p-2 text-sm" placeholder="Visible para el Director cuando la revisión sea observada.">{{ old('observacion_general') }}</textarea>
+                    <textarea id="observacion_general" name="observacion_general" rows="1" maxlength="2000" class="w-full mt-1 border border-gray-300 p-1.5 text-sm" placeholder="Visible para el Director cuando la revisión sea observada.">{{ old('observacion_general') }}</textarea>
                 </section>
 
-                <section class="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                <section data-revision-paginada class="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
                     <div class="bg-[#2d353c] text-white px-4 py-2.5 font-bold text-xs flex justify-between items-center">
                         <span>Snapshot de Designaciones Enviadas &bull; Versión {{ $version->numero }}</span>
                         <label class="flex items-center gap-2 bg-[#20252a] px-3 py-1 rounded text-white font-bold text-xs cursor-pointer hover:bg-black/30 transition-colors">
@@ -40,13 +42,18 @@
                             <span>Aprobar todas las filas</span>
                         </label>
                     </div>
-                    <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
+                    <div class="overflow-hidden">
+                    <table class="w-full table-fixed text-[11px] leading-tight">
+                        <colgroup>
+                            <col style="width: 13%"><col style="width: 14%"><col style="width: 5%">
+                            <col style="width: 6%"><col style="width: 6%"><col style="width: 7%"><col style="width: 7%">
+                            <col style="width: 14%"><col style="width: 12%"><col style="width: 16%">
+                        </colgroup>
+                        <thead class="bg-gray-50 text-left text-[10px] uppercase text-gray-600">
                             <tr>
-                                <th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th>
-                                <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th><th class="px-4 py-3">Justificación de remuneración</th>
-                                <th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación por fila</th>
+                                <th class="px-2 py-2 align-middle break-words">Docente</th><th class="px-2 py-2 align-middle break-words">Materia</th><th class="px-2 py-2 align-middle break-words">Grupo</th>
+                                <th class="px-2 py-2 align-middle break-words">Oficiales</th><th class="px-2 py-2 align-middle break-words">Pagadas</th><th class="px-2 py-2 align-middle break-words">No pagadas</th><th class="px-2 py-2 align-middle break-words">Adicionales</th><th class="px-2 py-2 align-middle break-words">Justificación de remuneración</th>
+                                <th class="px-2 py-2 align-middle break-words">Decisión</th><th class="px-2 py-2 align-middle break-words">Observación por fila</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -54,37 +61,46 @@
                                 @php($adicionales = max(0, $snapshot->horas_pagadas + $snapshot->horas_no_pagadas - $snapshot->materia_horas))
                                 @php($decisionAnterior = old("decisiones.{$indice}.decision", 'aprobada'))
                                 @php($observacionAnterior = old("decisiones.{$indice}.observacion"))
-                                <tr>
-                                    <td class="px-4 py-3">{{ $snapshot->docente_nombre }}</td>
-                                    <td class="px-4 py-3"><span class="font-semibold">{{ $snapshot->materia_sigla }}</span> {{ $snapshot->materia_nombre }}</td>
-                                    <td class="px-4 py-3">{{ $snapshot->grupo_codigo }}</td>
-                                    <td class="px-4 py-3 text-center">{{ $snapshot->materia_horas }} h</td>
-                                    <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
-                                    <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
-                                    <td class="px-4 py-3 text-center font-semibold {{ $adicionales ? 'text-rose-700' : 'text-gray-500' }}">{{ $adicionales }} h</td>
-                                    <td data-justificacion-remuneracion class="px-4 py-3 min-w-72 max-w-md whitespace-pre-line break-words">{{ filled($snapshot->observacion_remuneracion) ? $snapshot->observacion_remuneracion : '—' }}</td>
+                                <tr data-revision-row>
+                                    <td class="px-2 py-2 align-top break-words">{{ $snapshot->docente_nombre }}</td>
+                                    <td class="px-2 py-2 align-top break-words"><span class="font-semibold">{{ $snapshot->materia_sigla }}</span> {{ $snapshot->materia_nombre }}</td>
+                                    <td class="px-2 py-2 align-top text-center break-words">{{ $snapshot->grupo_codigo }}</td>
+                                    <td class="px-2 py-2 align-top text-center whitespace-nowrap">{{ $snapshot->materia_horas }} h</td>
+                                    <td class="px-2 py-2 align-top text-center text-emerald-700 whitespace-nowrap">{{ $snapshot->horas_pagadas }} h</td>
+                                    <td class="px-2 py-2 align-top text-center text-amber-700 whitespace-nowrap">{{ $snapshot->horas_no_pagadas }} h</td>
+                                    <td class="px-2 py-2 align-top text-center font-semibold whitespace-nowrap {{ $adicionales ? 'text-rose-700' : 'text-gray-500' }}">{{ $adicionales }} h</td>
+                                    <td data-justificacion-remuneracion class="px-2 py-2 align-top whitespace-pre-line break-words">{{ filled($snapshot->observacion_remuneracion) ? $snapshot->observacion_remuneracion : '—' }}</td>
                                     @if($snapshot->estado === 'aprobada_previamente')
-                                        <td colspan="2" class="px-4 py-3"><span class="bg-emerald-100 text-emerald-900 text-xs font-semibold px-2 py-1">Aprobada previamente</span></td>
+                                        <td colspan="2" class="px-2 py-2 align-top"><span class="bg-emerald-100 text-emerald-900 text-[10px] font-semibold px-1.5 py-1">Aprobada previamente</span></td>
                                     @else
-                                        <td class="px-4 py-3 min-w-40">
+                                        <td class="px-2 py-2 align-top">
                                             <input type="hidden" name="decisiones[{{ $indice }}][snapshot_id]" value="{{ $snapshot->id }}">
-                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-2 py-1.5 rounded" onchange="sincronizarObservacionFila(this, true)">
+                                            <select data-decision-fila name="decisiones[{{ $indice }}][decision]" class="w-full border border-gray-300 px-1.5 py-1 rounded text-[11px]" onchange="sincronizarObservacionFila(this, true)">
                                                 <option value="aprobada" @selected($decisionAnterior === 'aprobada')>Aprobar</option>
                                                 <option value="observada" @selected($decisionAnterior === 'observada')>Observar</option>
                                             </select>
                                         </td>
-                                        <td class="px-4 py-3 min-w-72"><input data-observacion-fila name="decisiones[{{ $indice }}][observacion]" maxlength="1000" value="{{ $observacionAnterior }}" @disabled($decisionAnterior !== 'observada') class="w-full border border-gray-300 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="Motivo si se observa"></td>
+                                        <td class="px-2 py-2 align-top"><input data-observacion-fila name="decisiones[{{ $indice }}][observacion]" maxlength="1000" value="{{ $observacionAnterior }}" @disabled($decisionAnterior !== 'observada') class="w-full border border-gray-300 px-1.5 py-1 disabled:bg-gray-100 disabled:text-gray-400 text-[11px]" placeholder="Motivo si se observa"></td>
                                     @endif
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                     </div>
+                    <div data-revision-pagination class="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50 px-3 py-2 text-[11px] text-gray-500">
+                        <span data-revision-page-status></span>
+                        <div class="flex items-center gap-1">
+                            <button type="button" data-revision-first class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Primera</button>
+                            <button type="button" data-revision-previous class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
+                            <button type="button" data-revision-next class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button>
+                            <button type="button" data-revision-last class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Última</button>
+                        </div>
+                    </div>
                 </section>
 
                 <div class="flex flex-wrap justify-end gap-3">
                     <input type="hidden" id="modo_revision" name="modo" value="decidir_filas">
-                    <button type="submit" class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-6 py-2.5 text-xs rounded shadow-md transition-colors cursor-pointer flex items-center gap-2">
+                    <button type="submit" class="bg-[#00acac] hover:bg-[#008a8a] text-white font-bold px-6 py-1.5 text-xs rounded shadow-md transition-colors cursor-pointer flex items-center gap-2">
                         <span>Confirmar Revisión</span>
                     </button>
                 </div>
@@ -124,33 +140,47 @@
                 </div>
             </div>
         @else
-            <section class="bg-white border border-gray-200 shadow-sm overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-left text-xs uppercase text-gray-600">
+            <section data-revision-paginada class="bg-white border border-gray-200 shadow-sm overflow-hidden">
+                <table class="w-full table-fixed text-[11px] leading-tight">
+                    <colgroup>
+                        <col style="width: 13%"><col style="width: 14%"><col style="width: 5%">
+                        <col style="width: 6%"><col style="width: 6%"><col style="width: 7%"><col style="width: 7%">
+                        <col style="width: 14%"><col style="width: 12%"><col style="width: 16%">
+                    </colgroup>
+                    <thead class="bg-gray-50 text-left text-[10px] uppercase text-gray-600">
                         <tr>
-                            <th class="px-4 py-3">Docente</th><th class="px-4 py-3">Materia</th><th class="px-4 py-3">Grupo</th>
-                            <th class="px-4 py-3">Oficiales</th><th class="px-4 py-3">Pagadas</th><th class="px-4 py-3">No pagadas</th><th class="px-4 py-3">Adicionales</th><th class="px-4 py-3">Justificación de remuneración</th>
-                            <th class="px-4 py-3">Decisión</th><th class="px-4 py-3">Observación</th>
+                            <th class="px-2 py-2 align-middle break-words">Docente</th><th class="px-2 py-2 align-middle break-words">Materia</th><th class="px-2 py-2 align-middle break-words">Grupo</th>
+                            <th class="px-2 py-2 align-middle break-words">Oficiales</th><th class="px-2 py-2 align-middle break-words">Pagadas</th><th class="px-2 py-2 align-middle break-words">No pagadas</th><th class="px-2 py-2 align-middle break-words">Adicionales</th><th class="px-2 py-2 align-middle break-words">Justificación de remuneración</th>
+                            <th class="px-2 py-2 align-middle break-words">Decisión</th><th class="px-2 py-2 align-middle break-words">Observación</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @foreach($version->designaciones as $snapshot)
                             @php($adicionales = max(0, $snapshot->horas_pagadas + $snapshot->horas_no_pagadas - $snapshot->materia_horas))
-                            <tr>
-                                <td class="px-4 py-3">{{ $snapshot->docente_nombre }}</td>
-                                <td class="px-4 py-3">{{ $snapshot->materia_sigla }} {{ $snapshot->materia_nombre }}</td>
-                                <td class="px-4 py-3">{{ $snapshot->grupo_codigo }}</td>
-                                <td class="px-4 py-3 text-center">{{ $snapshot->materia_horas }} h</td>
-                                <td class="px-4 py-3 text-center text-emerald-700">{{ $snapshot->horas_pagadas }} h</td>
-                                <td class="px-4 py-3 text-center text-amber-700">{{ $snapshot->horas_no_pagadas }} h</td>
-                                <td class="px-4 py-3 text-center">{{ $adicionales }} h</td>
-                                <td data-justificacion-remuneracion class="px-4 py-3 min-w-72 max-w-md whitespace-pre-line break-words">{{ filled($snapshot->observacion_remuneracion) ? $snapshot->observacion_remuneracion : '—' }}</td>
-                                <td class="px-4 py-3">{{ $snapshot->getRelation('decision')?->getAttribute('decision') ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td>
-                                <td class="px-4 py-3">{{ $snapshot->getRelation('decision')?->getAttribute('observacion') }}</td>
+                            <tr data-revision-row>
+                                <td class="px-2 py-2 align-top break-words">{{ $snapshot->docente_nombre }}</td>
+                                <td class="px-2 py-2 align-top break-words">{{ $snapshot->materia_sigla }} {{ $snapshot->materia_nombre }}</td>
+                                <td class="px-2 py-2 align-top text-center break-words">{{ $snapshot->grupo_codigo }}</td>
+                                <td class="px-2 py-2 align-top text-center whitespace-nowrap">{{ $snapshot->materia_horas }} h</td>
+                                <td class="px-2 py-2 align-top text-center text-emerald-700 whitespace-nowrap">{{ $snapshot->horas_pagadas }} h</td>
+                                <td class="px-2 py-2 align-top text-center text-amber-700 whitespace-nowrap">{{ $snapshot->horas_no_pagadas }} h</td>
+                                <td class="px-2 py-2 align-top text-center whitespace-nowrap">{{ $adicionales }} h</td>
+                                <td data-justificacion-remuneracion class="px-2 py-2 align-top whitespace-pre-line break-words">{{ filled($snapshot->observacion_remuneracion) ? $snapshot->observacion_remuneracion : '—' }}</td>
+                                <td class="px-2 py-2 align-top break-words">{{ $snapshot->getRelation('decision')?->getAttribute('decision') ?: ($snapshot->estado === 'aprobada_previamente' ? 'aprobada_previamente' : 'Sin decisión') }}</td>
+                                <td class="px-2 py-2 align-top break-words">{{ $snapshot->getRelation('decision')?->getAttribute('observacion') }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+                <div data-revision-pagination class="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50 px-3 py-2 text-[11px] text-gray-500">
+                    <span data-revision-page-status></span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" data-revision-first class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Primera</button>
+                        <button type="button" data-revision-previous class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
+                        <button type="button" data-revision-next class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button>
+                        <button type="button" data-revision-last class="rounded border border-gray-300 bg-white px-2 py-1 font-semibold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">Última</button>
+                    </div>
+                </div>
             </section>
         @endif
     </div>
@@ -221,7 +251,60 @@
         if (event.key === 'Escape') cerrarModalErrorRevision();
     });
 
+    function inicializarPaginacionRevision() {
+        document.querySelectorAll('[data-revision-paginada]').forEach((contenedor) => {
+            const filas = [...contenedor.querySelectorAll('[data-revision-row]')];
+            const paginacion = contenedor.querySelector('[data-revision-pagination]');
+            const estado = contenedor.querySelector('[data-revision-page-status]');
+            const primera = contenedor.querySelector('[data-revision-first]');
+            const anterior = contenedor.querySelector('[data-revision-previous]');
+            const siguiente = contenedor.querySelector('[data-revision-next]');
+            const ultima = contenedor.querySelector('[data-revision-last]');
+            const porPagina = 4;
+            const totalPaginas = Math.max(1, Math.ceil(filas.length / porPagina));
+            let paginaActual = 1;
+
+            if (!paginacion || !estado || !primera || !anterior || !siguiente || !ultima) return;
+
+            const actualizar = () => {
+                const inicio = (paginaActual - 1) * porPagina;
+                const fin = inicio + porPagina;
+
+                filas.forEach((fila, indice) => {
+                    fila.hidden = indice < inicio || indice >= fin;
+                });
+
+                estado.textContent = `Filas ${filas.length ? inicio + 1 : 0}-${Math.min(fin, filas.length)} de ${filas.length}`;
+                primera.disabled = paginaActual === 1;
+                anterior.disabled = paginaActual === 1;
+                siguiente.disabled = paginaActual === totalPaginas;
+                ultima.disabled = paginaActual === totalPaginas;
+                paginacion.hidden = totalPaginas === 1;
+            };
+
+            primera.addEventListener('click', () => {
+                paginaActual = 1;
+                actualizar();
+            });
+            anterior.addEventListener('click', () => {
+                paginaActual = Math.max(1, paginaActual - 1);
+                actualizar();
+            });
+            siguiente.addEventListener('click', () => {
+                paginaActual = Math.min(totalPaginas, paginaActual + 1);
+                actualizar();
+            });
+            ultima.addEventListener('click', () => {
+                paginaActual = totalPaginas;
+                actualizar();
+            });
+
+            actualizar();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        inicializarPaginacionRevision();
         const formulario = document.querySelector('[data-revision-form]');
 
         if (!formulario || formulario.dataset.hasOldInput !== '1') return;

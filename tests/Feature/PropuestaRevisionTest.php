@@ -86,6 +86,21 @@ class PropuestaRevisionTest extends TestCase
             ->assertSee('value="observada" selected', false);
     }
 
+    public function test_revision_pagina_filas_y_ajusta_tabla_a_la_pantalla(): void
+    {
+        [, $vicerrectorado, , $version] = $this->propuestaEnviada(5);
+
+        $response = $this->actingAs($vicerrectorado)
+            ->get("/revisiones/{$version->id}/revisar")
+            ->assertOk()
+            ->assertSee('data-revision-paginada', false)
+            ->assertSee('data-revision-pagination', false)
+            ->assertSee('data-revision-next', false)
+            ->assertSee('table-fixed', false);
+
+        $this->assertSame(5, substr_count($response->getContent(), '<tr data-revision-row'));
+    }
+
     public function test_decisiones_por_fila_observan_el_mismo_borrador_y_bloquean_las_aprobadas(): void
     {
         [$director, $vicerrectorado, $propuesta, $version, $filas] = $this->propuestaEnviada(2);

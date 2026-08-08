@@ -475,6 +475,12 @@ en la revision pendiente como en la revision historica; por ello una version
 reenviada puede mostrar una justificacion corregida sin modificar la
 justificacion de la version anterior.
 
+Para evitar el desplazamiento vertical de la pantalla, la tabla se presenta
+en formato compacto, ajustada al ancho disponible, y pagina las filas en
+bloques de cuatro. Cambiar de pagina solo oculta filas visualmente; todas las
+filas y sus controles permanecen en el formulario para conservar las
+decisiones al confirmar la revision.
+
 El checkbox global `Aprobar todas las filas` cambia visualmente las decisiones
 de las filas editables. La decision final se aplica unicamente al confirmar
 la revision.
