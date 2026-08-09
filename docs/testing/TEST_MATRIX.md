@@ -62,6 +62,9 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | ENV-009 | Integración | No ejecutar migraciones/seeders sobre base institucional | P0 | Reglas de seguridad y guardias existentes | CUBIERTA |
 | ENV-010 | Integración | Funciones institucionales requieren contrato antes de consumo | P0 | `PREPARACION_DESPLIEGUE.md` | PENDIENTE |
 | ENV-011 | Integración | CodeGraph responde estado del índice | P2 | BUG-005 | BLOQUEADA |
+| DOC-002 | Capacitación | Guía permite localizar ruta, controlador y servicio | P1 | `GUIA_APRENDIZAJE.md` | CUBIERTA |
+| DOC-003 | Capacitación | Guía explica flujo, estados, permisos y modelo de datos | P1 | `GUIA_APRENDIZAJE.md` | CUBIERTA |
+| DOC-004 | Capacitación | Ejercicios se pueden ejecutar solo en local/testing | P1 | `GUIA_APRENDIZAJE.md` | PREPARADA |
 
 ## Correcciones funcionales recientes
 

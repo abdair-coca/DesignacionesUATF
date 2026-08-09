@@ -39,6 +39,17 @@ seguirá separada y las funciones se integrarán primero como lecturas simuladas
 
 No se ejecutó ninguna migración o seeder contra una base institucional.
 
+## Fase 2 de preparación: guía de arquitectura y capacitación
+
+**Estado: COMPLETA.**
+
+Se creó [GUIA_APRENDIZAJE.md](../GUIA_APRENDIZAJE.md) con el mapa de capas,
+rutas, recorrido completo, modelo de datos, estados, configuración, diagnóstico
+y ejercicios autónomos. La guía distingue el código actual de la futura
+integración institucional y no introduce funciones PostgreSQL no documentadas.
+El reporte de la fase está en
+[PHASE_DEPLOY_2_REPORT.md](PHASES_REPORTS/PHASE_DEPLOY_2_REPORT.md).
+
 ## Fase 0
 
 Estado: **COMPLETA**
