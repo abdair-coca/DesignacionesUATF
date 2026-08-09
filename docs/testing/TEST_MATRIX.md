@@ -57,6 +57,11 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | --- | --- | --- | --- | --- | --- |
 | ENV-005 | Entorno | Reinicio normal de PostgreSQL conserva el dataset | P0 | `pg_ctl stop/start`, 5 usuarios conservados | CUBIERTA |
 | ENV-006 | Entorno | Fase 0 destructiva se distingue del inicio normal | P0 | `TestingPhase0` ejecuta `migrate:fresh` | DOCUMENTADA |
+| ENV-007 | Despliegue | Separar local, testing, staging, producción e institucional | P0 | `PREPARACION_DESPLIEGUE.md` | CUBIERTA |
+| ENV-008 | Despliegue | No configurar la función institucional como conexión principal | P0 | Inventario de entornos | CUBIERTA |
+| ENV-009 | Integración | No ejecutar migraciones/seeders sobre base institucional | P0 | Reglas de seguridad y guardias existentes | CUBIERTA |
+| ENV-010 | Integración | Funciones institucionales requieren contrato antes de consumo | P0 | `PREPARACION_DESPLIEGUE.md` | PENDIENTE |
+| ENV-011 | Integración | CodeGraph responde estado del índice | P2 | BUG-005 | BLOQUEADA |
 
 ## Correcciones funcionales recientes
 

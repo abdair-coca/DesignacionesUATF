@@ -18,6 +18,27 @@
 
 Fecha de actualización: 2026-08-06
 
+## Preparación de despliegue e integración institucional
+
+**Fase 1 completa; Fase 2 pendiente.**
+
+Se documentó la separación entre local, testing, staging, producción y la
+fuente institucional de funciones en [PREPARACION_DESPLIEGUE.md](../PREPARACION_DESPLIEGUE.md).
+No existe aún una conexión institucional configurada. La base de la aplicación
+seguirá separada y las funciones se integrarán primero como lecturas simuladas.
+
+| Verificación | Resultado |
+| --- | --- |
+| PHP local | 8.5.4; compatible con `^8.3` |
+| PostgreSQL local | 18.3 |
+| Extensiones Composer sin desarrollo | OK |
+| Testing PostgreSQL | Separado en `127.0.0.1:55432` |
+| Conexión institucional | No configurada; correcto para esta fase |
+| Cambios sin commit | 3 archivos conservados y clasificados |
+| CodeGraph | Bloqueado por SQLite; BUG-005 abierto |
+
+No se ejecutó ninguna migración o seeder contra una base institucional.
+
 ## Fase 0
 
 Estado: **COMPLETA**
