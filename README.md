@@ -82,6 +82,7 @@ php artisan academico:verificar-normalizacion
 - [Modelo de datos](docs/ERD.md)
 - [Guia de aprendizaje](docs/GUIA_APRENDIZAJE.md)
 - [Preparacion para despliegue](docs/PREPARACION_DESPLIEGUE.md)
+- [Guia de despliegue](docs/GUIA_DESPLIEGUE.md)
 - [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md)
 - [Boceto interactivo](docs/BOCETO_INTERACTIVO.md)
 - [Logica de negocio y flujo completo del boceto](docs/LOGICA_NEGOCIO_Y_FLUJO_BOCETO.md)

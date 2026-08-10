@@ -1,0 +1,47 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ApplicationHealthTest extends TestCase
+{
+    public function test_health_endpoint_is_public_and_reports_application_status(): void
+    {
+        $this->getJson('/health')
+            ->assertOk()
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonPath('checks.database.status', 'ok')
+            ->assertJsonPath('checks.institutional.status', 'not_configured');
+    }
+
+    public function test_health_command_reports_success_without_exposing_secrets(): void
+    {
+        $this->artisan('app:health')
+            ->expectsOutputToContain('Estado: ok')
+            ->expectsOutputToContain('database: ok')
+            ->expectsOutputToContain('institutional: not_configured')
+            ->assertExitCode(0);
+    }
+
+    public function test_health_command_returns_failure_when_app_key_is_missing(): void
+    {
+        config(['app.key' => null]);
+
+        $this->artisan('app:health')
+            ->expectsOutputToContain('Estado: degraded')
+            ->expectsOutputToContain('app_key: failed')
+            ->assertExitCode(1);
+    }
+
+    public function test_institutional_health_check_cannot_be_enabled_before_the_adapter_exists(): void
+    {
+        config(['deployment.institutional.enabled' => true]);
+
+        $this->getJson('/health')
+            ->assertServiceUnavailable()
+            ->assertJsonPath('status', 'degraded')
+            ->assertJsonPath('checks.institutional.status', 'blocked')
+            ->assertJsonPath('checks.institutional.required', true);
+    }
+}

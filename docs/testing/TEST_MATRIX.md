@@ -65,6 +65,10 @@ Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` sig
 | DOC-002 | Capacitación | Guía permite localizar ruta, controlador y servicio | P1 | `GUIA_APRENDIZAJE.md` | CUBIERTA |
 | DOC-003 | Capacitación | Guía explica flujo, estados, permisos y modelo de datos | P1 | `GUIA_APRENDIZAJE.md` | CUBIERTA |
 | DOC-004 | Capacitación | Ejercicios se pueden ejecutar solo en local/testing | P1 | `GUIA_APRENDIZAJE.md` | PREPARADA |
+| DEP-001 | Despliegue | Health check CLI y HTTP no requieren autenticación | P0 | `ApplicationHealthTest` | CUBIERTA |
+| DEP-002 | Despliegue | Health check falla si falta APP_KEY | P0 | `ApplicationHealthTest` | CUBIERTA |
+| DEP-003 | Despliegue | Integración institucional prematura bloquea health check | P0 | `ApplicationHealthTest` | CUBIERTA |
+| DEP-004 | Despliegue | Runbook documenta backup, restore y rollback | P0 | `GUIA_DESPLIEGUE.md` | PREPARADA |
 
 ## Correcciones funcionales recientes
 

@@ -50,6 +50,19 @@ integración institucional y no introduce funciones PostgreSQL no documentadas.
 El reporte de la fase está en
 [PHASE_DEPLOY_2_REPORT.md](PHASES_REPORTS/PHASE_DEPLOY_2_REPORT.md).
 
+## Fase 3 de preparación: despliegue reproducible
+
+**Estado: COMPLETA.**
+
+Se creó [GUIA_DESPLIEGUE.md](../GUIA_DESPLIEGUE.md) con instalación,
+actualización, permisos, HTTPS, workers, logs, backups, restauración y
+rollback. Se agregó `GET /health` y `php artisan app:health`; ambos verifican
+la aplicación, base propia, cache y filesystem sin exponer secretos. La
+integración institucional queda bloqueada hasta la Fase 4.
+
+El reporte de la fase esta en
+[PHASE_DEPLOY_3_REPORT.md](PHASES_REPORTS/PHASE_DEPLOY_3_REPORT.md).
+
 ## Fase 0
 
 Estado: **COMPLETA**

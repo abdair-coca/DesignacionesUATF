@@ -111,9 +111,10 @@ incluyen claves estables.
 
 ## Fases siguientes
 
-- **Fase 2**: guia de arquitectura y capacitacion practica.
+- **Fase 2**: guia de arquitectura y capacitacion practica. Completada en
+  `docs/GUIA_APRENDIZAJE.md`.
 - **Fase 3**: instalacion reproducible, HTTPS, permisos, respaldos y health
-  checks.
+  checks. Completada en `docs/GUIA_DESPLIEGUE.md` y con `app:health`.
 - **Fase 4**: contrato y adaptador de funciones en entorno simulado.
 - **Fase 5**: proyeccion local e importacion idempotente de lectura.
 - **Fase 6**: funciones institucionales de escritura, una capacidad por vez.

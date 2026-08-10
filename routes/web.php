@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PropuestaController;
 use App\Http\Controllers\RevisionPropuestaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::get('health', HealthController::class)->name('health');
 
 Route::middleware('auth')->group(function () {
     Route::get('/', function (Request $request) {
