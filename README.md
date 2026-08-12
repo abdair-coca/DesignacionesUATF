@@ -38,7 +38,7 @@ Configure la conexion PostgreSQL en `.env` antes de ejecutar las migraciones.
 ## Pruebas
 
 Para levantar el servidor con PostgreSQL de testing y conservar los datos,
-seguir [la guia de testing](docs/testing/LEVANTAR_SERVIDOR_TESTING.md). No usar
+seguir [la guia de testing](docs/TESTING.md). No usar
 `composer test:phase0` como inicio normal: ese comando valida Fase 0 y reinicia
 la base de datos de testing.
 
@@ -77,18 +77,17 @@ php artisan test
 php artisan academico:verificar-normalizacion
 ```
 
-## Documentacion
+## Documentacion vigente
 
-- [Modelo de datos](docs/ERD.md)
-- [Guia de aprendizaje](docs/GUIA_APRENDIZAJE.md)
-- [Preparacion para despliegue](docs/PREPARACION_DESPLIEGUE.md)
-- [Guia de despliegue](docs/GUIA_DESPLIEGUE.md)
-- [Estado del flujo de Designaciones](docs/ESTADO_FLUJO_DESIGNACIONES.md)
-- [Boceto interactivo](docs/BOCETO_INTERACTIVO.md)
-- [Logica de negocio y flujo completo del boceto](docs/LOGICA_NEGOCIO_Y_FLUJO_BOCETO.md)
-- [Grafo de conocimiento](docs/GRAFO_CONOCIMIENTO.md)
-- [Plan frontend](docs/PLAN_FRONTEND.md)
-- [Higiene del repositorio](docs/HIGIENE_REPOSITORIO.md)
+- [Arquitectura y límites](docs/ARCHITECTURE.md)
+- [Reglas de negocio verificadas](docs/BUSINESS_RULES.md)
+- [Operación segura](docs/OPERATIONS.md)
+- [Pruebas y trazabilidad](docs/TESTING.md)
+- [Integración de Jachasun](docs/INTEGRATION_JACHASUN.md)
+- [Higiene y organización del repositorio](docs/HIGIENE_REPOSITORIO.md)
+
+Los documentos anteriores se conservan en [docs/archive](docs/archive/); no
+son fuente normativa vigente.
 
 ## Licencia
 

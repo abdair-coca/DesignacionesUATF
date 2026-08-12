@@ -3,14 +3,22 @@
 @section('title', 'Lista de Designaciones — UATF')
 
 @section('content')
+@if($institutionalError ?? null)
+    <div class="bg-rose-50 border border-rose-300 text-rose-900 p-5 rounded-xs" role="alert">
+        <p class="font-bold">No se puede cargar la lista institucional.</p>
+        <p class="mt-1">{{ $institutionalError }}</p>
+    </div>
+@else
 @php
-    $carreraActual = $carreraActual ?? $carreras->firstWhere('id', Auth::user()?->carrera_id) ?? $carreras->first();
-    $gestionActual = $gestionActual ?? $gestiones->firstWhere('nombre', date('Y')) ?? $gestiones->last();
-    $anoActual = (string) ($gestionActual?->nombre ?? date('Y'));
-    $gestionActualId = $gestionActual?->id ?? 1;
+    $carreraActual = $carreraActual ?? Auth::user()?->carrera;
+    $institutionalSource = $institutionalSource ?? true;
+    $gestiones = $gestiones ?? collect();
+    $periodos = $periodos ?? collect();
+    $anoActual = $anoActual ?? date('Y');
+    $gestionActualId = $gestionActualId ?? 1;
 @endphp
 
-<div x-data="listaDesignacionesApp({{ json_encode($carreraActual) }}, {{ json_encode($gestiones) }}, {{ json_encode($periodos) }}, {{ json_encode($propuestasData ?? []) }})"
+<div x-data="listaDesignacionesApp({{ json_encode($carreraActual) }}, {{ json_encode($gestiones) }}, {{ json_encode($periodos) }}, {{ json_encode($propuestasData ?? []) }}, {{ $institutionalSource ? 'true' : 'false' }})"
      class="space-y-4 text-xs text-gray-800">
 
     <!-- BARRA SUPERIOR DE ACCIONES -->
@@ -24,13 +32,13 @@
             </div>
             <div class="flex flex-wrap items-center gap-3 mt-1">
                 <p class="text-[11px] text-gray-500">
-                    Propuestas docentes correspondientes a todas las gestiones.
+                    Designaciones de Jachasun correspondientes a todas las gestiones.
                 </p>
             </div>
         </div>
 
         <!-- Botón + Nueva Propuesta de Designación -->
-        <button @click="abrirModalNuevaPropuesta()"
+        <button @if($institutionalSource) disabled @else @click="abrirModalNuevaPropuesta()" @endif
                 class="px-3.5 py-2 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
@@ -56,9 +64,11 @@
                 <thead class="bg-white text-gray-900 font-bold border-b border-gray-200 text-xs">
                     <tr>
                         <th class="py-3 px-4 text-center w-12 border-r border-gray-200/80">#</th>
+                        <th class="py-3 px-4 text-center w-24 border-r border-gray-200/80">Fecha</th>
                         <th class="py-3 px-5 border-r border-gray-200/80">Descripción</th>
                         <th class="py-3 px-4 text-center w-24 border-r border-gray-200/80">Gestión</th>
                         <th class="py-3 px-4 text-center w-24 border-r border-gray-200/80">Periodo</th>
+                        <th class="py-3 px-4 text-center w-48 border-r border-gray-200/80">Observacion</th>
                         <th class="py-3 px-4 text-center w-48 border-r border-gray-200/80">Estado</th>
                         <th class="py-3 px-4 text-center w-64">Acciones</th>
                     </tr>
@@ -66,52 +76,60 @@
                 <tbody class="divide-y divide-gray-200 text-gray-700 font-medium">
                     <template x-if="propuestasOrdenadas.length === 0">
                         <tr>
-                            <td colspan="6" class="py-8 px-4 text-center text-gray-500 italic">
+                            <td colspan="8" class="py-8 px-4 text-center text-gray-500 italic">
                                 No existen propuestas de designación registradas.
                             </td>
                         </tr>
                     </template>
 
                     <template x-for="(item, index) in propuestasPaginadas" :key="item.id">
-                        <tr @dblclick="abrirModalObservaciones(item)"
+                        <tr @dblclick="!institutionalSource && abrirModalObservaciones(item)"
                             title="Haga doble clic para consultar observaciones del Vicerrectorado"
                             class="transition-colors cursor-pointer select-none"
                             :class="index % 2 === 0 ? 'bg-[#f2f4f8]' : 'bg-white hover:bg-gray-100/70'">
 
                             <!-- 1. # (Nro correlativo cronológico) -->
-                            <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                            <td class="py-3.5 px-4 text-center font-bold text-gray-500 border-r border-gray-200/60" x-text="institutionalSource ? item.id : (((currentPage - 1) * perPage) + index + 1)"></td>
+                            <td class="py-3.5 px-4 text-center border-r border-gray-200/60 text-gray-700" x-text="item.fecha || '-'"> </td>
 
                             <!-- 2. Descripción -->
                             <td class="py-3.5 px-5 border-r border-gray-200/60">
                                 <span class="font-bold text-gray-900 text-xs block" x-text="item.descripcion"></span>
                                 <span class="text-[11px] text-gray-500 font-normal">Carrera de {{ $carreraActual->nombre }}</span>
-                                <span class="text-[11px] text-gray-500 font-normal block" x-text="(item.designaciones_count || 0) + ' designaciones registradas'"></span>
+                                <template x-if="!institutionalSource">
+                                    <span class="text-[11px] text-gray-500 font-normal block" x-text="(item.designaciones_count || 0) + ' designaciones registradas'"></span>
+                                </template>
                             </td>
 
                             <!-- 3. Gestión -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60 font-bold text-gray-800 tabular-nums" x-text="item.gestion"></td>
 
                             <!-- 4. Periodo -->
-                            <td class="py-3.5 px-4 text-center border-r border-gray-200/60 font-semibold text-gray-700" x-text="'Periodo ' + item.periodo"></td>
+                            <td class="py-3.5 px-4 text-center border-r border-gray-200/60 font-semibold text-gray-700" x-text="item.periodo"></td>
+
+                            <td class="py-3.5 px-4 text-center border-r border-gray-200/60 text-gray-700" x-text="item.observacion || '-'"> </td>
 
                             <!-- 5. Estado -->
                             <td class="py-3.5 px-4 text-center border-r border-gray-200/60">
-                                <template x-if="item.estado === 'propuesta'">
+                                <template x-if="institutionalSource">
+                                    <span class="bg-emerald-100 text-emerald-800 text-[11px] font-semibold px-2.5 py-1 rounded-xs inline-block text-center" x-text="item.estado_label"></span>
+                                </template>
+                                <template x-if="!institutionalSource && item.estado === 'propuesta'">
                                     <span class="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2.5 py-1 rounded-xs inline-block text-center">
                                         Borrador / Propuesta
                                     </span>
                                 </template>
-                                <template x-if="item.estado === 'enviado'">
+                                <template x-if="!institutionalSource && item.estado === 'enviado'">
                                     <span class="bg-cyan-100 text-cyan-800 text-[11px] font-semibold px-2.5 py-1 rounded-xs inline-block text-center">
                                         Enviado a Vicerrectorado
                                     </span>
                                 </template>
-                                <template x-if="item.estado === 'con_observaciones'">
+                                <template x-if="!institutionalSource && item.estado === 'con_observaciones'">
                                     <span class="bg-rose-100 text-rose-800 text-[11px] font-semibold px-2.5 py-1 rounded-xs inline-block text-center">
                                         Con Observaciones
                                     </span>
                                 </template>
-                                <template x-if="item.estado === 'oficial'">
+                                <template x-if="!institutionalSource && item.estado === 'oficial'">
                                     <span class="bg-emerald-100 text-emerald-800 text-[11px] font-semibold px-2.5 py-1 rounded-xs inline-block text-center">
                                         Oficial
                                     </span>
@@ -121,9 +139,29 @@
                             <!-- 6. Acciones (SI ESTÁ APROBADA/OFICIAL: SOLO IMPRIMIR) -->
                             <td class="py-3.5 px-4 text-center" @click.stop>
                                 <div class="flex items-center justify-center gap-1.5">
+                                    <template x-if="institutionalSource">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button type="button" disabled title="Disponible cuando se habilite la integracion de acciones institucionales"
+                                                    class="px-3 py-1.5 bg-[#348fe2] text-white/70 font-bold rounded-xs text-xs shadow-2xs cursor-not-allowed opacity-60">
+                                                Abrir
+                                            </button>
+                                            <button type="button" disabled title="Disponible cuando se habilite la integracion de acciones institucionales"
+                                                    class="px-2.5 py-1.5 bg-gray-700 text-white/70 font-bold rounded-xs text-xs shadow-2xs cursor-not-allowed opacity-60">
+                                                Imprimir
+                                            </button>
+                                            <button type="button" disabled title="Disponible cuando se habilite la integracion de acciones institucionales"
+                                                    class="px-2.5 py-1.5 bg-[#00acac] text-white/70 font-bold rounded-xs text-xs shadow-2xs cursor-not-allowed opacity-60">
+                                                Enviar
+                                            </button>
+                                            <button type="button" disabled title="Disponible cuando se habilite la integracion de acciones institucionales"
+                                                    class="px-2.5 py-1.5 bg-white border border-gray-300 text-amber-700/60 font-bold rounded-xs text-xs shadow-2xs cursor-not-allowed opacity-60">
+                                                Retirar
+                                            </button>
+                                        </div>
+                                    </template>
 
                                     <!-- Botón Editar (Solo si NO está oficial/aprobada) -->
-                                    <template x-if="item.estado !== 'oficial'">
+                                    <template x-if="!institutionalSource && item.estado !== 'oficial'">
                                         <a :href="'/designaciones/' + item.id"
                                            title="Abrir asignación docente"
                                            class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors">
@@ -131,7 +169,7 @@
                                         </a>
                                     </template>
 
-                                    <template x-if="item.estado === 'oficial'">
+                                    <template x-if="!institutionalSource && item.estado === 'oficial'">
                                         <a :href="'/designaciones/' + item.id"
                                            title="Ver detalle de la asignación"
                                            class="px-3 py-1.5 bg-[#348fe2] hover:bg-[#2a72b5] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors">
@@ -141,13 +179,13 @@
 
                                     <!-- Botón Imprimir -->
                                     <!-- Botón Enviar / Retirar Envío Alternante -->
-                                    <button @click="abrirModalImprimir(item.descripcion)"
+                                    <button x-show="!institutionalSource" @click="abrirModalImprimir(item.descripcion)"
                                             title="Imprimir propuesta"
                                             class="px-2.5 py-1.5 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
                                         Imprimir
                                     </button>
 
-                                    <template x-if="item.estado === 'propuesta' || item.estado === 'con_observaciones'">
+                                    <template x-if="!institutionalSource && (item.estado === 'propuesta' || item.estado === 'con_observaciones')">
                                         <button @click="solicitarRevisionEspecifica(item)"
                                                 title="Enviar esta propuesta al Vicerrectorado"
                                                 class="px-2.5 py-1.5 bg-[#00acac] hover:bg-[#008a8a] text-white font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
@@ -155,7 +193,7 @@
                                         </button>
                                     </template>
 
-                                    <template x-if="item.estado === 'enviado' || item.estado === 'pendiente'">
+                                    <template x-if="!institutionalSource && (item.estado === 'enviado' || item.estado === 'pendiente')">
                                         <button @click="retirarEnvio(item)"
                                                 title="Cancelar el envío a Vicerrectorado"
                                                 class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-amber-700 font-bold rounded-xs text-xs shadow-2xs transition-colors cursor-pointer">
@@ -463,7 +501,7 @@
 
 @push('scripts')
 <script>
-    function listaDesignacionesApp(carrera, gestiones, periodos, propuestasBackend) {
+    function listaDesignacionesApp(carrera, gestiones, periodos, propuestasBackend, institutionalSource = false) {
         const anoActual = '{{ $anoActual }}';
         const propuestasIniciales = propuestasBackend || [];
 
@@ -471,6 +509,7 @@
             carrera: carrera,
             gestiones: gestiones,
             periodos: periodos,
+            institutionalSource: institutionalSource,
             modalNuevaOpen: false,
             modalObservacionesOpen: false,
             modalImprimirOpen: false,
@@ -713,4 +752,5 @@
     }
 </script>
 @endpush
+@endif
 @endsection

@@ -92,8 +92,8 @@ class ApplicationHealth
      */
     private function checkInstitutionalConfiguration(): array
     {
-        // La consulta institucional se implementara en la Fase 4 mediante funciones permitidas.
-        $enabled = (bool) config('deployment.institutional.enabled');
+        // La integracion institucional tiene su propia configuracion y conexion secundaria.
+        $enabled = (bool) config('institutional.enabled');
 
         return [
             'status' => $enabled ? 'blocked' : 'not_configured',

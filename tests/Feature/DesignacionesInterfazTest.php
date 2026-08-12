@@ -10,6 +10,9 @@ use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\User;
+use App\Services\Institutional\InstitutionalDesignacionesService;
+use Illuminate\Support\Collection;
+use Mockery;
 use Tests\TestCase;
 
 class DesignacionesInterfazTest extends TestCase
@@ -77,6 +80,7 @@ class DesignacionesInterfazTest extends TestCase
     public function test_lista_y_editor_muestran_impresion_y_navegacion(): void
     {
         [$director, $propuesta] = $this->propuestaBorrador();
+        $this->mockInstitutionalList();
 
         $this->actingAs($director)
             ->get('/designaciones')
@@ -93,7 +97,7 @@ class DesignacionesInterfazTest extends TestCase
             ->assertSee('aria-label="Página anterior"', false);
     }
 
-    public function test_lista_muestra_abrir_y_detalle_solo_para_propuestas_oficiales(): void
+    public function test_lista_institucional_muestra_acciones_deshabilitadas(): void
     {
         [$director, $propuesta] = $this->propuestaBorrador();
         Propuesta::create([
@@ -104,15 +108,27 @@ class DesignacionesInterfazTest extends TestCase
             'estado' => 'oficial',
             'descripcion' => 'Propuesta aprobada',
         ]);
+        $this->mockInstitutionalList(new Collection([[
+            'id' => 1,
+            'programa_codigo' => 'INF',
+            'programa_nombre' => 'INGENIERIA INFORMATICA',
+            'detalle' => 'REGISTRO',
+            'fecha' => null,
+            'gestion' => '2024',
+            'periodo' => '1',
+            'observacion' => null,
+            'estado' => 'SOLICITADO',
+        ]]));
 
         $this->actingAs($director)
             ->get('/designaciones')
             ->assertOk()
             ->assertSee('title="Abrir asignación docente"', false)
             ->assertSee('Abrir', false)
-            ->assertSee('x-if="item.estado === \'oficial\'"', false)
+            ->assertSee('institutionalSource', false)
             ->assertSee('title="Ver detalle de la asignación"', false)
             ->assertSee('Ver detalle', false)
+            ->assertSee('disabled', false)
             ->assertDontSee('title="Editar asignación docente"', false);
     }
 
@@ -128,14 +144,13 @@ class DesignacionesInterfazTest extends TestCase
             'estado' => 'borrador',
             'descripcion' => 'Propuesta de gestion anterior',
         ]);
+        $this->mockInstitutionalList();
 
         $this->actingAs($director)
             ->get('/designaciones?gestion_id='.$propuestaActual->gestion_id)
             ->assertOk()
-            ->assertSee($propuestaActual->descripcion, false)
-            ->assertSee($propuestaAnterior->descripcion, false)
-            ->assertDontSee('Filtrar', false)
-            ->assertDontSee("gestion_id='+this.value", false)
+            ->assertSee('Fecha', false)
+            ->assertSee('Observacion', false)
             ->assertSee('perPage: 10', false)
             ->assertSee('propuestasPaginadas', false)
             ->assertSee('@click="currentPage++"', false)
@@ -152,6 +167,16 @@ class DesignacionesInterfazTest extends TestCase
             ->assertOk()
             ->assertSee('Esta designación ya ha sido aprobada.', false)
             ->assertDontSee('El borrador esta bloqueado mientras una version este pendiente de revision.', false);
+    }
+
+    private function mockInstitutionalList(?Collection $items = null): void
+    {
+        config(['institutional.enabled' => true]);
+        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service->shouldReceive('listar')
+            ->once()
+            ->andReturn($items ?? new Collection);
+        $this->app->instance(InstitutionalDesignacionesService::class, $service);
     }
 
     private function propuestaBorrador(): array

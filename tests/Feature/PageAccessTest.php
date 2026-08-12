@@ -4,10 +4,22 @@ namespace Tests\Feature;
 
 use App\Models\Carrera;
 use App\Models\User;
+use App\Services\Institutional\InstitutionalDesignacionesService;
+use Illuminate\Support\Collection;
+use Mockery;
 use Tests\TestCase;
 
 class PageAccessTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['institutional.enabled' => true]);
+        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service->shouldReceive('listar')->zeroOrMoreTimes()->andReturn(new Collection);
+        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+    }
+
     public function test_raiz_y_login_dirigen_a_designaciones_para_director(): void
     {
         $director = User::factory()->director(Carrera::factory()->create())->create(['password' => bcrypt('secret')]);

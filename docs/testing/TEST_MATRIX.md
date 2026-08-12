@@ -1,113 +1,50 @@
-# Matriz de pruebas
+# Matriz de pruebas vigente
 
-Fase 2 solo cartografía casos. No se implementaron casos nuevos. `CUBIERTA` significa evidencia en suite existente; `PENDIENTE` significa candidato; `NEEDS_BUSINESS_CONFIRMATION` requiere decisión antes de fijar expectativa.
+La matriz protege el comportamiento existente. `CUBIERTA` significa que hay
+prueba o evidencia vigente; `PENDIENTE` es trabajo futuro; `NEEDS_BUSINESS_CONFIRMATION`
+requiere una decisión antes de fijar una expectativa.
 
-| ID | Módulo | Caso | Prioridad | Tipo | Evidencia actual | Estado |
-| --- | --- | --- | --- | --- | --- | --- |
-| ENV-001 | Entorno | Rechazar producción | P0 | Seguridad | `TestingPhase0` | CUBIERTA |
-| ENV-002 | Entorno | Recrear base desde cero | P0 | Integración | `TestingPhase0` | CUBIERTA |
-| ENV-003 | Entorno | Rollback completo | P0 | Integración | `TestingPhase0` | CUBIERTA |
-| ENV-004 | Entorno | No enviar correo/broadcast real | P0 | Integración | `TestingPhase0` | CUBIERTA |
-| STATIC-001 | Dependencias | Validar Composer y auditoría | P1 | Estática | Fase 1 | CUBIERTA |
-| STATIC-002 | Rutas | Detectar duplicados | P1 | Estática | `route:list --json` | CUBIERTA |
-| STATIC-003 | Suite | Ejecutar backend | P0 | Salud | `composer test` | CUBIERTA |
-| STATIC-004 | Frontend | Detectar pipeline | P1 | Estática | Sin `package.json` | CUBIERTA |
-| STATIC-005 | Análisis | Verificar PHPStan/Pest | P1 | Estática | No configurados | CUBIERTA |
-| AUTH-001 | Autenticación | Usuario no autenticado accede a ruta protegida | P0 | Feature | `PageAccessTest` | CUBIERTA |
-| AUTH-002 | Autorización | Director no accede a propuesta/carrera ajena | P0 | Seguridad | `PropuestaVersionadaTest`, `RoleAuthorizationTest` | CUBIERTA |
-| AUTH-003 | Autorización | Usuario incorrecto no decide/retira | P0 | Seguridad | Policies + tests existentes | CUBIERTA |
-| AUTH-004 | Login | Rate limit y redirección por rol | P0 | Seguridad | `AuthenticatedSessionTest` | CUBIERTA |
-| DES-001 | Propuestas | Crear borrador válido | P0 | Feature | `PropuestaVersionadaTest` | CUBIERTA |
-| DES-002 | Propuestas | Enviar incompleta | P0 | Regla | `PropuestaDistribucionTest`, `DesignacionesAceptacionTest` | CUBIERTA |
-| DES-003 | Propuestas | Impedir modificar versión pendiente | P0 | Regla | `PropuestaVersionadaTest` | CUBIERTA |
-| DES-004 | Propuestas | Completar todos grupos habilitados | P0 | Regla | `PropuestaDistribucionTest` | CUBIERTA |
-| DES-005 | Propuestas | Dos propuestas mismo contexto | P0 | Integridad | `PropuestaVersionadaTest` | CUBIERTA |
-| DES-006 | Propuestas | Concurrencia de envío/edición | P0 | Concurrencia | Candidato | PENDIENTE |
-| REV-001 | Revisión | Aprobar todas filas | P0 | Feature | `PropuestaRevisionTest` | CUBIERTA |
-| REV-002 | Revisión | Observar fila con motivo | P0 | Feature | `PropuestaRevisionTest` | CUBIERTA |
-| REV-003 | Revisión | Mezcla aprobar/observar | P0 | Regresión | `DesignacionesAceptacionTest` | CUBIERTA |
-| REV-004 | Revisión | Decisión duplicada o snapshot ajeno | P0 | Integridad | Candidato | PENDIENTE |
-| REV-005 | Revisión | Decisión incompleta | P0 | Regla | `PropuestaRevisionTest` | CUBIERTA |
-| REV-006 | Revisión | Vicerrectorado global versus alcance restringido | P0 | Seguridad | Regla no confirmada | NEEDS_BUSINESS_CONFIRMATION |
-| NOT-001 | Notificaciones | Reintento no duplica notificación | P0 | Idempotencia | `NotificacionPropuestaTest` | CUBIERTA |
-| NOT-002 | Notificaciones | Marcar todas leídas | P1 | Feature | `NotificacionPropuestaTest` | CUBIERTA |
-| NOT-003 | Notificaciones | Aviso pertenece solo a usuario | P0 | Seguridad | `NotificacionPropuestaTest` | CUBIERTA |
-| NOT-004 | Notificaciones | URL histórica/canónica | P1 | Integración | `NotificacionPropuestaTest` | CUBIERTA |
-| NOT-005 | Notificaciones | Eventos distintos no generan duplicado inesperado | P0 | Regresión | Candidato | PENDIENTE |
-| IMP-001 | Importación | Misma gestión/periodo rechazada | P0 | Regla | `ImportacionPropuestaTest` | CUBIERTA |
-| IMP-002 | Importación | Previsualización no escribe | P1 | Integración | `ImportacionPropuestaTest` | CUBIERTA |
-| IMP-003 | Importación | Precedencia oficial versus legado | P0 | Integridad | `ImportacionPropuestaTest` | CUBIERTA |
-| IMP-004 | Importación | No modificar aprobada previamente | P0 | Regla | `DesignacionesAceptacionTest` | CUBIERTA |
-| DB-001 | Integridad | Foreign keys y checks | P0 | Base de datos | Migraciones/tests existentes | CUBIERTA |
-| DB-002 | Integridad | Snapshots/decisiones inmutables | P0 | Base de datos | `PropuestaVersionadaTest` | CUBIERTA |
-| DB-003 | Integridad | Unicidad de versión pendiente | P0 | Concurrencia | Candidato | PENDIENTE |
-| HRS-001 | Carga | Horas no negativas, pagadas <= oficial, suma suficiente | P0 | Regla | `PropuestaDistribucionTest` | CUBIERTA |
-| HRS-002 | Carga | Mínimo/máximo global | P0 | Regla | Config contradice servicio | NEEDS_BUSINESS_CONFIRMATION |
-| FILE-001 | Archivos | Link `public/storage` disponible antes de uso | P1 | Operación | `about --env=testing` | PENDIENTE |
-| FILE-002 | Archivos | GET/PUT storage autorizado y no filtra privados | P0 | Seguridad | Ruta implícita sin auth | PENDIENTE |
-| REP-001 | Reportes | Exportar con filtros | P1 | Feature | No existe endpoint | NEEDS_BUSINESS_CONFIRMATION |
-| PERF-001 | Rendimiento | Consultas bajo carga | P1 | Rendimiento | Fuera de Fase 2 | PENDIENTE |
-| FE-001 | Frontend | Render Blade/Alpine sin build | P1 | UI | `resources/views` | CUBIERTA |
-| FE-002 | Frontend | CDN no disponible | P2 | Resiliencia | Candidato | PENDIENTE |
-| DOC-001 | Documentación | Resolver páginas descritas pero ausentes | P3 | Exploratoria | `PLAN_FRONTEND` versus árbol | NEEDS_BUSINESS_CONFIRMATION |
+| ID | Área | Caso protegido | Estado |
+| --- | --- | --- | --- |
+| AUTH-001 | Acceso | Invitado no entra a rutas protegidas | CUBIERTA |
+| AUTH-002 | Autorización | Director no opera otra carrera | CUBIERTA |
+| AUTH-003 | Revisión | Usuario incorrecto no decide ni retira | CUBIERTA |
+| AUTH-004 | Login | Rate limit y redirección por rol | CUBIERTA |
+| DES-001 | Propuestas | Crear y editar borrador de gestión actual | CUBIERTA |
+| DES-002 | Propuestas | No enviar propuesta incompleta | CUBIERTA |
+| DES-003 | Propuestas | Bloquear edición con versión pendiente | CUBIERTA |
+| DES-004 | Propuestas | Validar grupos habilitados y docente | CUBIERTA |
+| DES-005 | Versionado | Una versión pendiente y número secuencial | CUBIERTA |
+| DES-006 | Versionado | Concurrencia de envío/edición | PENDIENTE |
+| REV-001 | Revisión | Aprobar todas las filas | CUBIERTA |
+| REV-002 | Revisión | Observar fila con motivo | CUBIERTA |
+| REV-003 | Revisión | Revisión mixta y `aprobada_previamente` | CUBIERTA |
+| REV-004 | Revisión | Decisión duplicada o snapshot ajeno | PENDIENTE |
+| IMP-001 | Importación | Rechazar misma gestión y periodo | CUBIERTA |
+| IMP-002 | Importación | Previsualización sin escrituras | CUBIERTA |
+| IMP-003 | Importación | Precedencia oficial/legado | CUBIERTA |
+| IMP-004 | Importación | No modificar filas aprobadas previamente | CUBIERTA |
+| HRS-001 | Distribución | Horas enteras, no negativas y suficientes | CUBIERTA |
+| HRS-002 | Distribución | Mínimo/máximo global | NEEDS_BUSINESS_CONFIRMATION |
+| DB-001 | Integridad | Foreign keys, checks e inmutabilidad | CUBIERTA |
+| NOT-001 | Notificaciones | Propiedad, lectura y eventos | CUBIERTA |
+| INST-001 | Jachasun | `INF` y `UATF` con conexión simulada | CUBIERTA |
+| INST-002 | Jachasun | Integración deshabilitada no consulta | CUBIERTA |
+| INST-003 | Jachasun | Fallo externo no filtra secretos | CUBIERTA |
+| INST-004 | Jachasun | Importación de docentes/materias/grupos/horas | PENDIENTE |
+| INST-005 | Pantalla | Consulta inicial y tabla institucional con siete columnas visibles; programa y codigo quedan en el encabezado | CUBIERTA |
+| INST-006 | Pantalla | Invitado, director y Vicerrectorado | CUBIERTA |
+| INST-007 | Jachasun | Gestión y periodo `0` sin filtro (`INF / 0 / 0`) | CUBIERTA |
 
-## Verificaciones operativas adicionales
+| LIST-001 | Lista | Director consulta su carrera con `sigla / 0 / 0` | CUBIERTA |
+| LIST-002 | Lista | `/designaciones` no mezcla propuestas locales y usa Jachasun como fuente principal | CUBIERTA |
+| LIST-003 | Lista | Jachasun deshabilitado o fallido bloquea con HTTP 503 seguro | CUBIERTA |
+| LIST-004 | Lista | La tabla institucional oculta codigo y programa porque ya aparecen en el encabezado | CUBIERTA |
+| LIST-005 | Lista | La tabla actual agrega Fecha y Observacion y usa `r_id` en `#` | CUBIERTA |
+| LIST-006 | Lista | Acciones visibles pero deshabilitadas para registros institucionales | CUBIERTA |
+| LIST-007 | Lista | `SOLICITADO` se presenta como Oficial; equivalencia pendiente de confirmacion | NEEDS_BUSINESS_CONFIRMATION |
 
-| ID | Modulo | Caso | Prioridad | Evidencia | Estado |
-| --- | --- | --- | --- | --- | --- |
-| ENV-005 | Entorno | Reinicio normal de PostgreSQL conserva el dataset | P0 | `pg_ctl stop/start`, 5 usuarios conservados | CUBIERTA |
-| ENV-006 | Entorno | Fase 0 destructiva se distingue del inicio normal | P0 | `TestingPhase0` ejecuta `migrate:fresh` | DOCUMENTADA |
-| ENV-007 | Despliegue | Separar local, testing, staging, producción e institucional | P0 | `PREPARACION_DESPLIEGUE.md` | CUBIERTA |
-| ENV-008 | Despliegue | No configurar la función institucional como conexión principal | P0 | Inventario de entornos | CUBIERTA |
-| ENV-009 | Integración | No ejecutar migraciones/seeders sobre base institucional | P0 | Reglas de seguridad y guardias existentes | CUBIERTA |
-| ENV-010 | Integración | Funciones institucionales requieren contrato antes de consumo | P0 | `PREPARACION_DESPLIEGUE.md` | PENDIENTE |
-| ENV-011 | Integración | CodeGraph responde estado del índice | P2 | BUG-005 | BLOQUEADA |
-| DOC-002 | Capacitación | Guía permite localizar ruta, controlador y servicio | P1 | `GUIA_APRENDIZAJE.md` | CUBIERTA |
-| DOC-003 | Capacitación | Guía explica flujo, estados, permisos y modelo de datos | P1 | `GUIA_APRENDIZAJE.md` | CUBIERTA |
-| DOC-004 | Capacitación | Ejercicios se pueden ejecutar solo en local/testing | P1 | `GUIA_APRENDIZAJE.md` | PREPARADA |
-| DEP-001 | Despliegue | Health check CLI y HTTP no requieren autenticación | P0 | `ApplicationHealthTest` | CUBIERTA |
-| DEP-002 | Despliegue | Health check falla si falta APP_KEY | P0 | `ApplicationHealthTest` | CUBIERTA |
-| DEP-003 | Despliegue | Integración institucional prematura bloquea health check | P0 | `ApplicationHealthTest` | CUBIERTA |
-| DEP-004 | Despliegue | Runbook documenta backup, restore y rollback | P0 | `GUIA_DESPLIEGUE.md` | PREPARADA |
-
-## Correcciones funcionales recientes
-
-| ID | Modulo | Caso | Prioridad | Evidencia | Estado |
-| --- | --- | --- | --- | --- | --- |
-| FE-003 | Frontend | Docentes con materias asignadas primero y orden alfabetico | P1 | `DesignacionesInterfazTest` | CUBIERTA |
-| REV-007 | Revision | Falta motivo muestra modal y conserva campos editados | P1 | `PropuestaRevisionTest`, BUG-003 | CUBIERTA |
-| REV-008 | Revision | Modal inicia oculto, abre por falta de motivo y cierra sin perder edicion | P1 | `PropuestaRevisionTest`, BUG-004, prueba navegador | CUBIERTA |
-
-| FE-004 | Frontend | Modal genérico de impresión en lista, editor y revisión | P1 | `DesignacionesInterfazTest`, `PropuestaRevisionTest`, prueba navegador | CUBIERTA |
-| FE-005 | Frontend | Paginación del editor con primera, anterior, siguiente y última | P1 | `DesignacionesInterfazTest`, prueba navegador | CUBIERTA |
-| FE-006 | Frontend | Lista muestra Abrir para no oficiales y Ver detalle solo para oficiales | P1 | `DesignacionesInterfazTest` | CUBIERTA |
-| FE-007 | Frontend | Lista muestra propuestas de todas las gestiones y pagina 10 filas | P1 | `DesignacionesInterfazTest` | CUBIERTA |
-| FE-008 | Frontend | Detalle oficial informa que la designación ya fue aprobada | P1 | `DesignacionesInterfazTest` | CUBIERTA |
-| FE-009 | Frontend | Revision muestra justificacion del Director en pendiente e historico, solo lectura y con `—` si falta | P1 | `PropuestaDistribucionTest`, `PropuestaRevisionTest` | CUBIERTA |
-| FE-010 | Frontend | Tabla de revision compacta, ajustada al alto de pantalla y paginada de 10 en 10 sin perder decisiones | P1 | `PropuestaRevisionTest`, prueba navegador local | CUBIERTA |
-
-## Prioridades para fase posterior
-
-- P0 primero: autorización, estados, envío/revisión, snapshots, notificaciones, importación, constraints y storage si se usa.
-- P1 después: UI, CDN, auditoría, reportes y operación.
-- P2/P3: resiliencia visual, documentación y exploración.
-- Ningún caso pendiente se implementó en Fase 2.
-
-## Casos preparados por Fase 3
-
-| ID | Módulo | Caso | Prioridad | Evidencia | Estado |
-| --- | --- | --- | --- | --- | --- |
-| DATA-001 | Datos | Seeder pequeño desde base vacía | P0 | `TestingSmallSeeder`, 432 designaciones | CUBIERTA |
-| DATA-002 | Datos | Seeder normal con inserción por bloques | P0 | `TestingNormalSeeder`, 14.400 designaciones | CUBIERTA |
-| DATA-003 | Datos | Seeder edge Unicode/estados/nullable | P1 | `TestingEdgeCasesSeeder` | CUBIERTA |
-| DATA-004 | Datos | Seeder grande con multiplicador | P1 | `TestingLargeSeeder`, `0.8`, 32.768 designaciones | CUBIERTA |
-| DATA-005 | Datos | Selector de perfil explícito | P1 | `TestingDatabaseSeeder` | PENDIENTE |
-| DATA-006 | Datos | Rechazar seeder en producción | P0 | `TestingSeederSafety`, ejecución bloqueada | CUBIERTA |
-| DATA-007 | Datos | Rechazar host/base ambiguos | P0 | `TestingSeederSafety` | PENDIENTE |
-| DATA-008 | Datos | Validar conteos, estados y relaciones | P0 | `TestingDatasetValidator`, todos perfiles OK | CUBIERTA |
-| DATA-009 | Factories | Crear entidades versionadas coherentes | P0 | Smoke test de seis factories | CUBIERTA |
-| DATA-010 | Reproducibilidad | Recrear small desde base vacía | P0 | Ejecutado; mismo conteo observado | CUBIERTA |
-| DATA-011 | Seguridad | No insertar datos deliberadamente inválidos | P1 | Validator y edge documentan rechazo futuro | CUBIERTA |
-| DATA-012 | Escala | Large multiplicador 1.0 | P1 | Mecanismo probado con 0.8 | PENDIENTE |
-
-Fase 3 prepara datos; no implementa todavía pruebas funcionales nuevas, E2E, concurrencia ni rendimiento.
+La matriz no resuelve alcance de Vicerrectorado, propuestas múltiples,
+precedencia institucional ni límites horarios: esos puntos permanecen en
+[`../BUSINESS_RULES.md`](../BUSINESS_RULES.md) como
+`NEEDS_BUSINESS_CONFIRMATION`.

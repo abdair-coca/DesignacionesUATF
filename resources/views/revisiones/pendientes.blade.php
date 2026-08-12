@@ -95,10 +95,6 @@
         <!-- Top Toolbar estilo Color Admin Email Toolbar -->
         <div class="bg-[#f0f3f8] border-b border-gray-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
-                    <span class="sr-only">Seleccionar todo</span>
-                </label>
 
                 <!-- Selector de filtro -->
                 <select onchange="window.location.href=this.value" aria-label="Filtrar bandeja de solicitudes" class="border border-gray-300 rounded px-3 py-1 bg-white text-gray-700 font-bold focus:outline-none text-xs shadow-2xs">
@@ -135,10 +131,6 @@
                      class="flex items-center justify-between px-4 py-3 hover:bg-[#f0f3f8] cursor-pointer transition-colors group">
 
                     <div class="flex items-center gap-3 min-w-0 flex-1">
-                        <label class="flex items-center" onclick="event.stopPropagation()">
-                            <input type="checkbox" class="rounded border-gray-300 text-[#00acac] focus:ring-[#00acac]">
-                            <span class="sr-only">Seleccionar solicitud {{ $p['carrera_sigla'] }}</span>
-                        </label>
 
                         <!-- Circular Avatar con la Inicial de la Carrera -->
                         @php

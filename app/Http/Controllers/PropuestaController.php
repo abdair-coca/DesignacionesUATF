@@ -2,92 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Docente;
+use App\Http\Requests\CopiarPropuestaRequest;
+use App\Http\Requests\CrearPropuestaRequest;
+use App\Http\Requests\GuardarAsignacionesRequest;
+use App\Http\Requests\ImportarPropuestaRequest;
 use App\Models\Gestion;
-use App\Models\Grupo;
 use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\PropuestaVersion;
 use App\Services\ImportacionPropuestaService;
+use App\Services\PropuestaConsultaService;
 use App\Services\PropuestaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use LogicException;
+use Throwable;
 
 class PropuestaController extends Controller
 {
     public function __construct(
         private PropuestaService $propuestas,
         private ImportacionPropuestaService $importaciones,
+        private PropuestaConsultaService $consultas,
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|Response
     {
-        $gestiones = Gestion::orderByDesc('nombre')->get();
-        $gestionActual = $gestiones->firstWhere('es_actual', true) ?? $gestiones->first();
-        $propuestas = Propuesta::with(['gestion', 'periodo', 'versiones' => fn ($query) => $query
-            ->with('designaciones.decision')
-            ->latest('numero')])
-            ->withCount('designaciones')
-            ->where('carrera_id', $request->user()->carrera_id)
-            ->latest('updated_at')
-            ->get();
+        try {
+            return view('designaciones.lista', $this->consultas->datosListaInstitucional($request->user()));
+        } catch (LogicException) {
+            $error = 'La integración institucional no está habilitada.';
+        } catch (Throwable $exception) {
+            Log::warning('Lista institucional no disponible.', [
+                'exception' => $exception::class,
+            ]);
+            $error = 'No fue posible consultar las designaciones institucionales.';
+        }
 
-        $propuestasData = $propuestas->map(function (Propuesta $propuesta): array {
-            $versionPendiente = $propuesta->versiones->firstWhere('estado', 'pendiente');
-            $versionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
-            $observacionesFilas = $versionObservada?->designaciones
-                ->filter(fn ($fila) => $fila->getRelation('decision')?->getAttribute('decision') === 'observada')
-                ->map(function ($fila): array {
-                    $decision = $fila->getRelation('decision');
-
-                    return [
-                        'materia' => $fila->materia_sigla.' - '.$fila->materia_nombre,
-                        'grupo' => (string) $fila->grupo_codigo,
-                        'observacion' => $decision?->getAttribute('observacion'),
-                    ];
-                })
-                ->values()
-                ->all() ?? [];
-
-            return [
-                'id' => $propuesta->id,
-                'descripcion' => $propuesta->descripcion ?: 'Designaciones sin descripcion',
-                'gestion_id' => $propuesta->gestion_id,
-                'periodo_id' => $propuesta->periodo_id,
-                'gestion' => $propuesta->gestion->nombre,
-                'periodo' => $propuesta->periodo->nombre,
-                'estado' => $propuesta->estado === 'oficial'
-                    ? 'oficial'
-                    : ($versionPendiente ? 'enviado' : ($versionObservada ? 'con_observaciones' : 'propuesta')),
-                'observacion' => $versionObservada?->observaciones,
-                'version_pendiente_id' => $versionPendiente?->id,
-                'designaciones_count' => $propuesta->designaciones_count,
-                'observaciones_filas' => $observacionesFilas,
-                'created_at' => $propuesta->created_at?->toIso8601String(),
-            ];
-        });
-
-        return view('designaciones.lista', [
-            'propuestas' => $propuestas,
-            'propuestasData' => $propuestasData,
+        return response()->view('designaciones.lista', [
+            'institutionalSource' => true,
+            'propuestasData' => collect(),
+            'institutionalError' => $error,
             'carreraActual' => $request->user()->carrera,
-            'gestiones' => $gestiones,
-            'periodos' => Periodo::orderBy('nombre')->get(),
-            'gestionActual' => $gestionActual,
-        ]);
+            'gestiones' => collect(),
+            'periodos' => collect(),
+            'anoActual' => date('Y'),
+            'gestionActualId' => 1,
+        ], 503);
     }
 
-    public function crear(Request $request): RedirectResponse
+    public function crear(CrearPropuestaRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'gestion_id' => ['required', 'exists:gestiones,id'],
-            'periodo_id' => ['required', 'exists:periodos,id'],
-            'descripcion' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
 
         $propuesta = $this->propuestas->crearBorrador(
             $request->user(),
@@ -100,14 +72,9 @@ class PropuestaController extends Controller
             ->with('success', 'Borrador listo para editar.');
     }
 
-    public function previsualizarCopia(Request $request): JsonResponse
+    public function previsualizarCopia(CopiarPropuestaRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
-            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
-            'origen_gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
-            'origen_periodo_id' => ['required', 'integer', 'exists:periodos,id'],
-        ]);
+        $data = $request->validated();
 
         $filas = $this->importaciones->previsualizarNueva(
             $request->user(),
@@ -124,15 +91,9 @@ class PropuestaController extends Controller
         ]);
     }
 
-    public function copiar(Request $request): RedirectResponse
+    public function copiar(CopiarPropuestaRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
-            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
-            'descripcion' => ['nullable', 'string', 'max:255'],
-            'origen_gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
-            'origen_periodo_id' => ['required', 'integer', 'exists:periodos,id'],
-        ]);
+        $data = $request->validated();
 
         [$propuesta, $filas] = DB::transaction(function () use ($request, $data): array {
             $propuesta = $this->propuestas->crearBorrador(
@@ -156,150 +117,16 @@ class PropuestaController extends Controller
             ->with('success', "Propuesta creada con {$filas} designaciones copiadas.");
     }
 
-    public function editar(Propuesta $propuesta): View
+    public function editar(Request $request, Propuesta $propuesta): View
     {
         Gate::authorize('view', $propuesta);
 
-        $propuesta->load([
-            'carrera',
-            'gestion',
-            'periodo',
-            'designaciones.docente',
-            'designaciones.materia',
-            'designaciones.grupo',
-            'versiones' => fn ($query) => $query
-                ->with(['designaciones.decision', 'remitente', 'revisor'])
-                ->latest('numero'),
-        ]);
-
-        $grupos = Grupo::with('mallaCurricular.materia')
-            ->where('estado', 'habilitado')
-            ->whereHas('mallaCurricular', fn ($query) => $query->where('carrera_id', $propuesta->carrera_id))
-            ->orderBy('malla_curricular_id')
-            ->orderBy('codigo')
-            ->get();
-
-        $designacionesPorGrupo = $propuesta->designaciones->keyBy('grupo_id');
-        $versionObservada = $propuesta->versiones->firstWhere('estado', 'observada');
-        $observacionesPorGrupo = $versionObservada?->designaciones
-            ->filter(fn ($fila) => $fila->getRelation('decision')?->getAttribute('decision') === 'observada')
-            ->filter(function ($fila) use ($designacionesPorGrupo): bool {
-                $actual = $designacionesPorGrupo->get($fila->grupo_id);
-
-                if (! $actual) {
-                    return false;
-                }
-
-                return (int) $actual->docente_id === (int) $fila->docente_id
-                    && (int) $actual->materia_id === (int) $fila->materia_id
-                    && (int) $actual->horas_pagadas === (int) $fila->horas_pagadas
-                    && (int) $actual->horas_no_pagadas === (int) $fila->horas_no_pagadas
-                    && trim((string) $actual->observacion_remuneracion) === trim((string) $fila->observacion_remuneracion);
-            })
-            ->mapWithKeys(fn ($fila) => [$fila->grupo_id => $fila->getRelation('decision')?->getAttribute('observacion')]) ?? collect();
-        $docentesHistoricosIds = DB::table('designaciones')
-            ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
-            ->where('malla_curricular.carrera_id', $propuesta->carrera_id)
-            ->whereNotNull('designaciones.Id_docente')
-            ->pluck('designaciones.Id_docente')
-            ->unique()
-            ->all();
-        $horasOtrasCarrerasPorDocente = DB::table('designaciones')
-            ->join('materias', 'designaciones.Id_materia', '=', 'materias.id')
-            ->join('malla_curricular', 'designaciones.malla_curricular_id', '=', 'malla_curricular.id')
-            ->where('designaciones.Id_gestion', $propuesta->gestion_id)
-            ->where('designaciones.Id_periodo', $propuesta->periodo_id)
-            ->where('malla_curricular.carrera_id', '!=', $propuesta->carrera_id)
-            ->whereNotNull('designaciones.Id_docente')
-            ->groupBy('designaciones.Id_docente')
-            ->select('designaciones.Id_docente', DB::raw('SUM(materias.horas) as total_horas'))
-            ->pluck('total_horas', 'designaciones.Id_docente');
-        $docentes = Docente::with('carreraOrigen:id,sigla')
-            ->get(['id', 'nombre', 'carrera_origen_id'])
-            ->sortBy(function (Docente $docente) use ($propuesta, $docentesHistoricosIds): string {
-                $prioridad = (int) $docente->carrera_origen_id === $propuesta->carrera_id
-                    ? 1
-                    : (in_array($docente->id, $docentesHistoricosIds) ? 2 : 3);
-
-                return sprintf('%d_%s', $prioridad, strtolower($docente->nombre));
-            })
-            ->values()
-            ->map(function (Docente $docente) use ($propuesta, $docentesHistoricosIds, $horasOtrasCarrerasPorDocente): array {
-                $prioridad = (int) $docente->carrera_origen_id === $propuesta->carrera_id
-                    ? 1
-                    : (in_array($docente->id, $docentesHistoricosIds) ? 2 : 3);
-
-                return [
-                    'id' => $docente->id,
-                    'nombre' => $docente->nombre,
-                    'carreraSigla' => $docente->carreraOrigen?->sigla,
-                    'prioridad' => $prioridad,
-                    'horasOtrasCarreras' => (int) ($horasOtrasCarrerasPorDocente[$docente->id] ?? 0),
-                ];
-            });
-        $roster = $grupos->map(function (Grupo $grupo) use ($designacionesPorGrupo, $observacionesPorGrupo): array {
-            $designacion = $designacionesPorGrupo->get($grupo->id);
-
-            return [
-                'id' => $grupo->id,
-                'materia' => [
-                    'id' => $grupo->mallaCurricular->materia->id,
-                    'nombre' => $grupo->mallaCurricular->materia->nombre,
-                    'sigla' => $grupo->mallaCurricular->materia->sigla,
-                ],
-                'codigo' => $grupo->codigo,
-                'horas' => $grupo->mallaCurricular->materia->horas,
-                'designacion' => $designacion ? [
-                    'docente' => ['id' => $designacion->docente_id],
-                    'horas_pagadas' => (int) ($designacion->horas_pagadas ?? $grupo->mallaCurricular->materia->horas),
-                    'horas_no_pagadas' => (int) ($designacion->horas_no_pagadas ?? 0),
-                    'observacion_remuneracion' => $designacion->observacion_remuneracion,
-                ] : null,
-                'bloqueada' => $designacion?->estado === 'aprobada_previamente',
-                'observada' => $observacionesPorGrupo->has($grupo->id),
-                'observacion_revision' => $observacionesPorGrupo->get($grupo->id),
-            ];
-        });
-        $versionPendiente = $propuesta->versiones->firstWhere('estado', 'pendiente');
-
-        return view('designaciones.carrera', [
-            'propuesta' => $propuesta,
-            'carrera' => $propuesta->carrera,
-            'designaciones' => $propuesta->designaciones,
-            'roster' => $roster,
-            'docentes' => $docentes,
-            'gestiones' => Gestion::orderByDesc('nombre')->get(),
-            'periodos' => Periodo::orderBy('nombre')->get(),
-            'observacionRevisionGeneral' => $observacionesPorGrupo->isNotEmpty()
-                ? $versionObservada?->observaciones
-                : null,
-            'revision' => $versionPendiente ? [
-                'id' => $versionPendiente->id,
-                'estado' => $versionPendiente->estado,
-                'solicitante' => $versionPendiente->remitente?->name,
-                'solicitado_en' => $versionPendiente->enviado_en?->format('d/m/Y H:i'),
-            ] : null,
-            'filtros' => [
-                'gestion_id' => (string) $propuesta->gestion_id,
-                'periodo_id' => (string) $propuesta->periodo_id,
-            ],
-            'puedeEditar' => auth()->user()->can('update', $propuesta),
-        ]);
+        return view('designaciones.carrera', $this->consultas->datosEdicion($propuesta, $request->user()));
     }
 
-    public function guardar(Request $request, Propuesta $propuesta): RedirectResponse|JsonResponse
+    public function guardar(GuardarAsignacionesRequest $request, Propuesta $propuesta): RedirectResponse|JsonResponse
     {
-        Gate::authorize('update', $propuesta);
-
-        $data = $request->validate([
-            'cambios' => ['required', 'array', 'min:1'],
-            'cambios.*.grupo_id' => ['required', 'exists:grupos,id'],
-            'cambios.*.materia_id' => ['required', 'exists:materias,id'],
-            'cambios.*.docente_id' => ['nullable', 'exists:docentes,id'],
-            'cambios.*.horas_pagadas' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'cambios.*.horas_no_pagadas' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'cambios.*.observacion_remuneracion' => ['sometimes', 'nullable', 'string', 'max:1000'],
-        ]);
+        $data = $request->validated();
 
         $this->propuestas->guardarCambios($propuesta, $data['cambios']);
 
@@ -342,10 +169,9 @@ class PropuestaController extends Controller
         ]);
     }
 
-    public function previsualizarImportacion(Request $request, Propuesta $propuesta): View|JsonResponse
+    public function previsualizarImportacion(ImportarPropuestaRequest $request, Propuesta $propuesta): View|JsonResponse
     {
-        Gate::authorize('update', $propuesta);
-        $data = $this->validarOrigenImportacion($request);
+        $data = $request->validated();
         $gestionOrigen = Gestion::findOrFail($data['origen_gestion_id']);
         $periodoOrigen = Periodo::findOrFail($data['origen_periodo_id']);
 
@@ -373,10 +199,9 @@ class PropuestaController extends Controller
         ]);
     }
 
-    public function aplicarImportacion(Request $request, Propuesta $propuesta): RedirectResponse|JsonResponse
+    public function aplicarImportacion(ImportarPropuestaRequest $request, Propuesta $propuesta): RedirectResponse|JsonResponse
     {
-        Gate::authorize('update', $propuesta);
-        $data = $this->validarOrigenImportacion($request);
+        $data = $request->validated();
         $filas = $this->importaciones->aplicar(
             $propuesta,
             Gestion::findOrFail($data['origen_gestion_id']),
@@ -410,13 +235,5 @@ class PropuestaController extends Controller
 
         return redirect()->route('designaciones.editar', $version->propuesta_id)
             ->with('success', 'La versión pendiente fue retirada. El borrador vuelve a estar disponible.');
-    }
-
-    private function validarOrigenImportacion(Request $request): array
-    {
-        return $request->validate([
-            'origen_gestion_id' => ['required', 'integer', 'exists:gestiones,id'],
-            'origen_periodo_id' => ['required', 'integer', 'exists:periodos,id'],
-        ]);
     }
 }

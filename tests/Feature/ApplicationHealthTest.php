@@ -36,7 +36,7 @@ class ApplicationHealthTest extends TestCase
 
     public function test_institutional_health_check_cannot_be_enabled_before_the_adapter_exists(): void
     {
-        config(['deployment.institutional.enabled' => true]);
+        config(['institutional.enabled' => true]);
 
         $this->getJson('/health')
             ->assertServiceUnavailable()

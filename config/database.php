@@ -99,6 +99,20 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        // Fuente institucional de solo lectura. No se usa si INSTITUTIONAL_ENABLED=false.
+        'institutional' => [
+            'driver' => 'pgsql',
+            'url' => env('INSTITUTIONAL_DB_URL'),
+            'host' => env('INSTITUTIONAL_DB_HOST', '127.0.0.1'),
+            'port' => env('INSTITUTIONAL_DB_PORT', '5432'),
+            'database' => env('INSTITUTIONAL_DB_DATABASE', 'jachasun'),
+            'username' => env('INSTITUTIONAL_DB_USERNAME'),
+            'password' => env('INSTITUTIONAL_DB_PASSWORD'),
+            'charset' => env('INSTITUTIONAL_DB_CHARSET', 'utf8'),
+            'search_path' => env('INSTITUTIONAL_DB_SCHEMA', 'public'),
+            'sslmode' => env('INSTITUTIONAL_DB_SSLMODE', 'prefer'),
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

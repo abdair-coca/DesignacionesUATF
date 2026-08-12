@@ -109,6 +109,51 @@ El ejemplo `designaciones.f_asignaciones('CIV', '0', '0')` no se consumira
 hasta confirmar que significan `CIV`, `0` y `0`, y que las columnas devueltas
 incluyen claves estables.
 
+## Contrato observado de `f_asignaciones` (avance de Fase 4)
+
+El responsable funcional confirmó los parámetros de la consulta:
+
+```sql
+SELECT * FROM designaciones.f_asignaciones('INF', '2023', '1');
+SELECT * FROM designaciones.f_asignaciones('UATF', '2024', '1');
+```
+
+- `INF` representa el código de una carrera.
+- `UATF` representa la universidad completa y devuelve varias carreras.
+- El segundo parámetro es la gestión (por ejemplo, `2023` o `2024`).
+- El tercer parámetro es el periodo/semestre (por ejemplo, `1`).
+
+La salida observada contiene estas columnas:
+
+| Columna | Tipo observado | Uso provisional |
+| --- | --- | --- |
+| `r_id` | entero | Identificador retornado por la fuente |
+| `r_id_programa` | texto | Código de carrera/programa |
+| `r_programa` | texto | Nombre de carrera/programa |
+| `r_detalle` | texto | Descripción del periodo o actividad |
+| `r_fecha` | timestamp | Fecha retornada por la fuente |
+| `r_id_gestion` | entero | Gestión retornada |
+| `r_id_periodo` | entero | Periodo retornado |
+| `r_obs` | texto | Observación, por ejemplo `MIGRADO` |
+| `r_estado` | texto | Estado, por ejemplo `SOLICITADO` |
+
+Esta salida es un catálogo de registros de programa/gestión/periodo; no
+incluye todavía docente, materia, grupo ni horas, por lo que no se puede
+mapear directamente al editor de asignaciones local. La aplicación incorpora
+por ahora un cliente de lectura y el endpoint autenticado
+`GET /institucional/designaciones`, sin escribir en la fuente institucional.
+
+Queda `NEEDS_BUSINESS_CONFIRMATION` verificar por qué la salida entregada para
+`INF` contiene varias gestiones y periodos pese a la consulta indicada, además
+de confirmar si `r_id` es estable y cuál es el significado operativo de cada
+estado. No se debe usar este catálogo para importar filas docentes hasta
+resolver esas ambigüedades.
+
+La configuración activa de esta integración vive en
+`config/institutional.php`. `INSTITUTIONAL_ENABLED=false` sigue siendo el
+valor predeterminado y `DB_CONNECTION` continúa apuntando exclusivamente a la
+base propia de la aplicación.
+
 ## Fases siguientes
 
 - **Fase 2**: guia de arquitectura y capacitacion practica. Completada en

@@ -1,15 +1,22 @@
-# Higiene del repositorio
+# Higiene y organización del repositorio
 
 Este repositorio debe publicar solo codigo fuente, configuracion reproducible, pruebas y documentacion tecnica estable del sistema.
+
+## Material histórico
+
+Los planes, bocetos, bitácoras, mapas y reportes cerrados se conservan en
+[`archive/`](archive/) para no perder contexto. No deben enlazarse como reglas
+vigentes ni duplicarse en nuevos documentos.
 
 ## No versionar
 
 Los siguientes archivos y carpetas son material local de trabajo y no deben subirse a GitHub:
 
 - Contexto, instrucciones o memoria de asistentes: `CLAUDE.md`, `opencode.md`, `.claude/`, `.gemini/`.
-- Tareas temporales, handoffs o coordinacion entre sesiones: `tasks/`, `docs/TwinsTasks/`.
-- Bitacoras operativas de sesiones: `docs/bitacora/`.
-- Planes internos de mejora o prompts de trabajo: `docs/PLAN_ELEVACION_PROYECTO.md`.
+- Tareas temporales, handoffs o coordinación entre sesiones nuevos: `tasks/`.
+- Bitácoras operativas de sesiones nuevas: no crear otra `docs/bitacora/`.
+- Planes internos de mejora o prompts de trabajo nuevos: no agregarlos fuera de
+  `docs/archive/`.
 - Salidas regenerables de analisis: `graphify-out/`.
 - Credenciales, entornos locales, caches y dependencias instaladas: `.env`, `.env.testing`, `vendor/`, `node_modules/`, `.phpunit.result.cache`.
 
@@ -38,14 +45,23 @@ git rm -r --cached <ruta>
 
 Despues de retirarlo del indice, confirmar que la ruta este cubierta por `.gitignore`.
 
-## Documentacion publica aceptada
+## Documentacion vigente aceptada
 
 Se considera publicable:
 
 - `README.md`
-- `docs/ERD.md`
-- `docs/ESTADO_FLUJO_DESIGNACIONES.md`
-- `docs/PLAN_FRONTEND.md`
+- `docs/ARCHITECTURE.md`
+- `docs/BUSINESS_RULES.md`
+- `docs/OPERATIONS.md`
+- `docs/TESTING.md`
+- `docs/INTEGRATION_JACHASUN.md`
 - `docs/HIGIENE_REPOSITORIO.md`
 
-Cualquier nuevo documento debe describir arquitectura, instalacion, pruebas, decisiones tecnicas estables o uso del sistema. No debe incluir prompts, trazas de conversacion, notas de herramientas ni instrucciones exclusivas para asistentes.
+También son obligatorios para trazabilidad `docs/testing/STATUS.md`,
+`docs/testing/TEST_MATRIX.md` y `docs/testing/BUG_REPORTS/`.
+
+Cualquier nuevo documento debe describir arquitectura, instalación, pruebas,
+decisiones técnicas estables o uso del sistema. No debe incluir prompts,
+trazas de conversación, notas de herramientas ni instrucciones exclusivas para
+asistentes. Las reglas no confirmadas deben marcarse
+`NEEDS_BUSINESS_CONFIRMATION`.

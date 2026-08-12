@@ -104,6 +104,9 @@
                 <span class="text-gray-300">|</span>
                 <span class="font-semibold">Periodo {{ $propuesta->periodo->nombre }}</span>
             </div>
+            <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow text-xs text-gray-700 transition-all cursor-pointer">
+                <a href="{{ url('/designaciones') }}" class="font-semibold">← Mis propuestas</a>
+            </div>
 
             <button @click="abrirModalImprimir(@js($propuesta->descripcion ?: 'Reporte de designaciones'))"
                     title="Imprimir propuesta"
@@ -146,7 +149,7 @@
 
     @if($propuesta->estado === 'oficial')
         <div class="border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-            Esta designaci?n ya ha sido aprobada.
+            Esta designación ya ha sido aprobada.
         </div>
     @elseif(!$puedeEditar)
         <div class="border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

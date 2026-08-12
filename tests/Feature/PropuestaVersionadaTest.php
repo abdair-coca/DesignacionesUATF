@@ -13,7 +13,10 @@ use App\Models\PropuestaDesignacion;
 use App\Models\PropuestaVersion;
 use App\Models\PropuestaVersionDesignacion;
 use App\Models\User;
+use App\Services\Institutional\InstitutionalDesignacionesService;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
+use Mockery;
 use Tests\TestCase;
 
 class PropuestaVersionadaTest extends TestCase
@@ -42,11 +45,15 @@ class PropuestaVersionadaTest extends TestCase
         $this->assertDatabaseHas('propuestas', ['descripcion' => 'Propuesta inicial', 'estado' => 'borrador']);
         $this->assertDatabaseHas('propuestas', ['descripcion' => 'Segunda propuesta', 'estado' => 'borrador']);
 
+        config(['institutional.enabled' => true]);
+        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service->shouldReceive('listar')->once()->with(strtoupper((string) $director->carrera->sigla), '0', '0')->andReturn(new Collection);
+        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+
         $this->actingAs($director)
             ->get('/designaciones')
             ->assertOk()
-            ->assertSee('Propuesta inicial')
-            ->assertSee('Segunda propuesta');
+            ->assertSee('Designaciones');
     }
 
     public function test_no_se_puede_abrir_borrador_para_una_gestion_no_actual(): void
