@@ -45,7 +45,7 @@ class TestingPhase0 extends Command
         $database = strtolower((string) ($settings['database'] ?? ''));
         $host = strtolower((string) ($settings['host'] ?? ''));
 
-        if ($connection === 'pgsql') {
+        if (($settings['driver'] ?? null) === 'pgsql') {
             if (! in_array($host, ['127.0.0.1', 'localhost', '::1'], true)) {
                 throw new RuntimeException('Bloqueado: PostgreSQL de pruebas debe estar en localhost.');
             }
@@ -55,13 +55,6 @@ class TestingPhase0 extends Command
             }
         }
 
-        if ($connection === 'sqlite') {
-            $path = strtolower((string) ($settings['database'] ?? ''));
-
-            if (! str_contains($path, 'testing') && ! str_contains($path, '_test')) {
-                throw new RuntimeException('Bloqueado: SQLite debe estar dentro del almacenamiento de pruebas.');
-            }
-        }
     }
 
     private function verifyRuntimeSettings(): void
