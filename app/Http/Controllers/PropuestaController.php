@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use LogicException;
 use Throwable;
 
 class PropuestaController extends Controller
@@ -35,11 +34,9 @@ class PropuestaController extends Controller
     public function index(Request $request): View|Response
     {
         try {
-            return view('designaciones.lista', $this->consultas->datosListaInstitucional($request->user()));
-        } catch (LogicException) {
-            $error = 'La integración institucional no está habilitada.';
+            return view('designaciones.lista', $this->consultas->datosListaJachasun($request->user()));
         } catch (Throwable $exception) {
-            Log::warning('Lista institucional no disponible.', [
+            Log::warning('Lista Jachasun no disponible.', [
                 'exception' => $exception::class,
             ]);
             $error = 'No fue posible consultar las designaciones institucionales.';

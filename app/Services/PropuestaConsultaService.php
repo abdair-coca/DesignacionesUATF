@@ -8,18 +8,18 @@ use App\Models\Grupo;
 use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\User;
-use App\Services\Institutional\InstitutionalDesignacionesService;
+use App\Services\Jachasun\JachasunDesignacionesService;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
 class PropuestaConsultaService
 {
-    public function __construct(private InstitutionalDesignacionesService $institucional) {}
+    public function __construct(private JachasunDesignacionesService $jachasun) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function datosListaInstitucional(User $usuario): array
+    public function datosListaJachasun(User $usuario): array
     {
         $carrera = $usuario->carrera;
 
@@ -27,13 +27,13 @@ class PropuestaConsultaService
             throw new LogicException('El director no tiene una carrera configurada.');
         }
 
-        $items = $this->institucional->listar($carrera->sigla, '0', '0');
+        $items = $this->jachasun->listar($carrera->sigla, '0', '0');
 
         return [
             'institutionalSource' => true,
             'propuestasData' => $items->map(function (array $item): array {
-                $estadoInstitucional = strtoupper(trim((string) ($item['estado'] ?? '')));
-                $esSolicitado = $estadoInstitucional === 'SOLICITADO';
+                $estadoJachasun = strtoupper(trim((string) ($item['estado'] ?? '')));
+                $esSolicitado = $estadoJachasun === 'SOLICITADO';
 
                 return [
                     'id' => $item['id'],
@@ -43,8 +43,8 @@ class PropuestaConsultaService
                     'periodo' => $item['periodo'],
                     'observacion' => $item['observacion'],
                     'estado' => $esSolicitado ? 'oficial' : 'institucional',
-                    'estado_label' => $esSolicitado ? 'Oficial' : ($estadoInstitucional ?: 'Sin estado'),
-                    'estado_institucional' => $estadoInstitucional,
+                    'estado_label' => $esSolicitado ? 'Oficial' : ($estadoJachasun ?: 'Sin estado'),
+                    'estado_institucional' => $estadoJachasun,
                     'institutional' => true,
                     'designaciones_count' => 0,
                     'observaciones_filas' => [],
