@@ -20,7 +20,7 @@ depende de Jachasun ni de servicios externos reales.
 - aprobación, observación y reenvío;
 - importación y previsualización sin escritura;
 - notificaciones y propiedad de lectura;
-- endpoint institucional `INF` y `UATF` con integración deshabilitada;
+- consulta Jachasun de la carrera autenticada con `INF / 0 / 0`;
 - consulta institucional `INF / 0 / 0` para todo el historial del programa;
 - pantalla institucional con resultados, consulta vacía y permisos por rol;
 - fallos de conexión, permisos y validación.

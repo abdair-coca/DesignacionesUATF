@@ -136,3 +136,32 @@ eliminado y el codigo se concentra en `lista.blade.php`.
 
 La equivalencia visual `SOLICITADO` -> `Oficial` queda como
 `NEEDS_BUSINESS_CONFIRMATION`. No se conecto Jachasun real durante esta fase.
+
+## Reestructuracion hacia Jachasun
+
+Estado: **COMPLETA CON LIMITE DE ESQUEMA**
+
+Se retiro la pantalla y el endpoint institucional duplicados. La lista principal
+usa un servicio llamado `JachasunDesignacionesService` y la configuracion usa
+`DB_CONNECTION=jachasun`, sin banderas `INSTITUTIONAL_*`. Las vistas del flujo
+principal se conservaron. No se eliminaron modelos ni migraciones de propuestas
+porque el repositorio aun no contiene evidencia del esquema equivalente en
+Jachasun; esa eliminacion requiere una verificacion autorizada previa.
+
+Las pruebas de la pantalla y endpoint retirados se eliminaron. Se conservaron
+las pruebas de autenticacion, autorizacion, reglas de negocio y contrato de la
+lista principal.
+
+| Comando o verificacion | Resultado |
+| --- | --- |
+| `composer test -- --env=testing` | OK; 81 pruebas, 484 aserciones |
+| `vendor/bin/pint --test` | OK |
+| `git diff --check` | OK |
+| Rutas `/institucional/designaciones` | No registradas |
+| Configuracion `institutional` | Eliminada |
+| Conexiones SQLite/MySQL/MariaDB/SQL Server | Eliminadas de `config/database.php` |
+| `DB_CONNECTION=institucional` | Se normaliza internamente a `jachasun` |
+
+No se eliminaron modelos, migraciones ni servicios del flujo de propuestas:
+el repositorio no contiene un inventario verificable del esquema equivalente
+en Jachasun. Esa eliminacion requiere una fase autorizada de compatibilidad.

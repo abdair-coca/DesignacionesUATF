@@ -2,25 +2,26 @@
 
 ## Ambientes
 
-Mantener separadas las bases y credenciales de local, testing, staging y
-produccion. La base institucional externa no es `DB_CONNECTION` y no recibe
-migraciones de Laravel.
+Jachasun es la base principal de ejecucion. Testing usa PostgreSQL aislado y
+nunca comparte credenciales ni datos con Jachasun.
 
 `migrate:fresh`, seeders destructivos y datos sinteticos solo se ejecutan en
-local/testing autorizados. Nunca usar produccion ni Jachasun para la suite.
+testing autorizado. Nunca usar produccion ni Jachasun real para la suite.
 
-## Instalacion local
+## Configuracion
 
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate --seed
-php artisan serve
+La conexion se configura en `.env` mediante `DB_*`:
+
+```env
+DB_CONNECTION=jachasun
+DB_HOST=...
+DB_PORT=5432
+DB_DATABASE=jachasun
+DB_USERNAME=...
+DB_PASSWORD=...
 ```
 
-Configurar la base propia antes de migrar. Las credenciales se mantienen en
-`.env`, fuera de Git.
+Las credenciales se mantienen fuera de Git y nunca se escriben en logs.
 
 ## Testing
 
@@ -32,24 +33,18 @@ vendor/bin/pint --test
 git diff --check
 ```
 
-La suite usa mocks para Jachasun y no necesita acceso a la base universitaria.
+La suite usa mocks para la funcion Jachasun y no necesita acceso a la base
+universitaria real.
 
 ## Salud y despliegue
 
 Verificar `GET /health`, `php artisan app:health`, permisos de `storage` y
 `bootstrap/cache`, HTTPS, backups, restauracion, logs y workers antes de
-habilitar un ambiente. No registrar secretos ni respuestas institucionales
-completas en logs.
+habilitar un ambiente. No registrar secretos ni filas completas de Jachasun.
 
-## Integracion institucional
+## Consulta Jachasun
 
-`INSTITUTIONAL_ENABLED=false` es el valor predeterminado. Activarla requiere
-un ambiente autorizado, credenciales suministradas por administracion y una
-prueba del contrato documentado en
-[`INTEGRATION_JACHASUN.md`](INTEGRATION_JACHASUN.md). La aplicacion solo usa
-la funcion permitida en una transaccion `READ ONLY`.
-
-Con la integracion habilitada, `/designaciones` consulta siempre Jachasun para
-la carrera del director con `0`/`0`. No mezcla propuestas locales ni utiliza
-datos locales como respaldo. Si Jachasun falla o esta deshabilitado, responde
-HTTP 503 con un mensaje seguro.
+`/designaciones` consulta la carrera del director con
+`f_asignaciones(sigla, '0', '0')`. No existe una bandera de activacion ni una
+segunda pantalla institucional. La consulta usa parametros enlazados y una
+transaccion `READ ONLY`; los fallos responden con un mensaje seguro.

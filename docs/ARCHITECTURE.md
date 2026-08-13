@@ -24,30 +24,25 @@ coordinan transacciones y los modelos/migraciones conservan restricciones.
 
 ## Límites de datos
 
-La base local contiene usuarios, carreras, gestiones, propuestas, filas de
-asignación, versiones, snapshots, decisiones, auditoría y notificaciones. Esta
-base es la única que recibe migraciones y escrituras de la aplicación.
-
-Jachasun es una fuente institucional externa y separada. Su primer uso es el
-catálogo de `designaciones.f_asignaciones`; la integración se ejecuta en una
-conexión secundaria, dentro de una transacción `READ ONLY`, y está desactivada
-por defecto. No se importan docentes, materias, grupos u horas hasta confirmar
-que la función entregue esos identificadores y su significado.
+Jachasun es la conexión principal de ejecución. La lista de designaciones usa
+el catálogo `designaciones.f_asignaciones` dentro de una transacción `READ ONLY`.
+La compatibilidad de tablas para propuestas, versiones, snapshots, decisiones,
+auditoría y notificaciones debe verificarse contra el esquema real antes de
+eliminar o cambiar sus modelos y reglas.
 
 ## Módulos
 
 - Propuestas: crear borradores, editar filas, copiar e importar datos locales.
 - Revisión: decidir snapshots pendientes y producir el estado resultante.
 - Consulta: preparar datos para lista y edición sin cambiar reglas.
-- Institucional: consultar y normalizar únicamente el catálogo autorizado.
+- Jachasun: consultar y normalizar únicamente el catálogo autorizado.
 - Notificaciones y auditoría: registrar eventos internos del flujo.
 
 ## Roles y fronteras
 
 `director_carrera` opera únicamente su carrera y `vicerrectorado` accede a la
-bandeja de revisión conforme a sus Policies. La consulta institucional aplica
-la misma frontera: un director no puede consultar otra carrera; Vicerrectorado
-puede usar el alcance global autorizado por el código actual.
+bandeja de revisión conforme a sus Policies. La lista Jachasun obtiene la
+carrera exclusivamente del usuario autenticado.
 
 ## Estados independientes
 
@@ -69,8 +64,8 @@ legado como si fuera el estado de una versión actual.
 ## Seguridad y fallos
 
 - Credenciales solo en `.env`; nunca se registran ni se versionan.
-- La conexión institucional no sustituye `DB_CONNECTION`.
-- Las consultas institucionales usan parámetros enlazados.
+- `DB_CONNECTION=jachasun` es la conexión principal.
+- Las consultas Jachasun usan parámetros enlazados.
 - Los errores externos se muestran con mensajes seguros y se registran sin
   credenciales ni datos sensibles.
 - Las pruebas usan PostgreSQL local/testing y datos sintéticos.
@@ -82,6 +77,5 @@ legado como si fuera el estado de una versión actual.
 - `app/Services/ImportacionPropuestaService.php`
 - `app/Policies/PropuestaPolicy.php`
 - `app/Policies/PropuestaVersionPolicy.php`
-- `app/Services/Institutional/InstitutionalDesignacionesService.php`
-- `config/institutional.php`
+- `app/Services/Jachasun/JachasunDesignacionesService.php`
 - `database/migrations/`
