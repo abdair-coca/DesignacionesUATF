@@ -2,20 +2,17 @@
 
 namespace Tests\Unit;
 
-use App\Services\Institutional\InstitutionalDesignacionesService;
+use App\Services\Jachasun\JachasunDesignacionesService;
 use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
-use LogicException;
 use Mockery;
 use Tests\TestCase;
 
-class InstitutionalDesignacionesClientTest extends TestCase
+class JachasunDesignacionesServiceTest extends TestCase
 {
     public function test_normaliza_filas_de_la_funcion_en_una_consulta_de_solo_lectura(): void
     {
-        config(['institutional.enabled' => true]);
-
         $connection = Mockery::mock(Connection::class);
         $connection->shouldReceive('transaction')
             ->once()
@@ -45,9 +42,9 @@ class InstitutionalDesignacionesClientTest extends TestCase
             ]);
 
         $database = Mockery::mock(DatabaseManager::class);
-        $database->shouldReceive('connection')->once()->with('institutional')->andReturn($connection);
+        $database->shouldReceive('connection')->once()->with('jachasun')->andReturn($connection);
 
-        $rows = (new InstitutionalDesignacionesService($database))->listar('INF', '2023', '1');
+        $rows = (new JachasunDesignacionesService($database))->listar('INF', '2023', '1');
 
         $this->assertSame([
             [
@@ -62,17 +59,5 @@ class InstitutionalDesignacionesClientTest extends TestCase
                 'estado' => 'SOLICITADO',
             ],
         ], $rows->all());
-    }
-
-    public function test_no_consulta_si_la_integracion_institucional_esta_deshabilitada(): void
-    {
-        config(['institutional.enabled' => false]);
-
-        $database = Mockery::mock(DatabaseManager::class);
-        $database->shouldNotReceive('connection');
-
-        $this->expectException(LogicException::class);
-
-        (new InstitutionalDesignacionesService($database))->listar('UATF', '2024', '1');
     }
 }

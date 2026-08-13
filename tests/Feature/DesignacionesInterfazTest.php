@@ -10,7 +10,7 @@ use App\Models\Materia;
 use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\User;
-use App\Services\Institutional\InstitutionalDesignacionesService;
+use App\Services\Jachasun\JachasunDesignacionesService;
 use Illuminate\Support\Collection;
 use Mockery;
 use Tests\TestCase;
@@ -80,7 +80,7 @@ class DesignacionesInterfazTest extends TestCase
     public function test_lista_y_editor_muestran_impresion_y_navegacion(): void
     {
         [$director, $propuesta] = $this->propuestaBorrador();
-        $this->mockInstitutionalList();
+        $this->mockJachasunList();
 
         $this->actingAs($director)
             ->get('/designaciones')
@@ -97,7 +97,7 @@ class DesignacionesInterfazTest extends TestCase
             ->assertSee('aria-label="Página anterior"', false);
     }
 
-    public function test_lista_institucional_muestra_acciones_deshabilitadas(): void
+    public function test_lista_jachasun_muestra_acciones_deshabilitadas(): void
     {
         [$director, $propuesta] = $this->propuestaBorrador();
         Propuesta::create([
@@ -108,7 +108,7 @@ class DesignacionesInterfazTest extends TestCase
             'estado' => 'oficial',
             'descripcion' => 'Propuesta aprobada',
         ]);
-        $this->mockInstitutionalList(new Collection([[
+        $this->mockJachasunList(new Collection([[
             'id' => 1,
             'programa_codigo' => 'INF',
             'programa_nombre' => 'INGENIERIA INFORMATICA',
@@ -144,7 +144,7 @@ class DesignacionesInterfazTest extends TestCase
             'estado' => 'borrador',
             'descripcion' => 'Propuesta de gestion anterior',
         ]);
-        $this->mockInstitutionalList();
+        $this->mockJachasunList();
 
         $this->actingAs($director)
             ->get('/designaciones?gestion_id='.$propuestaActual->gestion_id)
@@ -169,14 +169,13 @@ class DesignacionesInterfazTest extends TestCase
             ->assertDontSee('El borrador esta bloqueado mientras una version este pendiente de revision.', false);
     }
 
-    private function mockInstitutionalList(?Collection $items = null): void
+    private function mockJachasunList(?Collection $items = null): void
     {
-        config(['institutional.enabled' => true]);
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service = Mockery::mock(JachasunDesignacionesService::class);
         $service->shouldReceive('listar')
             ->once()
             ->andReturn($items ?? new Collection);
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+        $this->app->instance(JachasunDesignacionesService::class, $service);
     }
 
     private function propuestaBorrador(): array

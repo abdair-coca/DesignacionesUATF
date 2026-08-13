@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Carrera;
 use App\Models\User;
-use App\Services\Institutional\InstitutionalDesignacionesService;
+use App\Services\Jachasun\JachasunDesignacionesService;
 use Illuminate\Support\Collection;
 use Mockery;
 use Tests\TestCase;
@@ -14,10 +14,9 @@ class PageAccessTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['institutional.enabled' => true]);
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service = Mockery::mock(JachasunDesignacionesService::class);
         $service->shouldReceive('listar')->zeroOrMoreTimes()->andReturn(new Collection);
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+        $this->app->instance(JachasunDesignacionesService::class, $service);
     }
 
     public function test_raiz_y_login_dirigen_a_designaciones_para_director(): void

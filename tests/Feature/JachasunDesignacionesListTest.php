@@ -7,22 +7,21 @@ use App\Models\Gestion;
 use App\Models\Periodo;
 use App\Models\Propuesta;
 use App\Models\User;
-use App\Services\Institutional\InstitutionalDesignacionesService;
+use App\Services\Jachasun\JachasunDesignacionesService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
 
-class InstitutionalDesignacionesListModeTest extends TestCase
+class JachasunDesignacionesListTest extends TestCase
 {
     public function test_lista_principal_consulta_la_carrera_con_ceros_y_adapta_la_tabla_actual(): void
     {
-        config(['institutional.enabled' => true]);
         $carrera = Carrera::factory()->create(['sigla' => 'INF', 'nombre' => 'Ingenieria Informatica']);
         $director = User::factory()->director($carrera)->create();
         $this->crearPropuestaLocal($director, 'Propuesta local que no debe aparecer');
-        $this->mockInstitutionalService(new Collection([[
+        $this->mockJachasunService(new Collection([[
             'id' => 2117,
             'programa_codigo' => 'INF',
             'programa_nombre' => 'INGENIERIA INFORMATICA',
@@ -58,24 +57,11 @@ class InstitutionalDesignacionesListModeTest extends TestCase
         $this->assertFalse(file_exists(resource_path('views/designaciones/partials/lista-institucional.blade.php')));
     }
 
-    public function test_lista_principal_consulta_jachasun_sin_modo_visual(): void
+    public function test_estado_jachasun_desconocido_se_muestra_sin_inventar_equivalencia(): void
     {
-        config(['institutional.enabled' => true]);
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
-        $service->shouldReceive('listar')->once()->with('INF', '0', '0')->andReturn(new Collection);
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
-
-        $this->actingAs($director)->get('/designaciones')->assertOk();
-    }
-
-    public function test_estado_institucional_desconocido_se_muestra_sin_inventar_equivalencia(): void
-    {
-        config(['institutional.enabled' => true]);
-        $carrera = Carrera::factory()->create(['sigla' => 'INF']);
-        $director = User::factory()->director($carrera)->create();
-        $this->mockInstitutionalService(new Collection([[
+        $this->mockJachasunService(new Collection([[
             'id' => 1,
             'programa_codigo' => 'INF',
             'programa_nombre' => 'INGENIERIA INFORMATICA',
@@ -94,18 +80,67 @@ class InstitutionalDesignacionesListModeTest extends TestCase
             ->assertSee('estado_label', false);
     }
 
-    public function test_fallo_institucional_bloquea_la_lista_con_mensaje_seguro(): void
+    public function test_tres_carreras_reciben_sus_designaciones_con_ceros(): void
     {
-        config(['institutional.enabled' => true]);
+        $carreras = collect([
+            ['sigla' => 'INF', 'nombre' => 'Ingenieria Informatica'],
+            ['sigla' => 'CIV', 'nombre' => 'Ingenieria Civil'],
+            ['sigla' => 'IND', 'nombre' => 'Ingenieria Industrial'],
+        ])->map(fn (array $datos): array => [
+            'carrera' => Carrera::factory()->create($datos),
+        ])->map(function (array $contexto): array {
+            $contexto['director'] = User::factory()->director($contexto['carrera'])->create();
+
+            return $contexto;
+        });
+
+        $service = Mockery::mock(JachasunDesignacionesService::class);
+        $service->shouldReceive('listar')
+            ->times(3)
+            ->withArgs(fn (string $sigla, string $gestion, string $periodo): bool => in_array($sigla, ['INF', 'CIV', 'IND'], true)
+                && $gestion === '0'
+                && $periodo === '0')
+            ->andReturnUsing(fn (string $sigla): Collection => new Collection([[
+                'id' => match ($sigla) {
+                    'INF' => 101,
+                    'CIV' => 202,
+                    'IND' => 303,
+                },
+                'programa_codigo' => $sigla,
+                'programa_nombre' => $sigla,
+                'detalle' => 'DESIGNACIONES '.$sigla,
+                'fecha' => null,
+                'gestion' => '2024',
+                'periodo' => '1',
+                'observacion' => null,
+                'estado' => 'SOLICITADO',
+            ]]));
+        $this->app->instance(JachasunDesignacionesService::class, $service);
+
+        foreach ($carreras as $contexto) {
+            $this->actingAs($contexto['director'])
+                ->get('/designaciones')
+                ->assertOk()
+                ->assertSee('DESIGNACIONES '.$contexto['carrera']->sigla, false)
+                ->assertSee((string) match ($contexto['carrera']->sigla) {
+                    'INF' => 101,
+                    'CIV' => 202,
+                    'IND' => 303,
+                });
+        }
+    }
+
+    public function test_fallo_jachasun_bloquea_la_lista_con_mensaje_seguro(): void
+    {
         Log::spy();
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service = Mockery::mock(JachasunDesignacionesService::class);
         $service->shouldReceive('listar')
             ->once()
             ->with('INF', '0', '0')
             ->andThrow(new RuntimeException('SQL password=secret SELECT private_rows'));
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+        $this->app->instance(JachasunDesignacionesService::class, $service);
 
         $this->actingAs($director)
             ->get('/designaciones')
@@ -116,36 +151,22 @@ class InstitutionalDesignacionesListModeTest extends TestCase
 
         Log::shouldHaveReceived('warning')
             ->once()
-            ->with('Lista institucional no disponible.', ['exception' => RuntimeException::class]);
+            ->with('Lista Jachasun no disponible.', ['exception' => RuntimeException::class]);
     }
 
-    public function test_integracion_deshabilitada_bloquea_la_lista(): void
+    private function mockJachasunService(Collection $items): void
     {
-        config(['institutional.enabled' => false]);
-        $carrera = Carrera::factory()->create(['sigla' => 'INF']);
-        $director = User::factory()->director($carrera)->create();
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
-        $service->shouldReceive('listar')->once()->with('INF', '0', '0')->andThrow(new \LogicException);
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
-
-        $this->actingAs($director)
-            ->get('/designaciones')
-            ->assertStatus(503)
-            ->assertSee('No se puede cargar la lista institucional.');
-    }
-
-    private function mockInstitutionalService(Collection $items): void
-    {
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service = Mockery::mock(JachasunDesignacionesService::class);
         $service->shouldReceive('listar')
             ->once()
             ->with('INF', '0', '0')
             ->andReturn($items);
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+        $this->app->instance(JachasunDesignacionesService::class, $service);
     }
 
     private function crearPropuestaLocal(User $director, string $descripcion): Propuesta
     {
+        Gestion::query()->update(['es_actual' => false]);
         $gestion = Gestion::factory()->create(['es_actual' => true]);
         $periodo = Periodo::factory()->create();
 

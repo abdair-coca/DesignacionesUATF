@@ -13,7 +13,7 @@ use App\Models\PropuestaDesignacion;
 use App\Models\PropuestaVersion;
 use App\Models\PropuestaVersionDesignacion;
 use App\Models\User;
-use App\Services\Institutional\InstitutionalDesignacionesService;
+use App\Services\Jachasun\JachasunDesignacionesService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Mockery;
@@ -45,10 +45,9 @@ class PropuestaVersionadaTest extends TestCase
         $this->assertDatabaseHas('propuestas', ['descripcion' => 'Propuesta inicial', 'estado' => 'borrador']);
         $this->assertDatabaseHas('propuestas', ['descripcion' => 'Segunda propuesta', 'estado' => 'borrador']);
 
-        config(['institutional.enabled' => true]);
-        $service = Mockery::mock(InstitutionalDesignacionesService::class);
+        $service = Mockery::mock(JachasunDesignacionesService::class);
         $service->shouldReceive('listar')->once()->with(strtoupper((string) $director->carrera->sigla), '0', '0')->andReturn(new Collection);
-        $this->app->instance(InstitutionalDesignacionesService::class, $service);
+        $this->app->instance(JachasunDesignacionesService::class, $service);
 
         $this->actingAs($director)
             ->get('/designaciones')

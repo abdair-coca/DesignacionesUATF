@@ -12,7 +12,7 @@ class ApplicationHealthTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'ok')
             ->assertJsonPath('checks.database.status', 'ok')
-            ->assertJsonPath('checks.institutional.status', 'not_configured');
+            ->assertJsonMissingPath('checks.jachasun');
     }
 
     public function test_health_command_reports_success_without_exposing_secrets(): void
@@ -20,7 +20,6 @@ class ApplicationHealthTest extends TestCase
         $this->artisan('app:health')
             ->expectsOutputToContain('Estado: ok')
             ->expectsOutputToContain('database: ok')
-            ->expectsOutputToContain('institutional: not_configured')
             ->assertExitCode(0);
     }
 
@@ -32,16 +31,5 @@ class ApplicationHealthTest extends TestCase
             ->expectsOutputToContain('Estado: degraded')
             ->expectsOutputToContain('app_key: failed')
             ->assertExitCode(1);
-    }
-
-    public function test_institutional_health_check_cannot_be_enabled_before_the_adapter_exists(): void
-    {
-        config(['institutional.enabled' => true]);
-
-        $this->getJson('/health')
-            ->assertServiceUnavailable()
-            ->assertJsonPath('status', 'degraded')
-            ->assertJsonPath('checks.institutional.status', 'blocked')
-            ->assertJsonPath('checks.institutional.required', true);
     }
 }
