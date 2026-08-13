@@ -23,6 +23,21 @@ DB_PASSWORD=...
 
 Las credenciales se mantienen fuera de Git y nunca se escriben en logs.
 
+### Login temporal
+
+Mientras no exista una funcion de usuarios autorizada, el login puede usar el
+proveedor aislado `demo`:
+
+```env
+AUTH_PROVIDER=demo
+DEMO_AUTH_PASSWORD=...
+```
+
+Las cuentas demo son Vicerrectorado, INF, MED y MEC. No se consultan ni se
+escriben usuarios en Jachasun. Cuando exista el proveedor real, cambiar
+`AUTH_PROVIDER=users` y retirar `app/Auth/Demo`, `config/demo-auth.php` y
+`DemoAuthServiceProvider`; el login, rutas y politicas no cambian.
+
 ## Testing
 
 ```bash

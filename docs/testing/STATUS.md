@@ -165,3 +165,23 @@ lista principal.
 No se eliminaron modelos, migraciones ni servicios del flujo de propuestas:
 el repositorio no contiene un inventario verificable del esquema equivalente
 en Jachasun. Esa eliminacion requiere una fase autorizada de compatibilidad.
+
+## Login temporal desacoplado
+
+Estado: **COMPLETA; PENDIENTE DE PROVEEDOR REAL**
+
+Se agrego un proveedor de autenticacion en memoria seleccionable con
+`AUTH_PROVIDER=demo`. Define cuatro cuentas temporales (Vicerrectorado, INF,
+MED y MEC) y valida una contraseña comun desde `DEMO_AUTH_PASSWORD`. No usa la
+tabla `users`, no escribe en Jachasun y no cambia controllers, rutas, vistas ni
+policies. Testing conserva `AUTH_PROVIDER=users`.
+
+| Comando o verificacion | Resultado |
+| --- | --- |
+| `php artisan test tests/Unit/DemoUserProviderTest.php tests/Feature/Auth/DemoAuthenticationTest.php --env=testing` | OK; 7 pruebas, 35 aserciones |
+| `vendor/bin/pint --test` | OK |
+| `git diff --check` | OK |
+| Tinker: proveedor y 4 cuentas demo | OK; sin contraseña expuesta |
+
+La suite completa no se ejecutó contra Jachasun real: el entorno testing apunta
+a PostgreSQL aislado y no estaba disponible durante esta fase.

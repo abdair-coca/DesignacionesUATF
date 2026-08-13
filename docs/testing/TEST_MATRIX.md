@@ -39,6 +39,8 @@ una decisión universitaria antes de fijar una expectativa.
 | LIST-005 | Lista | Fecha, observacion y `r_id` se muestran correctamente | CUBIERTA |
 | LIST-006 | Lista | Acciones visibles pero deshabilitadas | CUBIERTA |
 | LIST-007 | Lista | `SOLICITADO` se presenta como Oficial | NEEDS_BUSINESS_CONFIRMATION |
+| AUTH-005 | Login | Proveedor demo aislado con cuatro cuentas y carrera | CUBIERTA |
+| AUTH-006 | Login | Contraseña demo incorrecta y sesión persistente | CUBIERTA |
 
 La matriz no resuelve alcance de Vicerrectorado, precedencia institucional ni
 limites horarios. Esos puntos permanecen en `BUSINESS_RULES.md`.
