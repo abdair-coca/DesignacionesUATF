@@ -57,15 +57,5 @@
             </a>
         @endif
 
-        <a href="{{ route('institucional.designaciones.consulta') }}"
-           class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('institucional.*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
-            <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 {{ request()->routeIs('institucional.*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10.5L12 3l9 7.5M5.5 9.5V21h13V9.5M9 21v-6h6v6" />
-                </svg>
-                <span>Consulta institucional</span>
-            </div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-gray-500">Solo lectura</span>
-        </a>
     </nav>
 </aside>

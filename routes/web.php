@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\HealthController;
-use App\Http\Controllers\InstitutionalDesignacionesController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PropuestaController;
 use App\Http\Controllers\RevisionPropuestaController;
@@ -36,13 +35,6 @@ Route::middleware('auth')->group(function () {
     Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
     Route::post('notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas'])->name('notificaciones.leer_todas');
     Route::post('notificaciones/{notificacion}/leer', [NotificacionController::class, 'marcarLeida'])->name('notificaciones.leer');
-
-    Route::middleware('rol:director_carrera,vicerrectorado')->group(function () {
-        Route::get('institucional/designaciones/consulta', [InstitutionalDesignacionesController::class, 'consulta'])
-            ->name('institucional.designaciones.consulta');
-        Route::get('institucional/designaciones', [InstitutionalDesignacionesController::class, 'index'])
-            ->name('institucional.designaciones.index');
-    });
 
     Route::middleware('rol:vicerrectorado')->group(function () {
         Route::get('revisiones/pendientes', [RevisionPropuestaController::class, 'pendientes'])->name('revisiones.pendientes');

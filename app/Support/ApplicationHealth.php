@@ -20,7 +20,6 @@ class ApplicationHealth
             'cache' => $this->checkCache(),
             'storage' => $this->checkWritableDirectory(storage_path()),
             'bootstrap_cache' => $this->checkWritableDirectory(base_path('bootstrap/cache')),
-            'institutional' => $this->checkInstitutionalConfiguration(),
         ];
 
         $failedRequired = collect($checks)->contains(
@@ -84,20 +83,6 @@ class ApplicationHealth
         return [
             'status' => is_dir($path) && is_writable($path) ? 'ok' : 'failed',
             'required' => true,
-        ];
-    }
-
-    /**
-     * @return array{status: string, required: bool}
-     */
-    private function checkInstitutionalConfiguration(): array
-    {
-        // La integracion institucional tiene su propia configuracion y conexion secundaria.
-        $enabled = (bool) config('institutional.enabled');
-
-        return [
-            'status' => $enabled ? 'blocked' : 'not_configured',
-            'required' => $enabled,
         ];
     }
 }
