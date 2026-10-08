@@ -10,14 +10,7 @@ use App\Models\Grupo;
 use App\Models\MallaCurricular;
 use App\Models\Materia;
 use App\Models\Periodo;
-use App\Models\Propuesta;
-use App\Models\PropuestaDesignacion;
-use App\Models\PropuestaEvento;
-use App\Models\PropuestaVersion;
-use App\Models\PropuestaVersionDecision;
-use App\Models\PropuestaVersionDesignacion;
 use App\Models\User;
-use App\Notifications\PropuestaActualizadaNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -48,7 +41,6 @@ final class TestingDatasetSupport
 
         $catalog = self::seedCatalog($careers, $config);
         self::seedLegacyDesignaciones($catalog, $gestiones, $periodos);
-        self::seedWorkflowScenarios($catalog, $gestiones->firstWhere('es_actual', true), $periodos->first(), $config['workflow']);
 
         return [
             'careers' => $careers,
@@ -65,13 +57,9 @@ final class TestingDatasetSupport
         $career = Carrera::where('sigla', 'TST01')->firstOrFail();
         $materia = Materia::where('sigla', 'TST01-001')->firstOrFail();
         $docente = Docente::where('carrera_origen_id', $career->id)->firstOrFail();
-        $propuesta = Propuesta::where('carrera_id', $career->id)->latest('id')->firstOrFail();
-
         $career->update(['nombre' => "Carrera Ñandú O'Connor — Δ"]);
         $materia->update(['nombre' => 'Álgebra Ñandú — O\'Connor — Δ']);
         $docente->update(['nombre' => "Núñez O'Connor — Δ docente"]);
-        $propuesta->update(['descripcion' => str_repeat('Ñandú — límite ', 16)]);
-
         Docente::firstOrCreate(
             ['ci' => '999999999'],
             ['nombre' => 'Docente sin carrera opcional', 'carrera_origen_id' => null],
@@ -241,132 +229,11 @@ final class TestingDatasetSupport
         }
     }
 
-    private static function seedWorkflowScenarios(array $catalog, Gestion $gestion, Periodo $periodo, int $scenarioCount): void
-    {
-        $career = $catalog['careers']->first();
-        $groups = $catalog['groupsByCareer']->get($career->id, collect())->values();
-        $teachers = $catalog['teachersByCareer']->get($career->id, collect())->values();
-        $director = User::findOrFail($catalog['directorsByCareer']->get($career->id));
-        $vicerrectorado = User::where('rol', User::ROL_VICERRECTORADO)->firstOrFail();
-        $scenarios = ['borrador', 'pendiente', 'observada', 'aprobada', 'retirada'];
-
-        for ($scenarioIndex = 0; $scenarioIndex < min($scenarioCount, count($scenarios)); $scenarioIndex++) {
-            $scenario = $scenarios[$scenarioIndex];
-            $propuesta = Propuesta::create([
-                'carrera_id' => $career->id,
-                'gestion_id' => $gestion->id,
-                'periodo_id' => $periodo->id,
-                'creado_por' => $director->id,
-                'descripcion' => "Dataset sintético: escenario {$scenario}",
-                'estado' => $scenario === 'aprobada' ? 'oficial' : 'borrador',
-            ]);
-
-            $rows = $groups->map(fn (Grupo $group, int $index) => PropuestaDesignacion::create([
-                'propuesta_id' => $propuesta->id,
-                'docente_id' => $teachers[$index % $teachers->count()],
-                'materia_id' => $group->mallaCurricular->materia_id,
-                'grupo_id' => $group->id,
-                'malla_curricular_id' => $group->malla_curricular_id,
-                'estado' => 'propuesta',
-                'horas_pagadas' => $group->mallaCurricular->materia->horas,
-                'horas_no_pagadas' => 0,
-                'observacion_remuneracion' => null,
-            ]));
-
-            if ($scenario === 'borrador') {
-                continue;
-            }
-
-            $now = CarbonImmutable::parse('2026-02-01 10:00:00')->addDays($scenarioIndex);
-            $version = PropuestaVersion::create([
-                'propuesta_id' => $propuesta->id,
-                'numero' => 1,
-                'estado' => $scenario,
-                'enviado_por' => $director->id,
-                'enviado_en' => $now,
-                'retirado_por' => $scenario === 'retirada' ? $director->id : null,
-                'retirado_en' => $scenario === 'retirada' ? $now->addHour() : null,
-                'revisado_por' => in_array($scenario, ['observada', 'aprobada'], true) ? $vicerrectorado->id : null,
-                'revisado_en' => in_array($scenario, ['observada', 'aprobada'], true) ? $now->addHour() : null,
-                'observaciones' => $scenario === 'observada' ? 'Observación sintética de dataset' : null,
-            ]);
-
-            foreach ($rows as $index => $row) {
-                PropuestaVersionDesignacion::create([
-                    'propuesta_version_id' => $version->id,
-                    'docente_id' => $row->docente_id,
-                    'docente_nombre' => $row->docente->nombre,
-                    'materia_id' => $row->materia_id,
-                    'materia_sigla' => $row->materia->sigla,
-                    'materia_nombre' => $row->materia->nombre,
-                    'materia_horas' => $row->materia->horas,
-                    'horas_pagadas' => $row->horas_pagadas,
-                    'horas_no_pagadas' => $row->horas_no_pagadas,
-                    'observacion_remuneracion' => null,
-                    'carrera_id' => $career->id,
-                    'carrera_sigla' => $career->sigla,
-                    'carrera_nombre' => $career->nombre,
-                    'grupo_id' => $row->grupo_id,
-                    'grupo_codigo' => $row->grupo->codigo,
-                    'malla_curricular_id' => $row->malla_curricular_id,
-                    'gestion_id' => $gestion->id,
-                    'gestion_nombre' => $gestion->nombre,
-                    'periodo_id' => $periodo->id,
-                    'periodo_nombre' => $periodo->nombre,
-                    'estado' => 'propuesta',
-                    'decision' => null,
-                    'observacion' => null,
-                ]);
-            }
-
-            if ($scenario !== 'retirada' && $scenario !== 'pendiente') {
-                foreach ($version->designaciones as $index => $snapshot) {
-                    $decision = $scenario === 'observada' && $index === 0 ? 'observada' : 'aprobada';
-                    PropuestaVersionDecision::create([
-                        'propuesta_version_designacion_id' => $snapshot->id,
-                        'decision' => $decision,
-                        'observacion' => $decision === 'observada' ? 'Corregir fila sintética' : null,
-                        'decidido_por' => $vicerrectorado->id,
-                        'decidido_en' => $now->addHour(),
-                    ]);
-                    if ($decision === 'aprobada') {
-                        $rows[$index]->update(['estado' => $scenario === 'observada' ? 'aprobada_previamente' : 'oficial']);
-                    }
-                }
-            }
-
-            PropuestaEvento::create([
-                'propuesta_id' => $propuesta->id,
-                'propuesta_version_id' => $version->id,
-                'usuario_id' => $scenario === 'observada' || $scenario === 'aprobada' ? $vicerrectorado->id : $director->id,
-                'tipo' => match ($scenario) {
-                    'observada' => 'observada',
-                    'aprobada' => 'aprobada',
-                    'retirada' => 'retirada',
-                    default => 'enviada',
-                },
-                'datos' => ['dataset' => 'testing', 'scenario' => $scenario],
-                'ocurrio_en' => $now,
-            ]);
-
-            $recipient = in_array($scenario, ['observada', 'aprobada'], true) ? $director : $vicerrectorado;
-            $event = match ($scenario) {
-                'observada' => 'observada',
-                'aprobada' => 'aprobada_final',
-                'retirada' => 'retirada',
-                default => 'enviada',
-            };
-            $recipient->notify(new PropuestaActualizadaNotification($version, $event));
-        }
-    }
-
     public static function counts(): array
     {
         $tables = [
             'users', 'carreras', 'materias', 'malla_curricular', 'grupos', 'docentes',
-            'gestiones', 'periodos', 'designaciones', 'propuestas', 'propuesta_designaciones',
-            'propuesta_versiones', 'propuesta_version_designaciones', 'propuesta_version_decisiones',
-            'propuesta_eventos', 'notifications',
+            'gestiones', 'periodos', 'designaciones', 'notifications',
         ];
 
         return collect($tables)->mapWithKeys(fn (string $table) => [$table => DB::table($table)->count()])->all();

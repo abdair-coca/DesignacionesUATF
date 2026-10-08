@@ -57,6 +57,19 @@ class DemoAuthenticationTest extends TestCase
         $this->assertSame('MED', auth()->user()->carrera->sigla);
     }
 
+    public function test_decanatura_login_uses_shared_password_and_keeps_its_faculty_scope(): void
+    {
+        $this->post('/login', [
+            'email' => 'decanatura.cp@uatf.edu.bo',
+            'password' => 'demo-password',
+        ])->assertRedirect(route('designaciones.index'));
+
+        $this->assertAuthenticated();
+        $this->assertSame(User::ROL_DECANATURA, auth()->user()->rol);
+        $this->assertGreaterThan(0, (int) auth()->user()->facultad_id);
+        $this->get('/')->assertRedirect(route('designaciones.index'));
+    }
+
     /**
      * @return array<string, array{string, string, string|null}>
      */
@@ -67,6 +80,7 @@ class DemoAuthenticationTest extends TestCase
             'informatica' => ['director.inf@uatf.edu.bo', User::ROL_DIRECTOR_CARRERA, 'INF'],
             'medicina' => ['director.med@uatf.edu.bo', User::ROL_DIRECTOR_CARRERA, 'MED'],
             'mecanica' => ['director.mec@uatf.edu.bo', User::ROL_DIRECTOR_CARRERA, 'MEC'],
+            'decanatura' => ['decanatura.cp@uatf.edu.bo', User::ROL_DECANATURA, null],
         ];
     }
 }

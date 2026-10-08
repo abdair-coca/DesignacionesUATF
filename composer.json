@@ -2,11 +2,12 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "uatf/designaciones",
     "type": "project",
-    "description": "Sistema web para gestionar propuestas, revisiones y versiones de designaciones docentes en la UATF.",
+    "description": "Sistema web para consultar y gestionar designaciones docentes universitarias.",
     "keywords": ["laravel", "uatf", "designaciones", "docentes"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0"
     },

@@ -45,5 +45,12 @@ return [
                 'nombre' => 'Ingeniería Mecánica',
             ],
         ],
+        [
+            'id' => 'demo-decanatura-cp',
+            'name' => 'Decanatura de Ciencias Puras',
+            'email' => 'decanatura.cp@uatf.edu.bo',
+            'rol' => User::ROL_DECANATURA,
+            'facultad_id' => 3,
+        ],
     ],
 ];

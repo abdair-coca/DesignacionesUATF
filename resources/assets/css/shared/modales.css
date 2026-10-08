@@ -1,0 +1,97 @@
+/* Marco compartido por las modales Blade con slots. */
+.app-modal {
+    align-items: center;
+    background: rgba(0, 0, 0, .55);
+    bottom: 0;
+    color: #343a40;
+    display: flex;
+    font-family: Roboto, Arial, sans-serif;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1050;
+}
+.app-modal-dialog { margin: 0 auto; max-width: 680px; width: 100%; }
+.app-modal-dialog-wide { max-width: 900px; }
+.app-modal-content { background: #fff; border: 1px solid rgba(0, 0, 0, .2); border-radius: .3rem; box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .25); max-height: calc(100vh - 40px); overflow: auto; }
+.app-modal-header { align-items: center; background: #2d353c; color: #fff; display: flex; justify-content: space-between; padding: 14px 20px; }
+.app-modal-kicker { color: #9ee0e0; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.app-modal-title { font-size: 1rem; font-weight: 500; margin: 2px 0 0; }
+.app-modal-close { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: .8; padding: 0; }
+.app-modal-close:disabled { cursor: not-allowed; opacity: .45; }
+.app-modal-body { padding: 20px; }
+.app-modal-body label { color: #343a40; display: block; font-size: .8rem; font-weight: 500; margin-bottom: 5px; }
+.app-modal-body input,
+.app-modal-body select,
+.app-modal-body textarea { background: #fff; border: 1px solid #ced4da; border-radius: .25rem; box-sizing: border-box; color: #343a40; font-family: inherit; font-size: .85rem; line-height: 1.5; padding: .45rem .75rem; }
+.app-modal-body input:focus,
+.app-modal-body select:focus,
+.app-modal-body textarea:focus { border-color: #00acac; box-shadow: 0 0 0 .15rem rgba(0, 172, 172, .2); outline: 0; }
+.app-modal-body textarea { resize: vertical; width: 100%; }
+.app-modal-footer { background: #f5f6f7; border-top: 1px solid #dee2e6; display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px; }
+
+/* Fase 5: modales reutilizables de confirmacion y notificacion. */
+.designacion-confirmacion-modal,
+.designacion-notificacion-modal {
+    align-items: center;
+    background: rgba(0, 0, 0, .62);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1200 !important;
+}
+
+/* Dialogo de confirmacion de operaciones destructivas o de escritura. */
+.designacion-confirmacion-modal .confirmacion-dialog {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, .2);
+    border-radius: .3rem;
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .3);
+    max-width: 440px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.designacion-confirmacion-modal .confirmacion-header { align-items: center; background: #2d353c; color: #fff; display: flex; justify-content: space-between; padding: 14px 20px; }
+.designacion-confirmacion-modal .confirmacion-kicker { color: #9ee0e0; display: block; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.designacion-confirmacion-modal .confirmacion-title { font-size: 1rem; font-weight: 500; margin: 2px 0 0; }
+.designacion-confirmacion-modal .confirmacion-close { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: .8; padding: 0; }
+.designacion-confirmacion-modal .confirmacion-body { color: #343a40; padding: 24px 20px; text-align: center; }
+.designacion-confirmacion-modal .confirmacion-icon { align-items: center; background: #fff8db; border: 2px solid #ffed4a; border-radius: 50%; color: #927b00; display: inline-flex; height: 54px; justify-content: center; margin-bottom: 14px; width: 54px; }
+.designacion-confirmacion-modal .confirmacion-icon svg { height: 28px; width: 28px; }
+.designacion-confirmacion-modal .confirmacion-message { font-size: .85rem; font-weight: 500; line-height: 1.55; margin: 0; }
+.designacion-confirmacion-modal .confirmacion-footer { background: #f5f6f7; border-top: 1px solid #dee2e6; display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px; }
+.designacion-confirmacion-modal .confirmacion-button { border: 1px solid transparent; border-radius: .25rem; cursor: pointer; font-family: inherit; font-size: .8rem; font-weight: 500; line-height: 1.5; padding: .45rem .8rem; }
+.designacion-confirmacion-modal .confirmacion-cancel { background: #fff; border-color: #6c757d; color: #495057; }
+.designacion-confirmacion-modal .confirmacion-submit { background: #00acac; border-color: #00acac; color: #fff; }
+.designacion-confirmacion-modal .confirmacion-submit:hover { background: #008a8a; }
+
+/* Dialogo informativo con variantes de exito, error y aviso. */
+.designacion-notificacion-modal .notificacion-dialog { background: #fff; border: 1px solid #d1d5db; border-radius: .5rem; box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, .25); max-width: 28rem; overflow: hidden; text-align: center; width: 100%; }
+.designacion-notificacion-modal .notificacion-header { align-items: center; background: #2d353c; color: #fff; display: flex; justify-content: space-between; padding: .75rem 1.25rem; }
+.designacion-notificacion-modal .notificacion-heading { align-items: center; display: flex; gap: .5rem; }
+.designacion-notificacion-modal .notificacion-kicker { border-radius: .25rem; color: #fff; font-size: 9px; font-weight: 700; padding: .125rem .375rem; text-transform: uppercase; }
+.designacion-notificacion-modal .notificacion-kicker-success { background: #00acac; }
+.designacion-notificacion-modal .notificacion-kicker-error { background: #e11d48; }
+.designacion-notificacion-modal .notificacion-kicker-info { background: #348fe2; }
+.designacion-notificacion-modal .notificacion-title { font-size: .75rem; font-weight: 700; }
+.designacion-notificacion-modal .notificacion-close { background: transparent; border: 0; color: #9ca3af; cursor: pointer; font-size: 1.25rem; line-height: 1; }
+.designacion-notificacion-modal .notificacion-close:hover { color: #fff; }
+.designacion-notificacion-modal .notificacion-body { padding: 1.5rem; }
+.designacion-notificacion-modal .notificacion-icon { align-items: center; border-radius: 50%; display: flex; font-weight: 700; height: 3.5rem; justify-content: center; margin: 0 auto 1rem; width: 3.5rem; }
+.designacion-notificacion-modal .notificacion-icon svg { height: 2rem; width: 2rem; }
+.designacion-notificacion-modal .notificacion-icon-success { background: #d1fae5; border: 2px solid #a7f3d0; color: #059669; }
+.designacion-notificacion-modal .notificacion-icon-error { background: #ffe4e6; border: 2px solid #fecdd3; color: #e11d48; }
+.designacion-notificacion-modal .notificacion-icon-info { background: #dbeafe; border: 2px solid #bfdbfe; color: #2563eb; }
+.designacion-notificacion-modal .notificacion-message { color: #374151; font-size: .75rem; font-weight: 600; line-height: 1.625; margin: 0; }
+.designacion-notificacion-modal .notificacion-footer { background: #f3f4f6; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; padding: .75rem 1.25rem; }
+.designacion-notificacion-modal .notificacion-accept { background: #2d353c; border: 0; border-radius: .5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, .15); color: #fff; cursor: pointer; font-size: .75rem; font-weight: 700; padding: .5rem 1.5rem; transition: background-color .15s ease; }
+.designacion-notificacion-modal .notificacion-accept:hover { background: #1f2937; }

@@ -33,6 +33,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'rol' => User::ROL_DIRECTOR_CARRERA,
             'carrera_id' => Carrera::factory(),
+            'facultad_id' => null,
         ];
     }
 
@@ -51,6 +52,16 @@ class UserFactory extends Factory
         return $this->state(fn () => [
             'rol' => User::ROL_DIRECTOR_CARRERA,
             'carrera_id' => $carrera ?? Carrera::factory(),
+            'facultad_id' => null,
+        ]);
+    }
+
+    public function decanatura(int $facultadId): static
+    {
+        return $this->state(fn () => [
+            'rol' => User::ROL_DECANATURA,
+            'carrera_id' => null,
+            'facultad_id' => $facultadId,
         ]);
     }
 
@@ -59,6 +70,7 @@ class UserFactory extends Factory
         return $this->state(fn () => [
             'rol' => User::ROL_VICERRECTORADO,
             'carrera_id' => null,
+            'facultad_id' => null,
         ]);
     }
 }

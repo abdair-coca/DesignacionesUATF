@@ -17,7 +17,6 @@ class TestingNormalSeeder extends Seeder
             'gestiones' => 10,
             'periodos' => 5,
             'users' => 20,
-            'workflow' => 5,
         ]);
         $validation = TestingDatasetValidator::validate();
         $this->command?->info(json_encode(['profile' => 'normal', 'summary' => $summary['counts'], 'validation' => $validation, 'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2)], JSON_UNESCAPED_UNICODE));

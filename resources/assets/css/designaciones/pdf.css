@@ -1,0 +1,76 @@
+/* Fase 3: estilos exclusivos del PDF de designaciones. DOMPDF los recibe desde la vista PDF. */
+
+/* Configuracion de pagina y tipografia del documento. */
+@page { size: letter portrait; margin: 0 34pt 70pt 34pt; }
+body.designaciones-pdf,
+body.designaciones-pdf * { box-sizing: border-box; }
+body.designaciones-pdf { margin: 0; padding: 0 34pt 70pt; background: #fff; color: #000; font-family: "Times New Roman", "DejaVu Serif", serif; font-size: 8pt; }
+
+/* Cabecera institucional. */
+body.designaciones-pdf .header { width: 100%; margin: 0; padding: 10pt 0 0; }
+body.designaciones-pdf .header-top { width: 100%; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
+body.designaciones-pdf .header-top td { padding: 0; margin: 0; border: none; vertical-align: top; }
+body.designaciones-pdf .header-left { width: 132pt; text-align: left; }
+body.designaciones-pdf .header-left img { display: block; width: 126pt; height: auto; margin: 0; }
+body.designaciones-pdf .header-center { text-align: center; }
+body.designaciones-pdf .header-right { width: 132pt; text-align: right; }
+body.designaciones-pdf .header-right img { display: block; width: 124pt; height: auto; margin: 2pt 0 0 auto; }
+body.designaciones-pdf .brand { width: 100%; text-align: center; padding-top: 10pt; }
+body.designaciones-pdf .brand-data-center { margin: 0; padding: 0; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 17pt; line-height: 17pt; font-weight: bold; color: #0b56a7; letter-spacing: -.2pt; }
+body.designaciones-pdf .brand-university { margin: 4pt 0 0; padding: 0; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10.4pt; line-height: 10.8pt; font-weight: bold; color: #b3202d; letter-spacing: -.1pt; white-space: nowrap; }
+
+/* Lineas decorativas y titulos institucionales. */
+body.designaciones-pdf .line-table, body.designaciones-pdf .line-table-bottom { border-collapse: collapse; border-spacing: 0; margin-left: auto; margin-right: auto; }
+body.designaciones-pdf .line-table { width: 230pt; margin-top: 5pt; }
+body.designaciones-pdf .line-table-bottom { width: 270pt; margin-top: 6pt; }
+body.designaciones-pdf .line-table td, body.designaciones-pdf .line-table-bottom td { border: none; padding: 0; height: 3pt; vertical-align: middle; }
+body.designaciones-pdf .line-dot-cell { width: 4pt; }
+body.designaciones-pdf .blue-dot { display: block; width: 2.3pt; height: 2.3pt; background: #1d5fb0; border-radius: 50%; }
+body.designaciones-pdf .blue-dot.right { margin-left: auto; }
+body.designaciones-pdf .blue-line { width: 100%; height: 1pt; border-top: .7pt solid #1d5fb0; }
+body.designaciones-pdf .document-title { margin-top: 6pt; text-align: center; font-family: "Times New Roman", "DejaVu Serif", serif; color: #000; }
+body.designaciones-pdf .document-title-main { margin: 0; padding: 0; font-size: 10.9pt; line-height: 11.5pt; font-weight: bold; white-space: nowrap; }
+body.designaciones-pdf .document-title-secondary { margin: 4pt 0 0; padding: 0; font-size: 15.2pt; line-height: 15.8pt; font-weight: bold; white-space: nowrap; }
+
+/* Datos de la designacion y separacion antes de la tabla. */
+body.designaciones-pdf .header-data { width: 100%; margin: 8pt 0 0; padding: 0; font-family: "Times New Roman", "DejaVu Serif", serif; font-size: 8pt; line-height: 9.5pt; color: #000; }
+body.designaciones-pdf .header-data-table { width: auto; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; }
+body.designaciones-pdf .header-data-table td { border: none; padding: 0; margin: 0; height: 10pt; vertical-align: top; }
+body.designaciones-pdf .data-label { width: 78pt; padding-right: 6pt !important; white-space: nowrap; font-weight: normal; }
+body.designaciones-pdf .data-value { white-space: nowrap; font-weight: normal; }
+body.designaciones-pdf .header-spacing { height: 7pt; }
+body.designaciones-pdf .detalle-wrapper { margin-top: -60pt; padding: 0; }
+
+/* Tabla de detalle y cabecera repetible entre paginas. */
+body.designaciones-pdf table.detalle { width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; font-family: "Times New Roman", "DejaVu Serif", serif; font-size: 7.7pt; color: #000; }
+body.designaciones-pdf table.detalle thead { display: table-header-group; }
+body.designaciones-pdf table.detalle tbody { display: table-row-group; }
+body.designaciones-pdf table.detalle thead th { border: .6pt solid #5c5c5c; padding: 4pt 3pt; height: 23pt; background: #fff; font-size: 6.8pt; line-height: 7.6pt; font-weight: bold; text-align: center; vertical-align: middle; text-transform: uppercase; }
+body.designaciones-pdf table.detalle thead tr.page-top-spacing th { height: 60pt !important; min-height: 60pt !important; padding: 0 !important; margin: 0 !important; border: none !important; background: transparent !important; font-size: 0 !important; line-height: 0 !important; }
+body.designaciones-pdf .page-top-spacing-content { display: block; width: 100%; height: 60pt; margin: 0; padding: 0; }
+body.designaciones-pdf table.detalle tbody td { border: .45pt solid #7a7a7a; padding: 5pt 4pt; font-size: 7.7pt; line-height: 9pt; vertical-align: middle; }
+body.designaciones-pdf table.detalle tr { page-break-inside: avoid; }
+body.designaciones-pdf .col-docente { width: 24%; }
+body.designaciones-pdf .col-ci { width: 8%; }
+body.designaciones-pdf .col-materia { width: 38%; }
+body.designaciones-pdf .col-grupo { width: 6%; }
+body.designaciones-pdf .col-horas { width: 8%; }
+body.designaciones-pdf .centro { text-align: center; }
+body.designaciones-pdf .num { text-align: right; }
+
+/* Footer fijo, lineas institucionales y reserva inferior. */
+body.designaciones-pdf .footer { position: fixed; left: 34pt; right: 34pt; bottom: 10pt; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 5.8pt; color: #374151; }
+body.designaciones-pdf .footer-table { width: 100%; border-collapse: collapse; border-spacing: 0; }
+body.designaciones-pdf .footer-table td { border: none; padding: 0; vertical-align: middle; }
+body.designaciones-pdf .footer-left { width: 42%; text-align: left; }
+body.designaciones-pdf .footer-center { width: 16%; text-align: center; }
+body.designaciones-pdf .footer-right { width: 42%; text-align: right; }
+body.designaciones-pdf .footer-blue { width: 100%; margin-top: 3pt; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
+body.designaciones-pdf .footer-blue td { height: 5pt; padding: 0; border: none; }
+body.designaciones-pdf .footer-blue-left, body.designaciones-pdf .footer-blue-right { width: 47%; background: #1d5fb0; }
+body.designaciones-pdf .footer-blue-gap { width: 6%; }
+body.designaciones-pdf .footer-red { width: 83%; height: 4pt; margin: 2pt auto 0; background: #b3202d; }
+
+body.designaciones-pdf .pdf-cell-padded {
+    padding: 12pt;
+}

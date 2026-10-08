@@ -5,8 +5,7 @@
 @section('content')
 <div class="w-full max-w-md bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-700/30">
     <!-- Header del Login estilo Color Admin v2 -->
-    <div class="bg-[#2d353c] p-6 text-center border-b border-black/20 relative" 
-         style="background-image: linear-gradient(rgba(45, 53, 60, 0.85), rgba(45, 53, 60, 0.95)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80');">
+    <div class="bg-[#2d353c] p-6 text-center border-b border-black/20 relative login-banner">
         <div class="inline-flex h-12 w-12 rounded-full bg-[#00acac] text-white font-black text-2xl items-center justify-center shadow-lg border-2 border-white/20 mb-3">
             U
         </div>
@@ -25,7 +24,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+        <form method="POST" action="/login" class="space-y-4">
             @csrf
 
             <!-- Email -->
@@ -59,7 +58,7 @@
             </div>
 
             <!-- Botón de Ingreso -->
-            <button type="submit" 
+            <button type="submit"
                     class="w-full bg-[#00acac] hover:bg-[#008a8a] text-white font-bold py-2.5 px-4 rounded-lg text-sm transition-all duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#00acac] focus:ring-offset-2">
                 Ingresar al Sistema
             </button>

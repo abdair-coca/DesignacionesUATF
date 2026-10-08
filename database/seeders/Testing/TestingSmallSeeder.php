@@ -17,7 +17,6 @@ class TestingSmallSeeder extends Seeder
             'gestiones' => 3,
             'periodos' => 3,
             'users' => 5,
-            'workflow' => 5,
         ]);
         $validation = TestingDatasetValidator::validate();
         $this->command?->info(json_encode(['profile' => 'small', 'summary' => $summary['counts'], 'validation' => $validation, 'memory_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2)], JSON_UNESCAPED_UNICODE));

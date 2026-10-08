@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'rol', 'carrera_id'])]
+#[Fillable(['name', 'email', 'password', 'rol', 'carrera_id', 'facultad_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -18,6 +18,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     public const ROL_DIRECTOR_CARRERA = 'director_carrera';
+
+    public const ROL_DECANATURA = 'decanatura';
 
     public const ROL_VICERRECTORADO = 'vicerrectorado';
 
@@ -32,6 +34,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'carrera_id' => 'integer',
+            'facultad_id' => 'integer',
         ];
     }
 
@@ -45,9 +48,19 @@ class User extends Authenticatable
         return $this->rol === self::ROL_VICERRECTORADO;
     }
 
+    public function esDecanatura(): bool
+    {
+        return $this->rol === self::ROL_DECANATURA;
+    }
+
     public function administraCarrera(int $carreraId): bool
     {
         return $this->esDirectorCarrera() && (int) $this->carrera_id === $carreraId;
+    }
+
+    public function administraFacultad(int $facultadId): bool
+    {
+        return $this->esDecanatura() && (int) $this->facultad_id === $facultadId;
     }
 
     public function carrera(): BelongsTo

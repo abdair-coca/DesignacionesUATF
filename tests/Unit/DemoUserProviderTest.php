@@ -38,4 +38,28 @@ class DemoUserProviderTest extends TestCase
         $this->assertSame('INF', $user->carrera->sigla);
         $this->assertSame($user->id, $provider->retrieveById('demo-inf')?->id);
     }
+
+    public function test_retrieves_a_decanatura_user_with_its_faculty_scope(): void
+    {
+        $provider = new DemoUserProvider(new BcryptHasher(['rounds' => 4]), [
+            [
+                'id' => 'demo-decanatura',
+                'name' => 'Decanatura de Prueba',
+                'email' => 'decanatura@example.test',
+                'rol' => User::ROL_DECANATURA,
+                'facultad_id' => 73001,
+            ],
+        ], 'demo-password');
+
+        $user = $provider->retrieveByCredentials([
+            'email' => 'decanatura@example.test',
+            'password' => 'demo-password',
+        ]);
+
+        $this->assertNotNull($user);
+        $this->assertTrue($user->esDecanatura());
+        $this->assertTrue($user->administraFacultad(73001));
+        $this->assertFalse($user->administraFacultad(73002));
+        $this->assertSame(73001, $user->facultad_id);
+    }
 }

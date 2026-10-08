@@ -1,90 +1,78 @@
-<header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
-    <div class="flex items-center gap-4">
-        <!-- Título Institucional / Contexto -->
-        <div class="flex items-center gap-2">
-            <span class="bg-[#00acac] text-white text-xs font-bold px-2 py-0.5 rounded shadow-sm">UATF</span>
-            <h1 class="text-gray-800 text-sm font-semibold tracking-tight hidden sm:block">
-                Sistema de Designación Docente
-            </h1>
-        </div>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<header class="odiseo-top-header">
+    <div class="top-brand">
+        <span class="top-brand-mark">UATF</span>
+        <h1 class="top-brand-title">Sistema ODISEO</h1>
     </div>
 
-    <!-- Acciones Rápidas & Perfil de Usuario -->
-    <div class="flex items-center gap-4">
+    <div class="top-actions">
         @php($notificacionesNoLeidas = Auth::user()?->unreadNotifications()->count() ?? 0)
         <div class="relative" x-data="{ open: false }">
-            <button type="button" @click="open = !open" @keydown.escape.window="open = false" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors relative" title="Notificaciones" aria-label="Notificaciones" :aria-expanded="open">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <button type="button" @click="open = !open" @keydown.escape.window="open = false" class="top-action" title="Notificaciones" aria-label="Notificaciones" :aria-expanded="open">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 @if($notificacionesNoLeidas > 0)
-                    <span class="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#00acac] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{{ $notificacionesNoLeidas }}</span>
+                    <span class="notification-count">{{ $notificacionesNoLeidas }}</span>
                 @endif
             </button>
 
-            <div x-cloak x-show="open" @click.outside="open = false" x-transition class="absolute right-0 top-full mt-3 w-[min(24rem,calc(100vw-2rem))] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
-                <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <h2 class="text-sm font-bold text-gray-900">Notificaciones</h2>
+            <div x-cloak x-show="open" @click.outside="open = false" x-transition class="top-menu odiseo-notification-menu">
+                <div class="top-menu-title">
+                    <strong>Notificaciones</strong>
                     @if($notificacionesNoLeidas > 0)
                         <form method="POST" action="{{ route('notificaciones.leer_todas') }}">
                             @csrf
-                            <button type="submit" class="text-xs font-semibold text-[#008a8a] hover:underline">Marcar leídas</button>
+                            <button type="submit" class="top-menu-link top-menu-mark-read">Marcar leídas</button>
                         </form>
                     @endif
                 </div>
 
                 @php($notificacionesRecientes = Auth::user()?->unreadNotifications()->latest()->limit(5)->get() ?? collect())
                 @forelse($notificacionesRecientes as $notificacion)
-                    <form method="POST" action="{{ route('notificaciones.leer', $notificacion) }}" class="border-b border-gray-100 last:border-b-0">
+                    <form method="POST" action="{{ route('notificaciones.leer', $notificacion) }}">
                         @csrf
-                        <button type="submit" @click="open = false" class="block w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors">
-                            <p class="text-sm font-semibold text-gray-900 line-clamp-2">{{ $notificacion->data['titulo'] ?? 'Actualización' }}</p>
-                            <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ $notificacion->data['detalle'] ?? '' }}</p>
-                            <p class="text-[11px] text-gray-400 mt-1">{{ $notificacion->created_at->format('d/m/Y H:i') }}</p>
+                        <button type="submit" @click="open = false" class="odiseo-notification-item">
+                            <p class="notification-title">{{ $notificacion->data['titulo'] ?? 'Actualización' }}</p>
+                            <p class="notification-detail">{{ $notificacion->data['detalle'] ?? '' }}</p>
+                            <p class="notification-date">{{ $notificacion->created_at->format('d/m/Y H:i') }}</p>
                         </button>
                     </form>
                 @empty
-                    <p class="px-4 py-6 text-center text-xs text-gray-500">No hay notificaciones nuevas.</p>
+                    <p class="odiseo-notification-empty">No hay notificaciones nuevas.</p>
                 @endforelse
 
-                <div class="px-4 py-3 bg-gray-50 text-center">
-                    <a href="{{ route('notificaciones.index') }}" class="text-xs font-bold text-[#008a8a] hover:underline">Ver todo</a>
+                <div class="odiseo-notification-footer">
+                    <a href="{{ route('notificaciones.index') }}">Ver todo</a>
                 </div>
             </div>
         </div>
 
-        <!-- Usuario Logueado (Director de Carrera / Admin) -->
-        <div class="flex items-center gap-3 border-l border-gray-200 pl-4" x-data="{ open: false }">
-            <div class="text-right hidden sm:block">
-                <p class="text-xs font-bold text-gray-800 leading-tight">
-                    {{ Auth::user()?->name ?? 'Usuario' }}
-                </p>
-                <p class="text-[10px] text-gray-500 font-medium">
-                    {{ Auth::user()?->email ?? '' }}
-                </p>
+        <div class="top-user" x-data="{ open: false }">
+            <div class="top-user-copy">
+                <p class="top-user-name">{{ Auth::user()?->name ?? 'Usuario' }}</p>
+                <p class="top-user-role">{{ Auth::user()?->esVicerrectorado() ? 'Vicerrectorado' : (Auth::user()?->esDecanatura() ? 'Decanatura' : 'Director de Carrera') }}</p>
             </div>
-            
+
             <div class="relative">
-                <button @click="open = !open" class="flex items-center gap-2 focus:outline-none">
-                    <div class="h-8 w-8 rounded-full bg-[#2d353c] text-white font-bold text-xs flex items-center justify-center ring-2 ring-[#00acac]/30">
-                        {{ strtoupper(substr(Auth::user()?->name ?? 'U', 0, 1)) }}
-                    </div>
+                <button type="button" @click="open = !open" @keydown.escape.window="open = false" class="top-action" aria-label="Abrir menú de usuario" :aria-expanded="open">
+                    <span class="top-avatar">{{ strtoupper(substr(Auth::user()?->name ?? 'U', 0, 1)) }}</span>
                 </button>
 
-                <!-- Menú desplegable Perfil -->
-                <div x-show="open" @click.away="open = false" x-transition 
-                     class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 text-xs text-gray-700 z-50">
-                    <div class="px-4 py-2 border-b border-gray-100">
-                        <p class="font-semibold text-gray-900">{{ Auth::user()?->name ?? 'Usuario' }}</p>
-                        <p class="text-[11px] text-gray-400">Rol: {{ Auth::user()?->esVicerrectorado() ? 'Vicerrectorado' : 'Director de Carrera' }}</p>
+                <div x-cloak x-show="open" @click.outside="open = false" x-transition class="top-menu">
+                    <div class="top-menu-title">
+                        <strong>{{ Auth::user()?->name ?? 'Usuario' }}</strong>
+                        <span>{{ Auth::user()?->email ?? '' }}</span>
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 font-medium flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <button type="submit" class="top-menu-link danger">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            Cerrar Sesión
+                            Cerrar sesión
                         </button>
                     </form>
                 </div>

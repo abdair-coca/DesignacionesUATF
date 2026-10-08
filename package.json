@@ -1,0 +1,10 @@
+{
+  "name": "asignaciones-uatf-assets",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss --input resources/assets/css/tailwind.input.css --output resources/assets/css/tailwind.generated.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.0"
+  }
+}

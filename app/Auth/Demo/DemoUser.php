@@ -3,6 +3,7 @@
 namespace App\Auth\Demo;
 
 use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -35,6 +36,16 @@ class DemoUser extends User
      */
     public function unreadNotifications(): object
     {
+        return $this->emptyNotificationsQuery();
+    }
+
+    public function notifications(): object
+    {
+        return $this->emptyNotificationsQuery();
+    }
+
+    private function emptyNotificationsQuery(): object
+    {
         return new class
         {
             public function count(): int
@@ -60,6 +71,21 @@ class DemoUser extends User
             public function update(array $values): int
             {
                 return 0;
+            }
+
+            public function paginate(int $perPage): LengthAwarePaginator
+            {
+                return new LengthAwarePaginator(collect(), 0, $perPage);
+            }
+
+            public function whereKey(mixed $id): self
+            {
+                return $this;
+            }
+
+            public function exists(): bool
+            {
+                return false;
             }
         };
     }

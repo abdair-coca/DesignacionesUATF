@@ -19,7 +19,6 @@ class TestingLargeSeeder extends Seeder
             'gestiones' => $scale(20),
             'periodos' => $scale(5),
             'users' => $scale(100),
-            'workflow' => min(5, $scale(5)),
         ]);
         $validation = TestingDatasetValidator::validate();
         $this->command?->info(json_encode([

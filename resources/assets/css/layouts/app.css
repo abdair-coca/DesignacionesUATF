@@ -1,0 +1,11 @@
+[x-cloak] {
+    display: none !important;
+}
+
+.login-banner {
+    background-image: linear-gradient(rgba(45, 53, 60, 0.85), rgba(45, 53, 60, 0.95)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80');
+}
+
+.sidebar-profile-banner {
+    background-image: linear-gradient(rgba(45, 53, 60, 0.75), rgba(45, 53, 60, 0.95)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80');
+}

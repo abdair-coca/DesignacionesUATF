@@ -1,6 +1,6 @@
 <aside class="w-64 bg-[#2d353c] text-[#a8b6c1] flex flex-col min-h-screen shrink-0 font-sans shadow-xl select-none">
     <!-- Header de Perfil / Universidad estilo Color Admin v2 -->
-    <div class="relative p-4 bg-cover bg-center border-b border-black/20" style="background-image: linear-gradient(rgba(45, 53, 60, 0.75), rgba(45, 53, 60, 0.95)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80');">
+    <div class="relative p-4 bg-cover bg-center border-b border-black/20 sidebar-profile-banner">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-full bg-[#00acac] text-white font-black text-xl flex items-center justify-center shadow-lg border-2 border-white/20">
@@ -27,22 +27,7 @@
             Navegación
         </div>
 
-        @if(Auth::user()?->esVicerrectorado())
-            <!-- Bandeja de Revisiones (Solo Vicerrectorado) -->
-            <a href="{{ route('revisiones.pendientes') }}"
-               class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('revisiones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
-                <div class="flex items-center gap-3">
-                    <svg class="w-4 h-4 {{ request()->routeIs('revisiones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span>Bandeja de Revisiones</span>
-                </div>
-                <span class="bg-[#00acac] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">
-                    INBOX
-                </span>
-            </a>
-        @else
-            <!-- Designaciones por Carrera (Solo Director) -->
+        @if(Auth::user()?->esDirectorCarrera() || Auth::user()?->esDecanatura())
             <a href="{{ route('designaciones.index') }}"
                class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('designaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
                 <div class="flex items-center gap-3">
@@ -55,7 +40,25 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </a>
+        @elseif(Auth::user()?->esVicerrectorado())
+            <a href="{{ route('vicerrectorado.designaciones.index') }}"
+               class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('vicerrectorado.designaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
+                <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 {{ request()->routeIs('vicerrectorado.designaciones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5h18M3 12h18M3 19h18" />
+                    </svg>
+                    <span>Designaciones universitarias</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
         @endif
+
+        <a href="{{ route('notificaciones.index') }}"
+           class="flex items-center gap-3 px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('notificaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
+            <span>Notificaciones</span>
+        </a>
 
     </nav>
 </aside>

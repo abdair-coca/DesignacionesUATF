@@ -1,0 +1,15 @@
+@import "tailwindcss" source(none);
+
+@source "../../../app";
+@source "../../views";
+@source "../js";
+
+@theme {
+    --font-sans: "Instrument Sans", sans-serif;
+    --color-coloradmin-sidebar: #2d353c;
+    --color-coloradmin-active: #20252a;
+    --color-coloradmin-hover: #23282c;
+    --color-coloradmin-text: #a8b6c1;
+    --color-coloradmin-teal: #00acac;
+    --color-coloradmin-tealdark: #008a8a;
+}

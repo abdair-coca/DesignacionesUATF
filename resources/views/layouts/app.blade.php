@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Designación de Docentes UATF')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>[x-cloak] { display: none !important; }</style>
+    <link href="{{ asset('resources/assets/css/tailwind.generated.css') }}" rel="stylesheet">
+    <link href="{{ asset('resources/assets/css/layouts/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('resources/assets/css/layouts/header.css') }}" rel="stylesheet">
+    <link href="{{ asset('resources/assets/css/shared/modales.css') }}" rel="stylesheet">
     <script>
         const CSRF_TOKEN = '{{ csrf_token() }}';
     </script>
@@ -14,33 +17,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        coloradmin: {
-                            sidebar: '#2d353c',
-                            active: '#20252a',
-                            hover: '#23282c',
-                            text: '#a8b6c1',
-                            teal: '#00acac',
-                            tealdark: '#008a8a',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Instrument Sans"', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Alpine.js CDN para Interactividad -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     @stack('styles')
 </head>
@@ -78,6 +54,22 @@
                     </div>
                 @endif
 
+                @if($errors->any())
+                    <div class="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-medium shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span class="font-bold">No se pudo guardar:</span>
+                        </div>
+                        <ul class="mt-2 space-y-1 list-disc list-inside">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <!-- Contenido Dinámico de la Página -->
                 <main class="flex-1 p-6 overflow-y-auto">
                     @yield('content')
@@ -91,5 +83,9 @@
     @endauth
 
     @stack('scripts')
+
+    <!-- Alpine se ejecuta después de registrar las fábricas de las vistas. -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 </body>
 </html>

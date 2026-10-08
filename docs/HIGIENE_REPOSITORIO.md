@@ -12,8 +12,9 @@ vigentes ni duplicarse en nuevos documentos.
 
 Los siguientes archivos y carpetas son material local de trabajo y no deben subirse a GitHub:
 
-- Contexto, instrucciones o memoria de asistentes: `CLAUDE.md`, `opencode.md`, `.claude/`, `.gemini/`.
-- Tareas temporales, handoffs o coordinación entre sesiones nuevos: `tasks/`.
+- Configuración local de asistentes: `opencode.md`, `.claude/`, `.gemini/`.
+  `AGENTS.md` es la única fuente de instrucciones del agente.
+- Tareas temporales, handoffs o coordinación entre sesiones nuevos: `docs/tasks/`.
 - Bitácoras operativas de sesiones nuevas: no crear otra `docs/bitacora/`.
 - Planes internos de mejora o prompts de trabajo nuevos: no agregarlos fuera de
   `docs/archive/`.
@@ -45,23 +46,22 @@ git rm -r --cached <ruta>
 
 Despues de retirarlo del indice, confirmar que la ruta este cubierta por `.gitignore`.
 
-## Documentacion vigente aceptada
+## Documentación vigente
 
-Se considera publicable:
+La entrada principal es `docs/README.md`. Mantener solo referencias técnicas
+que aporten información distinta:
 
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/BUSINESS_RULES.md`
-- `docs/OPERATIONS.md`
-- `docs/TESTING.md`
-- `docs/INTEGRATION_JACHASUN.md`
-- `docs/HIGIENE_REPOSITORIO.md`
+- `README.md`: resumen y comandos básicos.
+- `docs/README.md`: contexto, flujo vigente y mapa del código.
+- `docs/INTEGRATION_JACHASUN.md`: contrato de integración.
+- `docs/HIGIENE_REPOSITORIO.md`: estas reglas.
+- `docs/specs/`: especificaciones de cambios.
+- `docs/testing/STATUS.md`, `docs/testing/TEST_MATRIX.md` y
+  `docs/testing/BUG_REPORTS/`: trazabilidad obligatoria.
 
-También son obligatorios para trazabilidad `docs/testing/STATUS.md`,
-`docs/testing/TEST_MATRIX.md` y `docs/testing/BUG_REPORTS/`.
-
-Cualquier nuevo documento debe describir arquitectura, instalación, pruebas,
-decisiones técnicas estables o uso del sistema. No debe incluir prompts,
-trazas de conversación, notas de herramientas ni instrucciones exclusivas para
-asistentes. Las reglas no confirmadas deben marcarse
+El material histórico vive en `docs/archive/` y no debe enlazarse como regla
+vigente. Evite duplicar el contexto del proyecto en nuevas guías. Cualquier
+documento nuevo debe aportar una referencia técnica estable; no debe incluir
+prompts, trazas de conversación ni instrucciones exclusivas para asistentes.
+Las decisiones universitarias no confirmadas se marcan
 `NEEDS_BUSINESS_CONFIRMATION`.

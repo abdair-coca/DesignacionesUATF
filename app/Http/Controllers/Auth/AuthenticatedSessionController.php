@@ -45,11 +45,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if ($request->user()?->esVicerrectorado()) {
-            return redirect()->intended(route('revisiones.pendientes'));
-        }
-
-        return redirect()->intended(route('designaciones.index'));
+        return redirect()->intended(
+            ($request->user()?->esDirectorCarrera() || $request->user()?->esDecanatura())
+                ? route('designaciones.index')
+                : route('vicerrectorado.designaciones.index'),
+        );
     }
 
     public function destroy(Request $request): RedirectResponse

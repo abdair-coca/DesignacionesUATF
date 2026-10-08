@@ -82,6 +82,7 @@ class DemoUserProvider implements UserProvider
             'email' => $account['email'],
             'rol' => $account['rol'],
             'carrera_id' => $account['carrera_id'] ?? null,
+            'facultad_id' => $account['facultad_id'] ?? null,
             'remember_token' => null,
         ], true);
 

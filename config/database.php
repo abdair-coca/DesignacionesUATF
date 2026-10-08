@@ -16,9 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION') === 'institucional'
-        ? 'jachasun'
-        : env('DB_CONNECTION', 'jachasun'),
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,8 +31,8 @@ return [
 
     'connections' => [
 
-        // Jachasun es la unica conexion de ejecucion de la aplicacion.
-        'jachasun' => [
+        // Jachasun usa PostgreSQL como unica conexion de ejecucion.
+        'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),

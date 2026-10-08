@@ -41,7 +41,8 @@ La validacion destructiva de Fase 0 debe distinguirse del inicio normal.
 
 ## Mitigacion aplicada
 
-La guia `LEVANTAR_SERVIDOR_TESTING.md` indica `pg_ctl` para el inicio normal y
+La guía archivada `docs/archive/testing/LEVANTAR_SERVIDOR_TESTING.md` indica
+`pg_ctl` para el inicio normal y
 reserva `composer test:phase0` para validacion destructiva.
 
 ## Estado

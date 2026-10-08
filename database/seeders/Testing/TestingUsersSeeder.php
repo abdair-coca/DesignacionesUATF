@@ -11,6 +11,8 @@ class TestingUsersSeeder extends Seeder
 {
     public const PASSWORD = 'testing-password';
 
+    private const FACULTAD_SINTETICA_ID = 73001;
+
     public function run(): void
     {
         TestingSeederSafety::assertSafe();
@@ -21,7 +23,7 @@ class TestingUsersSeeder extends Seeder
 
     public static function seedForCareers(Collection $careers, int $totalUsers): void
     {
-        $totalUsers = max(2, $totalUsers);
+        $totalUsers = max(3, $totalUsers);
         $password = Hash::make(self::PASSWORD);
 
         User::updateOrCreate(
@@ -34,8 +36,19 @@ class TestingUsersSeeder extends Seeder
             ],
         );
 
+        User::updateOrCreate(
+            ['email' => 'decanatura.testing@example.test'],
+            [
+                'name' => 'Decanatura de Prueba',
+                'password' => $password,
+                'rol' => User::ROL_DECANATURA,
+                'carrera_id' => null,
+                'facultad_id' => self::FACULTAD_SINTETICA_ID,
+            ],
+        );
+
         $careers = $careers->values();
-        for ($index = 0; $index < $totalUsers - 1; $index++) {
+        for ($index = 0; $index < $totalUsers - 2; $index++) {
             $career = $careers[$index % $careers->count()];
             $email = sprintf('director.%s.%02d.testing@example.test', strtolower($career->sigla), $index + 1);
 
@@ -46,6 +59,7 @@ class TestingUsersSeeder extends Seeder
                     'password' => $password,
                     'rol' => User::ROL_DIRECTOR_CARRERA,
                     'carrera_id' => $career->id,
+                    'facultad_id' => null,
                 ],
             );
         }

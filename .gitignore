@@ -7,6 +7,10 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
+/.dev/TASK.md
+/.dev/
+/.agents/
+/skills-lock.json
 /.cursor/
 /.idea
 /.nova
@@ -22,6 +26,10 @@
 /storage/*.key
 /storage/backups/
 /storage/pail
+# Estado generado localmente; se conservan los .gitignore de estructura.
+/storage/**
+!/storage/**/
+!/storage/**/.gitignore
 /vendor
 _ide_helper.php
 Homestead.json
@@ -36,7 +44,7 @@ Thumbs.db
 /.gemini/
 CLAUDE.md
 opencode.md
-/tasks/
+/docs/tasks/
 /docs/TwinsTasks/
 /docs/bitacora/
 /docs/PLAN_ELEVACION_PROYECTO.md

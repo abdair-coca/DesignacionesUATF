@@ -120,7 +120,7 @@
                             <p id="headerUserName" class="text-xs font-bold text-gray-800 leading-tight">Mgtr. María Quispe</p>
                             <p id="headerUserEmail" class="text-[10px] text-gray-500 font-medium">maria.quispe@uatf.edu.bo</p>
                         </div>
-                        
+
                         <div class="relative">
                             <button @click="open = !open" class="flex items-center gap-2 focus:outline-none cursor-pointer">
                                 <div id="headerAvatarCircle" class="h-8 w-8 rounded-full bg-[#2d353c] text-white font-bold text-xs flex items-center justify-center ring-2 ring-[#00acac]/30">
@@ -129,7 +129,7 @@
                             </button>
 
                             <!-- Menú desplegable Perfil -->
-                            <div x-show="open" @click.away="open = false" x-transition 
+                            <div x-show="open" @click.away="open = false" x-transition
                                  class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 py-1 text-xs text-gray-700 z-50">
                                 <div class="px-4 py-2 border-b border-gray-100">
                                     <p id="dropdownUserName" class="font-semibold text-gray-900">Mgtr. María Quispe</p>

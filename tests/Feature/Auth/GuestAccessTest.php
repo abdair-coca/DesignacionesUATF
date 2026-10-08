@@ -14,7 +14,7 @@ class GuestAccessTest extends TestCase
         return [
             'raiz' => ['/'],
             'designaciones' => ['/designaciones'],
-            'revisiones.pendientes' => ['/revisiones/pendientes'],
+            'notificaciones' => ['/notificaciones'],
         ];
     }
 
@@ -26,28 +26,19 @@ class GuestAccessTest extends TestCase
 
     public function test_invitado_no_puede_acceder_login_si_ya_autenticado(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->get('/login')
-            ->assertRedirect();
+        $this->actingAs(User::factory()->create())->get('/login')->assertRedirect();
     }
 
     public function test_login_muestra_formulario(): void
     {
-        $this->get('/login')
-            ->assertOk()
-            ->assertSee('Email')
-            ->assertSee('Ingresar');
+        $this->get('/login')->assertOk()->assertSee('Email')->assertSee('Ingresar');
     }
 
     public function test_login_valido_redirige(): void
     {
         $user = User::factory()->create(['password' => bcrypt('secret')]);
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'secret',
-        ])->assertRedirect('/designaciones');
-
+        $this->post('/login', ['email' => $user->email, 'password' => 'secret'])->assertRedirect('/notificaciones');
         $this->assertAuthenticated();
     }
 
@@ -55,11 +46,7 @@ class GuestAccessTest extends TestCase
     {
         User::factory()->create(['email' => 'test@test.com', 'password' => bcrypt('correct')]);
 
-        $this->post('/login', [
-            'email' => 'test@test.com',
-            'password' => 'wrong',
-        ])->assertSessionHasErrors();
-
+        $this->post('/login', ['email' => 'test@test.com', 'password' => 'wrong'])->assertSessionHasErrors();
         $this->assertGuest();
     }
 
@@ -67,27 +54,14 @@ class GuestAccessTest extends TestCase
     {
         $email = 'limite@test.com';
         $throttleKey = $this->throttleKey($email);
-
         RateLimiter::clear($throttleKey);
 
         for ($attempt = 0; $attempt < 5; $attempt++) {
-            $this->post('/login', [
-                'email' => $email,
-                'password' => 'wrong',
-            ])->assertSessionHasErrors('email');
+            $this->post('/login', ['email' => $email, 'password' => 'wrong'])->assertSessionHasErrors('email');
         }
 
-        $response = $this->post('/login', [
-            'email' => $email,
-            'password' => 'wrong',
-        ]);
-
-        $response->assertSessionHasErrors('email');
-        $this->assertStringContainsString(
-            'Demasiados intentos de inicio de sesión.',
-            session('errors')->first('email'),
-        );
-
+        $this->post('/login', ['email' => $email, 'password' => 'wrong'])->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Demasiados intentos de inicio de sesi�n.', session('errors')->first('email'));
         RateLimiter::clear($throttleKey);
     }
 
@@ -95,31 +69,30 @@ class GuestAccessTest extends TestCase
     {
         $user = User::factory()->create(['email' => 'reinicio@test.com', 'password' => bcrypt('correct')]);
         $throttleKey = $this->throttleKey($user->email);
-
         RateLimiter::clear($throttleKey);
         for ($attempt = 0; $attempt < 4; $attempt++) {
             RateLimiter::hit($throttleKey, 60);
         }
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'correct',
-        ])->assertRedirect('/designaciones');
-
+        $this->post('/login', ['email' => $user->email, 'password' => 'correct'])->assertRedirect('/notificaciones');
         $this->assertSame(0, RateLimiter::attempts($throttleKey));
     }
 
     public function test_logout_cierra_sesion(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->post('/logout')
-            ->assertRedirect('/login');
-
+        $this->actingAs(User::factory()->create())->post('/logout')->assertRedirect('/login');
         $this->assertGuest();
     }
 
     private function throttleKey(string $email): string
     {
         return mb_strtolower($email).'|127.0.0.1';
+    }
+
+    public function test_login_form_uses_relative_action(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('action="/login"', false);
     }
 }

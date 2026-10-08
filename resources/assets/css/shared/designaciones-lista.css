@@ -1,0 +1,205 @@
+/* Listados de designaciones: Directores y Vicerrectorado. */
+.designaciones-screen {
+    color: #2d353c;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: .9rem;
+    line-height: 1.6;
+}
+
+/* Navegacion y encabezado del listado. */
+.designaciones-screen .breadcrumb {
+    background: transparent;
+    float: right;
+    margin: 0 0 10px;
+    padding: 0;
+}
+
+.designaciones-screen .breadcrumb-item {
+    color: #6c757d;
+    display: inline;
+    font-size: .8rem;
+}
+
+.designaciones-screen .breadcrumb-item + .breadcrumb-item::before {
+    color: #adb5bd;
+    content: "/";
+    padding: 0 .5rem;
+}
+
+.designaciones-screen .breadcrumb-item a {
+    color: #348fe2;
+    text-decoration: none;
+}
+
+.designaciones-screen .breadcrumb-item a:hover { text-decoration: underline; }
+.designaciones-screen .breadcrumb-item.active { color: #6c757d; }
+
+.designaciones-screen .page-header {
+    clear: both;
+    color: #2d353c;
+    font-size: 1.6rem;
+    font-weight: 400;
+    letter-spacing: -.02em;
+    line-height: 1.35;
+    margin: 0 0 20px;
+}
+
+.designaciones-screen .page-header .material-icons {
+    color: black;
+    font-size: 1.45rem;
+    margin-right: .35rem;
+    vertical-align: -2px;
+}
+
+.designaciones-screen .page-header small {
+    display: inline-block;
+    font-size: .75rem;
+}
+
+/* Panel, barra de filtros y controles del listado. */
+.designaciones-screen .panel {
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+    margin-bottom: 20px;
+}
+
+.designaciones-screen .panel-inverse > .panel-heading {
+    align-items: center;
+    background: #2d353c;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 12px 15px;
+}
+
+.designaciones-screen .panel-title { font-size: .95rem; font-weight: 500; margin: 0; }
+.designaciones-screen .panel-body { padding: 20px; }
+
+.designaciones-screen .panel-toolbar {
+    align-items: end;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin: -20px -20px 20px;
+    padding: 14px 20px;
+}
+
+.designaciones-screen .toolbar-search { flex: 1 1 280px; max-width: 520px; }
+.designaciones-screen .toolbar-filter { align-items: end; display: flex; flex-wrap: wrap; gap: 8px; }
+.designaciones-screen .toolbar-filter .form-control { width: 150px; }
+.designaciones-screen .form-group { margin: 0; }
+.designaciones-screen label { color: #343a40; display: block; font-size: .8rem; font-weight: 500; margin-bottom: 4px; }
+
+.designaciones-screen .form-control {
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    color: #343a40;
+    display: block;
+    font-family: inherit;
+    font-size: .85rem;
+    line-height: 1.5;
+    padding: .45rem .75rem;
+    width: 100%;
+}
+
+.designaciones-screen .form-control:focus {
+    border-color: #00acac;
+    box-shadow: 0 0 0 .15rem rgba(0, 172, 172, .2);
+    outline: 0;
+}
+
+/* Botones, iconos y estados. */
+.designaciones-screen .btn {
+    border: 1px solid transparent;
+    border-radius: .25rem;
+    cursor: pointer;
+    display: inline-block;
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight: 500;
+    line-height: 1.5;
+    padding: .45rem .8rem;
+    text-decoration: none;
+    transition: background-color .15s ease, border-color .15s ease;
+    vertical-align: middle;
+}
+
+.designaciones-screen .btn-primary { background: #3490dc; border-color: #3490dc; color: #fff; }
+.designaciones-screen .btn-success { background: #101111; border-color: #3490dc; color: #fff; }
+.designaciones-screen .btn-primary:hover { background: #2779bd; }
+.designaciones-screen .btn-secondary { background: #6c757d; border-color: #6c757d; color: #fff; }
+.designaciones-screen .btn-outline-secondary { background: #fff; border-color: #6c757d; color: #6c757d; }
+.designaciones-screen .btn-info { background: #6cb2eb; border-color: #6cb2eb; color: #1b3b55; }
+.designaciones-screen .btn-dark { background: #343a40; border-color: #343a40; color: #fff; }
+.designaciones-screen .btn .material-icons { font-size: 15px; margin-right: 3px; vertical-align: -3px; }
+
+/* Tabla, acciones y paginacion. */
+.designaciones-screen .table-responsive { display: block; overflow-x: auto; width: 100%; }
+.designaciones-screen .table { border-collapse: collapse; color: #343a40; margin-bottom: 0; min-width: 900px; width: 100%; }
+.designaciones-screen .table th,
+.designaciones-screen .table td { border: 1px solid #dee2e6; padding: 10px 12px; vertical-align: middle; }
+.designaciones-screen .table thead th { background: #f5f6f7; color: #343a40; font-size: .78rem; font-weight: 700; text-align: left; }
+.designaciones-screen .table thead th.text-center,
+.designaciones-screen .table td.text-center { text-align: center; }
+.designaciones-screen .table tbody tr:nth-child(odd) { background: #f7f8fa; }
+.designaciones-screen .table tbody tr:hover { background: #eef7f7; }
+.designaciones-screen .text-nowrap { white-space: nowrap; }
+.designaciones-screen .text-muted { color: #6c757d; }
+.designaciones-screen .font-weight-bold { font-weight: 700; }
+.designaciones-screen .small { font-size: .78rem; }
+.designaciones-screen .badge { border-radius: .2rem; display: inline-block; font-size: .72rem; font-weight: 500; line-height: 1; padding: .4em .6em; vertical-align: baseline; }
+.designaciones-screen .badge-success { background: #38c172; color: #fff; }
+.designaciones-screen .badge-secondary { background: #6c757d; color: #fff; }
+.designaciones-screen .record-actions { display: inline-flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.designaciones-screen .panel-footer { align-items: center; border-top: 1px solid #dee2e6; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 12px 20px; }
+.designaciones-screen .pagination-label { color: #6c757d; font-size: .78rem; margin: 0; }
+.designaciones-screen .pagination { align-items: center; display: flex; gap: 5px; }
+.designaciones-screen .pagination .btn { font-size: .78rem; }
+.designaciones-screen .pagination .disabled { background: #e9ecef; border-color: #e9ecef; color: #adb5bd; cursor: default; }
+.designaciones-screen .alert { border: 1px solid transparent; border-radius: .25rem; margin-bottom: 20px; padding: 12px 15px; }
+.designaciones-screen .alert-danger { background: #fcebea; border-color: #f5c6cb; color: #721c24; }
+.designaciones-screen .empty-state { color: #6c757d; font-style: italic; padding: 35px 15px !important; text-align: center; }
+
+/* Modal de creacion. */
+.designaciones-screen .modal {
+    align-items: center;
+    background: rgba(0, 0, 0, .55);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1050;
+}
+
+.designaciones-screen .modal-dialog { margin: 0 auto; max-width: 680px; width: 100%; }
+.designaciones-screen .modal-content { background: #fff; border: 1px solid rgba(0, 0, 0, .2); border-radius: .3rem; box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .25); overflow: hidden; }
+.designaciones-screen .modal-header { align-items: center; background: #2d353c; color: #fff; display: flex; justify-content: space-between; padding: 14px 20px; }
+.designaciones-screen .modal-title { font-size: 1rem; font-weight: 500; margin: 0; }
+.designaciones-screen .modal-header .close { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: .8; padding: 0; }
+.designaciones-screen .modal-body { padding: 20px; }
+.designaciones-screen .modal-body .form-group { margin-bottom: 15px; }
+.designaciones-screen .modal-form-grid { display: grid; gap: 15px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.designaciones-screen .modal-form-grid .modal-field-wide { grid-column: 1 / -1; }
+.designaciones-screen .modal-body .form-control { margin-top: 5px; }
+.designaciones-screen .modal-footer { background: #f5f6f7; border-top: 1px solid #dee2e6; display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px; }
+
+@media (max-width: 767px) {
+    /* Ajustes responsive del listado. */
+    .designaciones-screen .breadcrumb { float: none; margin-bottom: 8px; }
+    .designaciones-screen .page-header { font-size: 1.35rem; }
+    .designaciones-screen .panel-body { padding: 14px; }
+    .designaciones-screen .panel-toolbar { margin: -14px -14px 14px; padding: 12px 14px; }
+    .designaciones-screen .panel-footer { align-items: flex-start; flex-direction: column; padding: 12px 14px; }
+    .designaciones-screen .modal-form-grid { grid-template-columns: 1fr; }
+    .designaciones-screen .modal-form-grid .modal-field-wide { grid-column: auto; }
+}
