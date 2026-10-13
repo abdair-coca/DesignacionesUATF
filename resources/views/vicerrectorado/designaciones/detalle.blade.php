@@ -28,7 +28,7 @@
             <div class="no-print detail-actions">
                 <a href="{{ $rutaLista }}" class="detail-btn detail-btn-secondary">Volver</a>
                 @if($asignacion)
-                    <a href="{{ route('vicerrectorado.designaciones.pdf', ['id' => $asignacion['id'], 'gestion' => $gestion] + (($carrera ?? '') !== '' ? ['carrera' => $carrera] : [])) }}" target="_blank" rel="noopener" title="Imprimir designación" aria-label="Imprimir designación" class="detail-btn detail-btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
+                    <a href="{{ route('vicerrectorado.designaciones.pdf', ['id' => $asignacion['id'], 'gestion' => $gestion]) }}" target="_blank" rel="noopener" title="Imprimir reporte anterior" aria-label="Imprimir reporte anterior" class="detail-btn detail-btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
                 @endif
             </div>
         </header>

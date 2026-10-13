@@ -1,5 +1,135 @@
 ﻿# Estado de pruebas
 
+## Fase de carta PDF DocExtr (09/10/2026)
+
+- `DocOrdCont` fue aprobada por el usuario antes de iniciar esta fase. Se agregó
+  `Docente Extraordinario` al selector y a la lista permitida por el servidor;
+  las tres condiciones admitidas preparan etiquetas explícitas.
+- La vista única `resources/views/designaciones/carta-pdf.blade.php` incorpora
+  la redacción de `DocExtr.png`, con referencia fija al Artículo 11 y gestión
+  vigente. El modal permite indicar si la carrera es semestralizada: en ese caso
+  aparecen entre paréntesis los semestres I y II de la gestión; en caso contrario
+  se omite el paréntesis. Se eliminó por completo la leyenda “SOLO PARA
+  CARRERAS SEMESTRALIZADAS” de las tres variantes. Se conservan sus textos
+  normativos específicos; el reporte anterior permanece intacto.
+- Se conservan los campos temporales, la selección de todas las materias del
+  docente seleccionado, las firmas, la autorización en servidor y la
+  comprobación de pertenencia de fila.
+- Se generaron PDFs sintéticos de una página para los dos valores de
+  semestralización. La variante semestralizada con cuatro asignaturas se comparó
+  visualmente con `public/pdf/DocExtr.png`: condición, Artículo 11, gestión,
+  semestres, total de horas, firmas y presentación revisados.
+- Archivos funcionales y de pruebas: solicitud, servicio y vistas compartidas
+  de carta, pruebas `PrepararCartaDesignacionTest`, `DesignacionPdfTest` y
+  `FrontendAssetsTest`, `DesignacionCartaSemestralizacionTest` y el fixture de
+  vista de Decanatura; se actualizaron este estado y la matriz.
+
+| Comando o revisión | Resultado |
+| --- | --- |
+| `php artisan test --env=testing --no-coverage tests/Unit/PrepararCartaDesignacionTest.php tests/Unit/FrontendAssetsTest.php tests/Unit/DesignacionCartaSemestralizacionTest.php` | OK; 11 pruebas, 139 aserciones |
+| `php artisan test --env=testing --no-coverage tests/Feature/DecanaturaDesignacionesTest.php --filter=test_pdf_compartido_conserva_el_formato_y_muestra_las_filas_sinteticas` | OK; 1 prueba, 8 aserciones; visualización sin paréntesis al seleccionar “No” |
+| `php artisan test --env=testing --no-coverage` | BLOQUEADA parcialmente: 143 aprobadas y 95 errores porque el entorno aislado de testing no estaba disponible; 238 pruebas, 934 aserciones |
+| `php artisan view:clear && php artisan view:cache --no-ansi`; `php artisan route:list --path=designaciones --no-ansi` | OK; vistas compiladas y 13 rutas; carta `POST` y reporte anterior `GET` |
+| `php -l` en solicitud, servicio y pruebas modificadas; Pint dirigido | OK; sintaxis y formato dirigido |
+| `vendor/bin/pint --test` | FALLÓ en cuatro archivos existentes fuera de esta fase: `app/Domain/Designaciones/ReglasDecisionDesignacion.php`, `app/Domain/Designaciones/SeleccionGrupo.php`, `app/Data/Designaciones/PreparacionEdicionDesignacion.php` y `tests/Unit/UseCasesDesignacionesTest.php` |
+| `npm audit`; `composer audit --locked` | OK; 0 vulnerabilidades reportadas |
+| `git diff --check` | OK; Git avisó que normalizará CRLF en `TEST_MATRIX.md` |
+
+| Riesgo abierto | Tratamiento |
+| --- | --- |
+| Pruebas Feature de la carta requieren el entorno aislado de testing, no disponible | Repetir cuando esté disponible; no cambiar a SQLite ni a otra fuente |
+| Aprobación de la plantilla `DocExtr` | Detenerse aquí; no iniciar `DocExtrCalIntr` hasta recibir aprobación explícita |
+| Nombre de facultad obtenido de la fuente de Decanatura | `NEEDS_BUSINESS_CONFIRMATION` anotado en la fase `DocOrdTit`; conservar el campo del modal hasta confirmar el mapeo |
+
+## Fase de carta PDF DocOrdCont (09/10/2026)
+
+- Se agregó `Docente Ordinario Contratado` al selector del modal y a la lista
+  permitida por la validación del servidor. El servicio prepara la etiqueta de
+  la variante; entradas de otras condiciones se rechazan.
+- La vista compartida `resources/views/designaciones/carta-pdf.blade.php`
+  selecciona el texto contratado, mantiene fijo el Artículo 19 y usa la gestión
+  vigente para la frase de semestralización. Se conservaron la selección de
+  materias del docente, los campos temporales del modal, las firmas y la
+  presentación compartida. La rama de `DocOrdTit` no cambió su texto y el PDF
+  anterior `resources/views/designaciones/pdf.blade.php` permanece intacto.
+- La carta se genera con la misma ruta `POST`, autorización de Dirección y
+  comprobaciones de pertenencia de fila/docente existentes. El modal identifica
+  la opción contratada como ejemplo ficticio.
+- Se generó un PDF sintético de una página y se comparó visualmente con
+  `public/pdf/DocOrdCont.png`: condición contratada, Artículo 19, gestión,
+  semestres, asignaturas, firmas y presentación revisados.
+- Archivos de esta fase: `app/Http/Requests/GenerarCartaDesignacionRequest.php`,
+  `app/Services/Designaciones/PrepararCartaDesignacion.php`,
+  `resources/views/partials/modal-designacion-pdf.blade.php`,
+  `resources/views/designaciones/carta-pdf.blade.php`, las pruebas unitarias y
+  Feature de carta, `tests/Unit/FrontendAssetsTest.php` y el informe de bug de
+  autorización.
+
+| Comando o revisión | Resultado |
+| --- | --- |
+| `php artisan test --env=testing --no-coverage tests/Unit/PrepararCartaDesignacionTest.php tests/Unit/FrontendAssetsTest.php` | OK; 6 pruebas, 108 aserciones |
+| `php artisan test --env=testing --no-coverage tests/Feature/DecanaturaDesignacionesTest.php --filter=test_decanatura_no_abre_detalle_fuera_de_su_facultad_o_no_aprobado` | OK; 1 prueba, 4 aserciones; rol no autorizado recibe 403 antes de validar campos |
+| `php artisan test --env=testing --no-coverage` | BLOQUEADA parcialmente: 138 aprobadas y 92 errores por PostgreSQL de testing no disponible; 230 pruebas, 901 aserciones |
+| `php artisan view:clear && php artisan view:cache --no-ansi`; `php artisan route:list --path=designaciones --no-ansi` | OK; vistas compiladas y 13 rutas registradas; carta `POST` y reporte anterior `GET` |
+| `php -l` en solicitud, servicio y pruebas modificadas; Pint dirigido | OK; sintaxis y formato dirigido |
+| `vendor/bin/pint --test` | FALLÓ en cuatro archivos existentes fuera de esta fase: `app/Domain/Designaciones/ReglasDecisionDesignacion.php`, `app/Domain/Designaciones/SeleccionGrupo.php`, `app/Data/Designaciones/PreparacionEdicionDesignacion.php` y `tests/Unit/UseCasesDesignacionesTest.php` |
+| `npm audit`; `composer audit --locked` | OK; 0 vulnerabilidades reportadas |
+| `git diff --check` | OK; Git avisó que normalizará CRLF en `TEST_MATRIX.md` |
+
+| Riesgo abierto | Tratamiento |
+| --- | --- |
+| Pruebas Feature de la carta requieren el entorno PostgreSQL aislado, no disponible | Repetir cuando esté disponible; no cambiar a SQLite ni a otra fuente |
+| Aprobación de la plantilla `DocOrdCont` | Confirmada por el usuario; permitió iniciar `DocExtr` |
+
+- BUG-2026-10-09 de autorización corregido; informe y regresión dirigida:
+  `docs/testing/BUG_REPORTS/BUG-2026-10-09-carta-pdf-autorizacion-antes-de-validacion.md`.
+
+## Fase inicial de carta PDF DocOrdTit (corte anterior, 09/10/2026)
+
+- `DocOrdTit` se completó y aprobó antes de iniciar `DocOrdCont`. Al cierre de
+  ese corte, las otras cuatro condiciones aún estaban pendientes.
+- La impresión de los tres roles ahora solicita condición y datos editables en
+  un modal. El formulario envía por `POST` y los valores ingresados solo se usan
+  para esa generación; no se guardan. El servidor conserva las verificaciones
+  de alcance existentes y bloquea una carta si las filas no corresponden a un
+  único docente.
+- El reporte PDF anterior se conserva sin cambios en
+  `resources/views/designaciones/pdf.blade.php` y mantiene su ruta `GET`.
+  La carta nueva se renderiza desde
+  `resources/views/designaciones/carta-pdf.blade.php` en una ruta `POST`
+  separada. Ambas salidas tienen acciones independientes en las pantallas.
+  Incluye las filas de la designación, sin identificadores personales internos.
+  Se revisó un render DOMPDF de una página con valores sintéticos.
+- Ajustes confirmados para `DocOrdTit`: el cite se captura separado del número
+  de resolución; la leyenda superior es editable; el nombre completo de
+  Decanatura se captura y el cargo se compone con el nombre de la facultad.
+  Potosí y la referencia del Artículo 20 están fijos en la plantilla.
+- La facultad aún se pide en el modal. El usuario indicó usar la fuente que
+  consulta Decanatura, pero el contrato actualmente visible en la aplicación no
+  entrega el nombre de facultad asociado a cada carrera. Está pendiente precisar
+  cómo obtener ese nombre antes de quitar el campo manual.
+- Pruebas unitarias cubren la transformación de datos y el rechazo de filas de
+  más de un docente. Las pruebas Feature con fixtures no pudieron ejecutarse
+  porque PostgreSQL de testing rechazó la conexión; no se usó otra base.
+
+| Comando o revisión | Resultado |
+| --- | --- |
+| `php artisan test --env=testing --no-coverage tests/Unit/PrepararCartaDesignacionTest.php tests/Unit/FrontendAssetsTest.php` | OK; 4 pruebas, 97 aserciones |
+| Prueba dirigida del detalle de Vicerrectorado y modal | OK; 1 prueba, 74 aserciones |
+| Suite relacionada ejecutada tras separar las rutas PDF | 34 pruebas aprobadas, 29 errores por conexión rechazada en `127.0.0.1:55432`; 63 pruebas, 352 aserciones |
+| `php artisan test --env=testing --no-coverage` | 136 aprobadas, 88 errores por PostgreSQL de testing no disponible; 224 pruebas, 881 aserciones |
+| `php artisan view:clear && php artisan view:cache --no-ansi`; `php artisan route:list --path=designaciones --no-ansi` | OK; vistas compiladas, el reporte anterior conserva `GET` y la carta nueva usa `POST` |
+| `php -l` en solicitudes, servicios y pruebas; `node --check` en scripts modificados | OK; sintaxis válida |
+| `vendor/bin/pint --test` | FALLÓ en 4 archivos existentes fuera de este cambio; Pint dirigido a los archivos PHP modificados pasó |
+| `npm audit`; `composer audit --locked` | OK; 0 vulnerabilidades reportadas |
+| `git diff --check` | OK; Git informa que normalizará CRLF en `TEST_MATRIX.md` |
+
+| Riesgo abierto | Tratamiento |
+| --- | --- |
+| No se verificaron las pruebas Feature dependientes del PostgreSQL aislado | Repetir cuando el servicio local de testing esté disponible; no cambiar a SQLite ni a otra base |
+| `NEEDS_BUSINESS_CONFIRMATION`: cómo obtener el nombre de la facultad de la carrera desde la misma fuente que usa Decanatura | No cambiar la fuente ni inventar una relación o campo; quitar el ingreso manual cuando el mapeo esté definido |
+| Aprobación de `DocOrdTit` | Confirmada; permitió iniciar la fase `DocOrdCont` |
+
 ## Cuenta de Decanatura para Ciencias Puras (07/10/2026)
 
 - Se agregó `Decanatura de Ciencias Puras` al acceso compartido vigente, asignada
@@ -18,6 +148,70 @@
 | `php artisan test --env=testing --no-coverage tests/Feature/DecanaturaDesignacionesTest.php tests/Feature/Auth/DemoAuthenticationTest.php tests/Unit/DemoUserProviderTest.php` | OK; 18 pruebas, 113 aserciones; sin datos personales |
 | Comprobación segura de cuenta y alcance activos | OK; cuenta presente, facultad asignada y clave compartida configurada; ningún valor secreto mostrado |
 | Lectura de carreras y estados en Ciencias Puras | OK; transacción de solo lectura; sin escrituras |
+
+## Filtros compartidos en el listado de Decanatura (08/10/2026)
+
+- Decanatura reutiliza el filtro local de texto y carrera de Vicerrectorado, con
+  búsqueda sin distinguir tildes sobre descripción, observación, carrera, fecha,
+  gestión, periodo y estado. También permite elegir una gestión, limpiar todos
+  los filtros y ver el total filtrado.
+- La carga sigue limitada en el servidor a designaciones `APROBADO` de la
+  facultad autorizada. Los filtros de interfaz solo reducen ese conjunto.
+- Se extrajo la lógica compartida a
+  `resources/assets/js/shared/designaciones-filtros.js`; Dirección conserva su
+  búsqueda por descripción.
+
+| Comando o revisión | Resultado |
+| --- | --- |
+| `node --check` en los tres scripts de listado | OK; sintaxis válida |
+| `php artisan view:cache --no-ansi` | OK; vistas compiladas |
+| `git diff --check` | OK |
+| `npm audit`; `composer audit --locked` | OK; 0 vulnerabilidades npm y sin avisos Composer |
+| `vendor/bin/pint --test` | FALLÓ en cuatro archivos PHP no modificados; este cambio no modifica archivos PHP |
+| Pruebas automatizadas | No ejecutadas en esta solicitud |
+
+## Vistas independientes de Decanatura (08/10/2026)
+
+- El listado y detalle de Decanatura ahora se renderizan desde
+  `resources/views/decanatura/designaciones/`; Dirección conserva sus vistas
+  bajo `resources/views/designaciones/` sin ramas de presentación para
+  Decanatura.
+- El PDF de Decanatura tiene una vista de entrada propia que incluye el
+  documento compartido, que no contiene lógica por rol. La selección de lista,
+  detalle y PDF se hace en `DesignacionController`; el alcance de facultad y la
+  restricción de estado `APROBADO` siguen comprobándose en el servidor.
+- Vicerrectorado conserva sus plantillas bajo
+  `resources/views/vicerrectorado/designaciones/`; no se agregó lógica de
+  Decanatura a esas plantillas.
+- Se actualizaron las expectativas de las pruebas existentes para el nombre de
+  la vista PDF y el listado. Las pruebas no se ejecutaron en esta solicitud.
+
+| Comando o revisión | Resultado |
+| --- | --- |
+| Revisión de controlador, rutas, vistas y pruebas existentes | OK; flujo sigue en `/designaciones`, control de alcance en servidor |
+| `php artisan view:cache --no-ansi` | OK; vistas Blade compiladas |
+| `node --check` en los scripts de lista Decanatura, Dirección y filtros compartidos | OK; sintaxis JavaScript válida |
+| `php -l` en `DesignacionController.php` y `VicerrectoradoDesignacionController.php` | OK; sintaxis PHP válida |
+| `npm audit`; `composer audit --locked` | OK; sin vulnerabilidades reportadas |
+| `git diff --check` | OK; Git avisó que normalizará CRLF en `TEST_MATRIX.md` |
+| Pruebas automatizadas | No ejecutadas en esta solicitud |
+| `vendor/bin/pint --test` | No ejecutado en esta solicitud |
+
+## Error 500 al ingresar a Vicerrectorado (08/10/2026)
+
+- La ruta fallaba antes de ejecutar `index`: el controlador dependía de una
+  clase de servicio que no existe en el proyecto. Se restauró la dependencia
+  `JachasunDesignacionesService`, que ya implementa las operaciones usadas por
+  el controlador y tiene un mock enlazado en las pruebas Feature existentes.
+- Regresión disponible: `VicerrectoradoDesignacionesTest::test_vicerrectorado_ve_todas_las_designaciones_de_la_gestion` reproduce la entrada al listado con el servicio simulado.
+- La prueba automatizada no se ejecutó en esta solicitud.
+
+| Comando o revisión | Resultado |
+| --- | --- |
+| `php -l` en `VicerrectoradoDesignacionController.php` | OK; sintaxis válida |
+| Resolución del controlador desde el contenedor | OK; instancia creada sin ejecutar consultas |
+| `git diff --check` | OK; aviso de normalización CRLF en `TEST_MATRIX.md` |
+| Prueba Feature del listado de Vicerrectorado | No ejecutada en esta solicitud |
 
 ## TASK2 Fase 3: separación de lectura y escritura (07/10/2026)
 

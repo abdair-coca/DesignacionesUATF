@@ -1,4 +1,8 @@
 window.designacionesLista = (config = {}) => ({
+    ...window.designacionesListaFiltros({
+        ...config,
+        soloDescripcion: true,
+    }),
     /* Modal de creacion y datos que provienen del servidor. */
     crearModalOpen: false,
     crearForm: { gestion: '', periodo: '', obs: '', importarDesde: '' },
@@ -8,10 +12,6 @@ window.designacionesLista = (config = {}) => ({
     accionConfirmada: null,
     modalNotificacionOpen: false,
     modalNotificacionData: { tipo: 'info', titulo: '', mensaje: '' },
-    designaciones: config.designaciones ?? [],
-    filtro: config.filtro ?? '',
-    pagina: 1,
-    porPagina: 10,
     rutaDetalle: config.rutaDetalle ?? '',
     rutaPdf: config.rutaPdf ?? '',
 
@@ -19,24 +19,6 @@ window.designacionesLista = (config = {}) => ({
     limpiarFiltro() {
         this.filtro = '';
         this.pagina = 1;
-    },
-    filasFiltradas() {
-        const termino = this.filtro.trim().toLowerCase();
-        if (!termino) return this.designaciones;
-        return this.designaciones.filter((d) => (d.detalle || '').toLowerCase().includes(termino));
-    },
-    totalPaginas() {
-        return Math.max(1, Math.ceil(this.filasFiltradas().length / this.porPagina));
-    },
-    paginaInicio() {
-        return (this.pagina - 1) * this.porPagina;
-    },
-    paginadas() {
-        const inicio = this.paginaInicio();
-        return this.filasFiltradas().slice(inicio, inicio + this.porPagina);
-    },
-    irAPagina(pagina) {
-        this.pagina = Math.min(this.totalPaginas(), Math.max(1, pagina));
     },
 
     /* Apertura, limpieza y validacion previa del formulario de creacion. */

@@ -6,6 +6,8 @@ use App\Auth\Demo\DemoUser;
 use App\Data\Designaciones\RevisionDesignacion;
 use App\Models\User;
 use App\Services\Jachasun\JachasunDesignacionesService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF as DomPdfDocument;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Mockery;
@@ -52,7 +54,9 @@ class VicerrectoradoDesignacionesTest extends TestCase
             ->assertSee('class="btn btn-dark"', false)
             ->assertSee(str_replace('/', '\\/', route('vicerrectorado.designaciones.show', ['id' => '__ID__', 'gestion' => '2026'])), false)
             ->assertSee(str_replace('/', '\\/', route('vicerrectorado.designaciones.pdf', ['id' => '__ID__', 'gestion' => '2026'])), false)
-            ->assertSee('target="_blank" rel="noopener"', false)
+            ->assertSee('target="_blank"', false)
+            ->assertDontSee('designacion-pdf-open', false)
+            ->assertDontSee('designacion-pdf-modal', false)
             ->assertDontSee('btn-group dropup', false)
             ->assertDontSee('Nuevo')
             ->assertDontSee('Editar');
@@ -189,7 +193,8 @@ class VicerrectoradoDesignacionesTest extends TestCase
             ->assertSee('x-text="observacionEstadoFila()"', false)
             ->assertSee('>Teóricas</th>', false)
             ->assertSee('carrera=MED', false)
-            ->assertSee(route('vicerrectorado.designaciones.pdf', ['id' => 22, 'gestion' => '2026']), false)
+            ->assertDontSee('designacionPdfModal({ rutaPdf:', false)
+            ->assertDontSee('designacion-pdf-open', false)
             ->assertSee('Revisión de designación')
             ->assertSee('x-data="vicerrectoradoRevision({ filas:', false)
             ->assertSee('>Acciones</th>', false)
@@ -371,13 +376,31 @@ class VicerrectoradoDesignacionesTest extends TestCase
             ->assertDontSee('No fue posible habilitar las decisiones.');
     }
 
-    public function test_vicerrectorado_puede_generar_el_pdf_de_una_designacion(): void
+    public function test_vicerrectorado_conserva_el_reporte_pdf_en_su_ruta_get(): void
     {
         $service = $this->mockService();
         $service->shouldReceive('obtenerUniversidad')->once()
             ->with(22, '2026')
             ->andReturn($this->fila('MED', 'MEDICINA', 'SOLICITADO'));
-        $service->shouldReceive('detallar')->once()->with(22)->andReturn(new Collection);
+        $service->shouldReceive('detallar')->once()->with(22)->andReturn(new Collection([[
+            'id' => 901,
+            'docente_id' => 974,
+            'docente_nombre' => 'Docente Sintético',
+            'materia_sigla' => 'MED101',
+            'materia_nombre' => 'Materia Sintética',
+            'grupo_id' => 1,
+            'horas_teoricas' => 2,
+            'horas_practicas' => 1,
+            'horas_laboratorio' => 0,
+        ]]));
+
+        $pdf = Mockery::mock(DomPdfDocument::class);
+        $pdf->shouldReceive('stream')->once()->with('designacion.pdf')
+            ->andReturn(response('%PDF-1.7', 200, ['Content-Type' => 'application/pdf']));
+        Pdf::shouldReceive('loadView')->once()
+            ->with('designaciones.pdf', Mockery::on(fn (array $data): bool => isset($data['fechaImpresion'])
+                && $data['filas']->count() === 1))
+            ->andReturn($pdf);
 
         $this->actingAs($this->usuario(User::ROL_VICERRECTORADO))
             ->get('/vicerrectorado/designaciones/22/pdf?gestion=2026')

@@ -10,12 +10,11 @@
 @endpush
 
 @section('content')
-    @php($esDecanatura = Auth::user()?->esDecanatura() ?? false)
     <div
         class="designaciones-detail max-w-6xl mx-auto space-y-4 text-sm text-gray-800"
         x-data="designacionesCarrera({
             observacionInicial: @js($asignacion['observacion'] ?? ''),
-            rutaBusquedaDocentes: @js($esDecanatura ? '' : route('designaciones.docentes.buscar')),
+            rutaBusquedaDocentes: @js(route('designaciones.docentes.buscar')),
             materiasDisponibles: @js($materiasDisponibles ?? collect()),
             materiasOferta: @js($materiasOferta ?? collect()),
             gruposOfertaDisponibles: @js($gruposOfertaDisponibles ?? true),
@@ -34,7 +33,7 @@
             <div class="no-print detail-actions">
                 <a href="{{ route('designaciones.index') }}" class="detail-btn detail-btn-secondary">Volver</a>
                 <a href="{{ route('designaciones.pdf', ['id' => $asignacion['id']]) }}" target="_blank" rel="noopener" title="Imprimir designación" aria-label="Imprimir designación" class="detail-btn detail-btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
-                @if(($puedeEditar ?? false) && !$esDecanatura && !($errorJachasun ?? null))
+                @if(($puedeEditar ?? false) && !($errorJachasun ?? null))
                     <button type="button" @click="abrirEdicionCabecera()" class="detail-btn detail-btn-primary">Editar</button>
                 @endif
             </div>
@@ -65,7 +64,6 @@
                     <h2 class="panel-title">Asignaciones registradas</h2>
                 </div>
                 <div class="panel-body">
-                 @unless($esDecanatura)
                  <form class="no-print detail-toolbar" @submit.prevent>
                      <div class="detail-search">
                          <label for="filtro-asignaciones">Buscar por docente, materia o CI</label>
@@ -76,12 +74,11 @@
                          </div>
                      </div>
                      <div class="detail-actions">
-                          @if(($puedeEditar ?? false) && !$esDecanatura)
+                          @if($puedeEditar ?? false)
                              <button type="button" @click="abrirNuevaDesignacion()" class="detail-btn detail-btn-success">Nueva designación</button>
                          @endif
                      </div>
                  </form>
-                 @endunless
                  <div class="detail-table-wrap">
                     <table class="detail-table">
                         <thead>
@@ -93,10 +90,8 @@
                                 <th class="text-right">Teóricas</th>
                                 <th class="text-right">Prácticas</th>
                                 <th class="text-right">Laboratorio</th>
-                                    @unless($esDecanatura)
-                                        <th>Estado</th>
-                                        <th class="no-print text-right">Acciones</th>
-                                    @endunless
+                                <th>Estado</th>
+                                <th class="no-print text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -109,7 +104,6 @@
                                     <td class="text-right" x-text="fila.horas_teoricas ?? '-'"></td>
                                     <td class="text-right" x-text="fila.horas_practicas ?? '-'"></td>
                                     <td class="text-right" x-text="fila.horas_laboratorio ?? '-'"></td>
-                                        @unless($esDecanatura)
                                         <td>
                                             <button
                                                 type="button"
@@ -120,11 +114,9 @@
                                                 title="Ver estado de la asignación"
                                             ><strong x-text="etiquetaEstadoFila(fila.id)"></strong></button>
                                         </td>
-                                        @endunless
-                                        @unless($esDecanatura)
                                     <td class="no-print text-right text-nowrap">
                                         <div class="detail-row-actions">
-                                            @if(($puedeEditar ?? false) && !$esDecanatura)
+                                            @if($puedeEditar ?? false)
                                             <button
                                                 type="button"
                                                 @click="abrirEdicionFila(fila)"
@@ -145,19 +137,18 @@
                                                 </svg>
                                             </button>
                                             @endif
-                                            <a href="" target="_blank" rel="noopener" title="Imprimir designación" aria-label="Imprimir designación" class="detail-btn detail-btn-dark">
+                                            <button type="button" @click="$dispatch('designacion-pdf-open', { id: {{ (int) $asignacion['id'] }}, filaId: fila.id })" title="Imprimir carta del docente" aria-label="Imprimir carta del docente" class="detail-btn detail-btn-dark">
                                                 <span class="material-icons" aria-hidden="true">print</span>
-                                            </a>
+                                            </button>
                                         </div>
                                     </td>
-                                        @endunless
                                 </tr>
                             </template>
                             <tr x-show="filtro !== '' && filas.length > 0 && !hayCoincidencias()">
-                                <td colspan="{{ $esDecanatura ? 7 : 9 }}" class="detail-empty">No se encontraron asignaciones para la búsqueda indicada.</td>
+                                <td colspan="9" class="detail-empty">No se encontraron asignaciones para la búsqueda indicada.</td>
                             </tr>
                             <tr x-show="filas.length === 0">
-                                <td colspan="{{ $esDecanatura ? 7 : 9 }}" class="detail-empty">No se recibieron filas de detalle.</td>
+                                <td colspan="9" class="detail-empty">No se recibieron filas de detalle.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -165,7 +156,6 @@
                 </div>
             </section>
 
-            @unless($esDecanatura)
             <x-modal open="estadoModalOpen" title-id="estado-fila-title" close="cerrarEstadoFila()" kicker="Estado de asignación">
                 <x-slot:title><span x-text="tituloEstadoFila()"></span></x-slot:title>
                 <x-slot:body>
@@ -182,10 +172,9 @@
                     <button type="button" @click="cerrarEstadoFila()" class="detail-btn detail-btn-secondary">Cerrar</button>
                 </x-slot:footer>
             </x-modal>
-            @endunless
         @endif
 
-        @if(($puedeEditar ?? false) && !$esDecanatura)
+        @if($puedeEditar ?? false)
         <form id="form-editar" method="POST" action="{{ route('designaciones.update', ['id' => $asignacion['id']]) }}">
             @csrf
             <div
@@ -400,10 +389,9 @@
 
         @endif
 
-        @unless($esDecanatura)
-            @include('partials.modal-confirmacion')
-            @include('partials.modal-notificacion')
-        @endunless
+        @include('partials.modal-confirmacion')
+        @include('partials.modal-notificacion')
+        @include('partials.modal-designacion-pdf', ['rutaPdf' => route('designaciones.carta_pdf', ['id' => '__ID__'])])
     </div>
 @endsection
 

@@ -103,7 +103,7 @@
                                         <td class="text-center">
                                             <div class="record-actions">
                                                 <a :href="detalleUrl(designacion.id)" class="btn btn-info">Detalles</a>
-                                                <a :href="pdfUrl(designacion.id)" target="_blank" rel="noopener" title="Imprimir designación" aria-label="Imprimir designación" class="btn btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
+                                                <a :href="pdfUrl(designacion.id)" target="_blank" rel="noopener" title="Imprimir reporte anterior" aria-label="Imprimir reporte anterior" class="btn btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
                                             </div>
                                         </td>
                                     </tr>
@@ -137,5 +137,6 @@
 @endsection
 
 @push('scripts')
+    <script defer src="{{ asset('resources/assets/js/shared/designaciones-filtros.js') }}"></script>
     <script defer src="{{ asset('resources/assets/js/vicerrectorado/designaciones/lista.js') }}"></script>
 @endpush

@@ -28,9 +28,11 @@ class FrontendAssetsTest extends TestCase
             'css/shared/designaciones-detalle.css' => ['.designaciones-detail', '@media print'],
             'css/shared/designaciones-lista.css' => ['.designaciones-screen'],
             'css/shared/modales.css' => ['.app-modal', '.designacion-confirmacion-modal'],
+            'css/shared/designacion-pdf-modal.css' => ['.designacion-pdf-form-grid', '.designacion-pdf-dialog'],
             'css/designaciones/pdf.css' => ['@page', 'body.designaciones-pdf', '.pdf-cell-padded'],
             'js/designaciones/carrera.js' => ['window.designacionesCarrera', 'grupoSiguienteMateria', 'this.docenteSeleccionado = docente'],
             'js/designaciones/lista.js' => ['window.designacionesLista', 'this.contextoActual.gestion'],
+            'js/shared/designacion-pdf-modal.js' => ['window.designacionPdfModal', 'this.$refs.form.reset()', 'this.rutaPlantilla.replace'],
             'js/vicerrectorado/designaciones/detalle.js' => [
                 'window.vicerrectoradoRevision',
                 'Las decisiones confirmadas se guardaron correctamente.',
@@ -64,6 +66,18 @@ class FrontendAssetsTest extends TestCase
                 'resources/assets/css/shared/designaciones-detalle.css',
                 'resources/assets/js/designaciones/carrera.js',
             ],
+            'resources/views/designaciones/pdf.blade.php' => [
+                "resource_path('assets/css/designaciones/pdf.css')",
+            ],
+            'resources/views/designaciones/carta-pdf.blade.php' => [
+                'DOCENTE ORDINARIO TITULAR',
+                'DOCENTE ORDINARIO CONTRATADO',
+                'DOCENTE EXTRAORDINARIO',
+                'Artículo 20',
+                'Artículo 19',
+                'Artículo 11',
+                'carrera_semestralizada',
+            ],
             'resources/views/vicerrectorado/designaciones/index.blade.php' => [
                 'resources/assets/css/shared/designaciones-lista.css',
             ],
@@ -71,8 +85,14 @@ class FrontendAssetsTest extends TestCase
                 'resources/assets/css/shared/designaciones-detalle.css',
                 'resources/assets/js/vicerrectorado/designaciones/detalle.js',
             ],
-            'resources/views/designaciones/pdf.blade.php' => [
-                "resource_path('assets/css/designaciones/pdf.css')",
+            'resources/views/partials/modal-designacion-pdf.blade.php' => [
+                'resources/assets/css/shared/designacion-pdf-modal.css',
+                'resources/assets/js/shared/designacion-pdf-modal.js',
+                'method="POST"',
+                'x-ref="form"',
+                'DOC_ORD_CONTRATADO',
+                'DOC_EXTR',
+                'name="carrera_semestralizada"',
             ],
         ];
 

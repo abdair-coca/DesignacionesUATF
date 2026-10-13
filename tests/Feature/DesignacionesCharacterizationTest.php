@@ -76,7 +76,7 @@ class DesignacionesCharacterizationTest extends TestCase
     public function test_vicerrectorado_no_consulta_ni_escribe_ids_ajenos_al_alcance_universitario(): void
     {
         $service = Mockery::mock(JachasunDesignacionesService::class);
-        $service->shouldReceive('obtenerUniversidad')->times(4)
+        $service->shouldReceive('obtenerUniversidad')->times(3)
             ->with(91, '2026')
             ->andReturn(null, null, null, null);
         $service->shouldNotReceive('detallar');
@@ -88,10 +88,6 @@ class DesignacionesCharacterizationTest extends TestCase
 
         $this->actingAs($vicerrectorado)
             ->get('/vicerrectorado/designaciones/91?gestion=2026')
-            ->assertNotFound();
-
-        $this->actingAs($vicerrectorado)
-            ->get('/vicerrectorado/designaciones/91/pdf?gestion=2026')
             ->assertNotFound();
 
         $this->actingAs($vicerrectorado)
@@ -113,6 +109,7 @@ class DesignacionesCharacterizationTest extends TestCase
         $nombres = [
             'designaciones.show',
             'designaciones.pdf',
+            'designaciones.carta_pdf',
             'designaciones.update',
             'designaciones.actualizar_detalle',
             'vicerrectorado.designaciones.show',
@@ -128,6 +125,11 @@ class DesignacionesCharacterizationTest extends TestCase
             $this->assertSame(1, preg_match('/^'.$restriccion.'$/D', '91'));
             $this->assertSame(0, preg_match('/^'.$restriccion.'$/D', 'no-numerico'));
         }
+
+        $this->assertContains('GET', Route::getRoutes()->getByName('designaciones.pdf')?->methods() ?? []);
+        $this->assertContains('POST', Route::getRoutes()->getByName('designaciones.carta_pdf')?->methods() ?? []);
+        $this->assertContains('GET', Route::getRoutes()->getByName('vicerrectorado.designaciones.pdf')?->methods() ?? []);
+        $this->assertNull(Route::getRoutes()->getByName('vicerrectorado.designaciones.carta_pdf'));
     }
 
     private function director(): DemoUser

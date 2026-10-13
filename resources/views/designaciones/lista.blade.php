@@ -10,7 +10,6 @@
 @endpush
 
 @section('content')
-    @php($esDecanatura = Auth::user()?->esDecanatura() ?? false)
     <div
         class="designaciones-screen"
         x-data="designacionesLista({
@@ -27,11 +26,7 @@
         <h1 class="page-header">
             <span class="material-icons" aria-hidden="true">fact_check</span>
             Designaciones Docentes
-            @if($esDecanatura)
-                <small>Designaciones aprobadas de su facultad</small>
-            @else
-                <small>{{ $carrera->nombre }} ({{ $carrera->sigla }})</small>
-            @endif
+            <small>{{ $carrera->nombre }} ({{ $carrera->sigla }})</small>
         </h1>
 
         @if($errorJachasun ?? null)
@@ -42,7 +37,7 @@
         @else
             <div class="panel panel-inverse">
                 <div class="panel-heading">
-                    <h4 class="panel-title">{{ $esDecanatura ? 'Consulta de designaciones aprobadas' : 'Administración de Designaciones' }}</h4>
+                    <h4 class="panel-title">Administración de Designaciones</h4>
                 </div>
 
                 <div class="panel-body">
@@ -80,11 +75,7 @@
                                         <td class="text-center text-nowrap" x-text="d.fecha || '-'"></td>
                                         <td>
                                             <div class="font-weight-bold" x-text="d.detalle"></div>
-                                            @if($esDecanatura)
-                                                <small class="text-muted">Carrera de <span x-text="d.programa_nombre"></span> (<span x-text="d.programa_codigo"></span>)</small>
-                                            @else
-                                                <small class="text-muted">Carrera de {{ $carrera->nombre }}</small>
-                                            @endif
+                                            <small class="text-muted">Carrera de {{ $carrera->nombre }}</small>
                                         </td>
                                         <td class="text-center font-weight-bold" x-text="d.gestion"></td>
                                         <td class="text-center" x-text="d.periodo"></td>
@@ -95,14 +86,14 @@
                                         <td class="text-center">
                                             <div class="record-actions">
                                                 <a :href="rutaDetalle.replace('__ID__', d.id)" class="btn btn-info">Detalles</a>
-                                                <a :href="rutaPdf.replace('__ID__', d.id)" target="_blank" rel="noopener" title="Imprimir designación" aria-label="Imprimir designación" class="btn btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
+                                                <a :href="rutaPdf.replace('__ID__', d.id)" target="_blank" rel="noopener" title="Imprimir reporte anterior" aria-label="Imprimir reporte anterior" class="btn btn-dark"><span class="material-icons" aria-hidden="true">print</span></a>
                                             </div>
                                         </td>
                                     </tr>
                             </template>
                             <tr x-show="designaciones.length === 0">
-                                    <td colspan="7" class="empty-state">{{ $esDecanatura ? 'No existen designaciones aprobadas para esta facultad.' : 'No existen designaciones registradas para esta carrera.' }}</td>
-                                </tr>
+                                <td colspan="7" class="empty-state">No existen designaciones registradas para esta carrera.</td>
+                            </tr>
                                 <tr x-show="designaciones.length > 0 && filasFiltradas().length === 0">
                                     <td colspan="7" class="empty-state">No se encontraron designaciones para la búsqueda indicada.</td>
                                 </tr>
@@ -189,5 +180,6 @@
 @endsection
 
 @push('scripts')
+    <script defer src="{{ asset('resources/assets/js/shared/designaciones-filtros.js') }}"></script>
     <script defer src="{{ asset('resources/assets/js/designaciones/lista.js') }}"></script>
 @endpush

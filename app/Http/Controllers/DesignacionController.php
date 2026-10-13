@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GenerarCartaDesignacionRequest;
+use App\Services\Designaciones\PrepararCartaDesignacion;
 use App\Services\Jachasun\JachasunDesignacionesService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +18,10 @@ use Throwable;
 
 class DesignacionController extends Controller
 {
-    public function __construct(private JachasunDesignacionesService $designaciones) {}
+    public function __construct(
+        private JachasunDesignacionesService $designaciones,
+        private PrepararCartaDesignacion $prepararCarta,
+    ) {}
 
     public function index(Request $request): View|Response
     {
@@ -26,6 +31,9 @@ class DesignacionController extends Controller
         $carrera = $facultadId === null
             ? $this->carreraAutorizada($request)
             : $this->carreraFacultad();
+        $vistaLista = $facultadId === null
+            ? 'designaciones.lista'
+            : 'decanatura.designaciones.lista';
         $busqueda = mb_substr(trim($request->string('search')->toString()), 0, 100);
 
         try {
@@ -37,7 +45,7 @@ class DesignacionController extends Controller
         } catch (Throwable $exception) {
             Log::warning('Lista no disponible.', ['exception' => $exception::class]);
 
-            return response()->view('designaciones.lista', [
+            return response()->view($vistaLista, [
                 'carrera' => $carrera,
                 'designaciones' => collect(),
                 'busqueda' => $busqueda,
@@ -58,7 +66,7 @@ class DesignacionController extends Controller
             ])
             ->first();
 
-        return view('designaciones.lista', [
+        return view($vistaLista, [
             'carrera' => $carrera,
             'designaciones' => $items,
             'busqueda' => $busqueda,
@@ -82,6 +90,9 @@ class DesignacionController extends Controller
         $carrera = $facultadId === null
             ? $this->carreraAutorizada($request)
             : $this->carreraFacultad();
+        $vistaDetalle = $facultadId === null
+            ? 'designaciones.carrera'
+            : 'decanatura.designaciones.detalle';
 
         try {
             $asignacion = $facultadId === null
@@ -90,7 +101,7 @@ class DesignacionController extends Controller
         } catch (Throwable $exception) {
             Log::warning('Lista no disponible.', ['exception' => $exception::class]);
 
-            return response()->view('designaciones.carrera', [
+            return response()->view($vistaDetalle, [
                 'carrera' => $carrera,
                 'asignacion' => [
                     'id' => $id,
@@ -120,7 +131,7 @@ class DesignacionController extends Controller
         } catch (Throwable $exception) {
             Log::warning('Detalle no disponible.', ['exception' => $exception::class]);
 
-            return response()->view('designaciones.carrera', [
+            return response()->view($vistaDetalle, [
                 'carrera' => $carrera,
                 'asignacion' => $asignacion,
                 'filas' => collect(),
@@ -172,7 +183,7 @@ class DesignacionController extends Controller
             } catch (Throwable $exception) {
                 Log::warning('Oferta de materias no disponible.', ['exception' => $exception::class]);
 
-                return response()->view('designaciones.carrera', [
+                return response()->view($vistaDetalle, [
                     'carrera' => $carrera,
                     'asignacion' => $asignacion,
                     'filas' => $filas,
@@ -185,7 +196,7 @@ class DesignacionController extends Controller
             }
         }
 
-        return view('designaciones.carrera', [
+        return view($vistaDetalle, [
             'carrera' => $carrera,
             'asignacion' => $asignacion,
             'filas' => $filas,
@@ -253,14 +264,68 @@ class DesignacionController extends Controller
             return response('No fue posible consultar el detalle de la designación.', 503);
         }
 
-        $pdf = Pdf::loadView('designaciones.pdf', [
+        return Pdf::loadView('designaciones.pdf', [
             'carrera' => $carrera,
             'asignacion' => $asignacion,
             'filas' => $filas,
             'fechaImpresion' => now()->format('d/m/Y H:i'),
-        ]);
+        ])->stream("designacion-{$id}.pdf");
+    }
 
-        return $pdf->stream("designacion-{$id}.pdf");
+    public function cartaPdf(GenerarCartaDesignacionRequest $request, int $id): Response
+    {
+        abort_unless($request->user()?->esDirectorCarrera(), 403);
+        $carrera = $this->carreraAutorizada($request);
+
+        try {
+            $asignacion = $this->designaciones->listar($carrera->sigla, '0', '0')->firstWhere('id', $id);
+        } catch (Throwable $exception) {
+            Log::warning('Lista no disponible.', ['exception' => $exception::class]);
+
+            return response('No fue posible consultar la designación solicitada.', 503);
+        }
+
+        abort_if($asignacion === null, 404);
+
+        try {
+            $filas = $this->designaciones->detallar($id);
+        } catch (Throwable $exception) {
+            Log::warning('Detalle no disponible.', ['exception' => $exception::class]);
+
+            return response('No fue posible consultar el detalle de la designación.', 503);
+        }
+
+        try {
+            $datosCarta = $request->validated();
+            $filaSeleccionada = $filas->firstWhere('id', (int) $datosCarta['fila_id']);
+
+            if ($filaSeleccionada === null) {
+                throw new InvalidArgumentException('La fila seleccionada no pertenece a la designación.');
+            }
+
+            $docenteId = (int) ($filaSeleccionada['docente_id'] ?? 0);
+            $filasDocente = $filas
+                ->filter(fn (array $fila): bool => (int) ($fila['docente_id'] ?? 0) === $docenteId)
+                ->values();
+
+            $cartaData = $this->prepararCarta->preparar($filasDocente, $datosCarta);
+        } catch (InvalidArgumentException $exception) {
+            Log::warning('Datos de carta de designación no válidos.', ['exception' => $exception::class]);
+
+            return response('No fue posible completar la operación.', 422);
+        }
+
+        try {
+            return Pdf::loadView('designaciones.carta-pdf', [
+                ...$cartaData,
+                'carrera' => $carrera,
+                'asignacion' => $asignacion,
+            ])->setPaper('a4')->stream("carta-designacion-docente-{$id}.pdf");
+        } catch (Throwable $exception) {
+            Log::warning('Carta de designación no disponible.', ['exception' => $exception::class]);
+
+            return response('No fue posible completar la operación.', 503);
+        }
     }
 
     public function store(Request $request): RedirectResponse

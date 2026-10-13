@@ -46,6 +46,9 @@ Route::middleware('auth')->group(function () {
     Route::get('designaciones/{id}/pdf', [DesignacionController::class, 'pdf'])
         ->whereNumber('id')
         ->name('designaciones.pdf');
+    Route::post('designaciones/{id}/carta-pdf', [DesignacionController::class, 'cartaPdf'])
+        ->whereNumber('id')
+        ->name('designaciones.carta_pdf');
     Route::get('designaciones/docentes/buscar', [DesignacionController::class, 'buscarDocentes'])
         ->name('designaciones.docentes.buscar');
     Route::get('designaciones/{id}', [DesignacionController::class, 'show'])
