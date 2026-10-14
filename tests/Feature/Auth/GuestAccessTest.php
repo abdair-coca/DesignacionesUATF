@@ -38,7 +38,7 @@ class GuestAccessTest extends TestCase
     {
         $user = User::factory()->create(['password' => bcrypt('secret')]);
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'secret'])->assertRedirect('/notificaciones');
+        $this->post('/login', ['email' => $user->email, 'password' => 'secret'])->assertRedirect('/designaciones');
         $this->assertAuthenticated();
     }
 
@@ -61,7 +61,7 @@ class GuestAccessTest extends TestCase
         }
 
         $this->post('/login', ['email' => $email, 'password' => 'wrong'])->assertSessionHasErrors('email');
-        $this->assertStringContainsString('Demasiados intentos de inicio de sesi�n.', session('errors')->first('email'));
+        $this->assertStringContainsString('Demasiados intentos de inicio de sesión.', session('errors')->first('email'));
         RateLimiter::clear($throttleKey);
     }
 
@@ -74,7 +74,7 @@ class GuestAccessTest extends TestCase
             RateLimiter::hit($throttleKey, 60);
         }
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'correct'])->assertRedirect('/notificaciones');
+        $this->post('/login', ['email' => $user->email, 'password' => 'correct'])->assertRedirect('/designaciones');
         $this->assertSame(0, RateLimiter::attempts($throttleKey));
     }
 

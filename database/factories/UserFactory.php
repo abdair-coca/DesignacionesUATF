@@ -73,4 +73,13 @@ class UserFactory extends Factory
             'facultad_id' => null,
         ]);
     }
+
+    public function personal(): static
+    {
+        return $this->state(fn () => [
+            'rol' => User::ROL_PERSONAL,
+            'carrera_id' => null,
+            'facultad_id' => null,
+        ]);
+    }
 }

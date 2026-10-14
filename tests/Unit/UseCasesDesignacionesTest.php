@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Contracts\DesignacionesReadContract;
 use App\Contracts\DesignacionesWriteContract;
+use App\Data\Designaciones\DecisionAsignacion;
 use App\Data\Designaciones\DesignacionCabecera;
 use App\Data\Designaciones\DesignacionResumen;
 use App\Data\Designaciones\DetalleAsignacion;
@@ -19,8 +20,8 @@ use App\UseCases\Designaciones\GuardarDecisionPorFila;
 use App\UseCases\Designaciones\GuardarRevisionGeneral;
 use App\UseCases\Designaciones\PrepararEdicionDesignacion;
 use InvalidArgumentException;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 
 class UseCasesDesignacionesTest extends TestCase
@@ -134,7 +135,7 @@ class UseCasesDesignacionesTest extends TestCase
         $escritura = Mockery::mock(DesignacionesWriteContract::class);
         $escritura->shouldReceive('guardarDecisionAsignacionDetalle')->once()
             ->with(91, 31, 'RECHAZADA', 'Motivo sintético')
-            ->andReturn(new \App\Data\Designaciones\DecisionAsignacion(31, 'RECHAZADA', 'Motivo sintético'));
+            ->andReturn(new DecisionAsignacion(31, 'RECHAZADA', 'Motivo sintético'));
 
         $decision = (new GuardarDecisionPorFila($escritura, new ReglasDecisionDesignacion))
             ->ejecutar(91, 31, ' rechazada ', ' Motivo sintético ');
@@ -155,6 +156,58 @@ class UseCasesDesignacionesTest extends TestCase
 
         $this->assertSame('APROBADO', $revision->estado);
         $this->assertNull($revision->observacion);
+    }
+
+    public function test_consulta_universitaria_aprobada_descarta_los_demas_estados(): void
+    {
+        $lectura = Mockery::mock(DesignacionesReadContract::class);
+        $lectura->shouldReceive('listarUniversidad')->once()->with('2026')->andReturn(collect([
+            $this->designacionUniversitaria(1, 'APROBADO'),
+            $this->designacionUniversitaria(2, 'SOLICITADO'),
+            $this->designacionUniversitaria(3, ' aprobado '),
+            $this->designacionUniversitaria(4, 'OBSERVADA'),
+        ]));
+
+        $aprobadas = (new ConsultarDesignaciones($lectura))->aprobadasUniversidad('2026');
+
+        $this->assertSame([1, 3], $aprobadas->pluck('id')->all());
+    }
+
+    public function test_consulta_universitaria_por_id_no_devuelve_designacion_no_aprobada(): void
+    {
+        $lectura = Mockery::mock(DesignacionesReadContract::class);
+        $lectura->shouldReceive('obtenerUniversidad')->once()->with(2, '2026')
+            ->andReturn($this->designacionUniversitaria(2, 'SOLICITADO'));
+        $lectura->shouldReceive('obtenerUniversidad')->once()->with(1, '2026')
+            ->andReturn($this->designacionUniversitaria(1, 'APROBADO'));
+
+        $consulta = new ConsultarDesignaciones($lectura);
+
+        $this->assertNull($consulta->aprobadaUniversidad(2, '2026'));
+        $this->assertSame(1, $consulta->aprobadaUniversidad(1, '2026')?->id);
+    }
+
+    public function test_consulta_universitaria_por_id_sin_registro_devuelve_null(): void
+    {
+        $lectura = Mockery::mock(DesignacionesReadContract::class);
+        $lectura->shouldReceive('obtenerUniversidad')->once()->with(9, '2026')->andReturn(null);
+
+        $this->assertNull((new ConsultarDesignaciones($lectura))->aprobadaUniversidad(9, '2026'));
+    }
+
+    private function designacionUniversitaria(int $id, string $estado): DesignacionResumen
+    {
+        return new DesignacionResumen(
+            $id,
+            'INF',
+            'Carrera sintética',
+            'Designación sintética',
+            '2026-01-15',
+            '2026',
+            '1',
+            null,
+            $estado,
+        );
     }
 
     private function designacion(): DesignacionResumen

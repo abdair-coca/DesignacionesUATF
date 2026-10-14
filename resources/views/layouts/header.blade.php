@@ -53,7 +53,7 @@
         <div class="top-user" x-data="{ open: false }">
             <div class="top-user-copy">
                 <p class="top-user-name">{{ Auth::user()?->name ?? 'Usuario' }}</p>
-                <p class="top-user-role">{{ Auth::user()?->esVicerrectorado() ? 'Vicerrectorado' : (Auth::user()?->esDecanatura() ? 'Decanatura' : 'Director de Carrera') }}</p>
+                <p class="top-user-role">{{ Auth::user()?->esVicerrectorado() ? 'Vicerrectorado' : (Auth::user()?->esPersonal() ? 'Personal' : (Auth::user()?->esDecanatura() ? 'Decanatura' : 'Director de Carrera')) }}</p>
             </div>
 
             <div class="relative">

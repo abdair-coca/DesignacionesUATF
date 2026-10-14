@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,11 +46,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(
-            ($request->user()?->esDirectorCarrera() || $request->user()?->esDecanatura())
-                ? route('designaciones.index')
-                : route('vicerrectorado.designaciones.index'),
-        );
+        return redirect()->intended($this->rutaInicial($request->user()));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -60,6 +57,17 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function rutaInicial(?User $user): string
+    {
+        if ($user?->esPersonal()) {
+            return route('personal.designaciones.index');
+        }
+
+        return ($user?->esDirectorCarrera() || $user?->esDecanatura())
+            ? route('designaciones.index')
+            : route('vicerrectorado.designaciones.index');
     }
 
     private function throttleKey(Request $request): string

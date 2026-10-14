@@ -349,3 +349,82 @@ grupos y contexto; el modo degradado ya fue verificado con smoke real. Ver
 | Área | Caso | Comando/evidencia | Resultado |
 |---|---|---|---|
 | Vistas | Retiro de cuatro plantillas sin referencias activas; conservación de vistas enlazadas e inclusiones | `php artisan view:cache --no-ansi`; `PageAccessTest`; `JachasunDesignacionesListTest` | Compilación OK. Pruebas funcionales bloqueadas antes de aserciones porque PostgreSQL de testing no acepta conexiones; no se confirmó el comportamiento HTTP en esta ejecución |
+
+## Rol Personal: fase P1 (14/10/2026)
+
+| Area | Caso | Comando/evidencia | Resultado |
+|---|---|---|---|
+| Rol Personal | Rol aceptado solo sin carrera ni facultad | `RoleAuthorizationTest::test_la_base_acepta_personal_sin_alcance` | CUBIERTA; OK |
+| Rol Personal | Rechazo de Personal con carrera o con facultad | `RoleAuthorizationTest::test_la_base_rechaza_personal_con_carrera`, `test_la_base_rechaza_personal_con_facultad` | CUBIERTA; OK |
+| Rol Personal | Migración reversible solo sin usuarios Personal | `php artisan migrate:rollback --step=1 --env=testing` con y sin usuario sintético | CUBIERTA por verificación manual; bloquea con mensaje interno cuando existen usuarios |
+| Rol Personal | Cuenta demo y proveedor demo | `DemoUserProviderTest`, `DemoAuthenticationTest` | OK; 22 pruebas junto con `RoleAuthorizationTest` |
+| Rol Personal | Validación del dataset de testing | `TestingDatasetValidator` | Cambio revisado por lectura; no ejecutado ni automatizado |
+| Regresión | Suite completa frente a `main` | `php artisan test --env=testing --no-coverage` | Sin regresiones: 53 fallas y errores idénticos a `main`; 241 pruebas con 188 aprobadas |
+
+## Rol Personal: fase P2 (14/10/2026)
+
+| Area | Caso | Comando/evidencia | Resultado |
+|---|---|---|---|
+| Rol Personal | Personal recibe 403 en designaciones de carrera, carta, búsqueda de docentes y escrituras | `RoleAuthorizationTest::test_personal_no_accede_a_las_designaciones_de_carrera` | CUBIERTA; OK |
+| Rol Personal | Personal recibe 403 en la bandeja de Vicerrectorado, decisiones y estado | `RoleAuthorizationTest::test_personal_no_accede_a_la_bandeja_de_vicerrectorado` | CUBIERTA; OK |
+| Rol Personal | Director, Decanatura y Vicerrectorado reciben 403 en `personal/designaciones` | `RoleAuthorizationTest::test_otros_roles_no_acceden_a_las_designaciones_de_personal` | CUBIERTA; OK |
+| Rol Personal | Lista solo de designaciones aprobadas, por gestión pedida o actual | `PersonalDesignacionesTest` (lista) y `UseCasesDesignacionesTest::test_consulta_universitaria_aprobada_descarta_los_demas_estados` | CUBIERTA; OK |
+| Rol Personal | Gestión inválida no consulta Jachasun | `PersonalDesignacionesTest::test_personal_lista_rechaza_una_gestion_invalida_sin_consultar_jachasun` | CUBIERTA; OK |
+| Rol Personal | Fallo de Jachasun responde 503 sin detalles técnicos | `PersonalDesignacionesTest::test_personal_lista_con_fallo_de_jachasun_responde_503_sin_detalles_tecnicos` | CUBIERTA; OK |
+| Rol Personal | Detalle aprobado de solo lectura; no aprobado responde 404 | `PersonalDesignacionesTest` (detalle) y `UseCasesDesignacionesTest::test_consulta_universitaria_por_id_no_devuelve_designacion_no_aprobada` | CUBIERTA; OK |
+| Rol Personal | PDF de designación aprobada; no aprobada no genera documento | `PersonalDesignacionesTest` (PDF) | CUBIERTA; OK |
+| Rol Personal | Identificadores no numéricos no resuelven designaciones | `PersonalDesignacionesTest::test_ids_no_numericos_no_resuelven_designaciones` | CUBIERTA; OK |
+| Regresión | Suite completa frente a `main` | `php artisan test --env=testing --no-coverage` | 256 pruebas, 203 aprobadas; mismas 53 fallas y errores previas que `main` |
+
+## Rol Personal: fase P3 (14/10/2026)
+
+| Area | Caso | Comando/evidencia | Resultado |
+|---|---|---|---|
+| Rol Personal | Login y raíz llevan a `personal/designaciones` | `PageAccessTest::test_personal_se_dirige_a_su_listado_al_entrar_y_en_la_raiz` | CUBIERTA; OK |
+| Rol Personal | Lista con navegación propia, etiqueta de rol y sin enlaces a rutas de Director o Vicerrectorado | `PageAccessTest::test_personal_ve_el_listado_de_solo_lectura_con_su_navegacion_y_rol` | CUBIERTA; OK |
+| Rol Personal | Detalle de solo lectura con impresión y sin rutas de escritura | `PageAccessTest::test_personal_ve_detalle_de_solo_lectura_con_impresion_de_la_designacion` | CUBIERTA; OK |
+| Rol Personal | Script de la lista servido por el controlador de assets | `FrontendAssetsServingTest::test_css_and_javascript_assets_are_served_from_the_resources_url` | CUBIERTA; OK |
+| Rol Personal | Visual en navegador | No ejecutable en este entorno | PENDIENTE de revisión manual |
+| Regresión | Suite completa frente a `main` | `php artisan test --env=testing --no-coverage` | 259 pruebas, 206 aprobadas; mismas 53 fallas y errores previas que `main` |
+
+## Rol Personal: fase P4 (14/10/2026)
+
+| Area | Caso | Comando/evidencia | Resultado |
+|---|---|---|---|
+| Carta Personal | PDF solo con las materias del docente elegido | `PersonalCartaPdfTest::test_personal_genera_la_carta_solo_con_las_materias_del_docente_elegido` | CUBIERTA; OK |
+| Carta Personal | PDF real renderizado de designación aprobada | `PersonalCartaPdfTest::test_personal_genera_un_pdf_real_de_la_carta_de_una_designacion_aprobada` | CUBIERTA; OK |
+| Carta Personal | Designación no aprobada: 404 sin documento | `PersonalCartaPdfTest::test_carta_de_designacion_no_aprobada_responde_404_sin_generar_documento` | CUBIERTA; OK |
+| Carta Personal | Fila de otra designación y condición inválida: 422 sin documento | `PersonalCartaPdfTest` (fila ajena y condición inválida) | CUBIERTA; OK |
+| Carta Personal | Sin escrituras en Jachasun | `PersonalCartaPdfTest::test_la_carta_de_personal_no_escribe_en_jachasun` | CUBIERTA; OK |
+| Carta Personal | Otros roles reciben 403 | `PersonalCartaPdfTest::test_otros_roles_no_generan_la_carta_de_personal` | CUBIERTA; OK |
+| Carta Personal | Botón de carta y modal en el detalle | `PersonalDesignacionesTest::test_personal_detalle_de_designacion_aprobada_es_de_solo_lectura` | CUBIERTA; OK |
+| Carta Personal | Facultad derivada desde Decanatura | Fuente no confirmada | `NEEDS_BUSINESS_CONFIRMATION`; facultad sigue en el modal |
+| Carta Director | Código sin cambios frente a `HEAD` | `git diff HEAD` sobre los archivos de carta | Sin diferencias |
+| Carta Director | `DesignacionPdfTest` aislado | `php artisan test --env=testing tests/Feature/DesignacionPdfTest.php` | Igual que `main`: 6 OK, 6 fallas y 3 errores por causas de pruebas |
+| Regresión | Suite completa frente a `main` | `php artisan test --env=testing --no-coverage` | 266 pruebas, 213 aprobadas; mismas 53 fallas y errores previas que `main` |
+
+## Cierre del rol Personal: fase P5 (14/10/2026)
+
+| Area | Caso | Comando/evidencia | Resultado |
+|---|---|---|---|
+| Calidad | Pint en todo el proyecto | `vendor/bin/pint --test` | OK; formato corregido en 3 archivos previos, sin cambios de lógica |
+| Regresión | Suite completa frente a `main` | `php artisan test --env=testing --no-coverage` con base limpia | 266 pruebas, 213 aprobadas; 53 fallas y errores idénticas a `main` |
+| Previa: aislamiento | `JachasunDesignacionesDetailTest`, `EscrituraTest`, `ListTest` | Suite completa | 40 fallas por filas confirmadas; `BUG-2026-10-14-aislamiento-jachasun.md`, abierto |
+| Previa: carta Director | `DesignacionPdfTest` | Ejecución aislada | 9 fallas por pruebas desfasadas; `BUG-2026-10-14-carta-director-pruebas-desfasadas.md`, abierto |
+| Previa: login | `GuestAccessTest` | Ejecución aislada | 3 fallas por expectativa vieja y codificación; `BUG-2026-10-14-login-pruebas-desfasadas.md`, abierto |
+| Previa: página Director | `PageAccessTest::test_director_ve_lista_jachasun_y_rutas_locales_no_existen` | Ejecución aislada | 1 falla por texto inexistente; `BUG-2026-10-14-pagina-director-jachasun.md`, abierto |
+| Calidad | Auditorías | `npm audit`; `composer audit --locked` | 0 vulnerabilidades; sin avisos |
+| Calidad | Diferencias de espacios | `git diff --check` | OK en archivos rastreados; sin espacios finales en archivos nuevos |
+| Frontend | CSS generado | `npm run build:css` | Único cambio: `.border-collapse`, de la carta en `0a7c527` |
+
+## Corrección de fallas previas (14/10/2026)
+
+| Area | Caso | Comando/evidencia | Resultado |
+|---|---|---|---|
+| Aislamiento | Pruebas de detalle, escritura y lista sin protección desactivada | `php artisan test --env=testing --no-coverage` en los cinco archivos afectados | 68/68 OK; sin filas residuales al terminar |
+| Jachasun lista | Contrato de lista: datos al navegador, paginación y búsqueda en cliente | `JachasunDesignacionesListTest` | 6 pruebas, OK |
+| Jachasun detalle | Textos de la modal verificados en el script del detalle | `JachasunDesignacionesDetailTest` | OK; no verifica el navegador |
+| Login | Redirección por rol y bloqueo tras cinco intentos | `GuestAccessTest` | 12/12 OK |
+| Página Director | Título vigente de la lista | `PageAccessTest` | OK |
+| Carta Director | Helper sin `fila_id` y fixtures sin `fecha_resolucion_anio` | `DesignacionPdfTest` | 9 casos fallidos, aceptados sin corrección |
+| Suite completa | Estado final | `php artisan test --env=testing --no-coverage` | 266 pruebas, 257 aprobadas, 6 fallas y 3 errores; todos en `DesignacionPdfTest` |

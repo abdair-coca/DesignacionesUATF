@@ -17,9 +17,9 @@ class JachasunDesignacionesListTest extends TestCase
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF', 'nombre' => 'Ingenieria Informatica']);
         $director = User::factory()->director($carrera)->create();
-        $this->mockService()->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 1, 10)
-            ->andReturn(['items' => collect([$this->fila(2117, 'SEMESTRAL 1/2023')]), 'total' => 1]);
+        $this->mockService()->shouldReceive('listar')->once()
+            ->with('INF', '0', '0')
+            ->andReturn(collect([$this->fila(2117, 'SEMESTRAL 1/2023')]));
 
         $this->actingAs($director)->get('/designaciones')->assertOk()
             ->assertSee(asset('resources/assets/css/shared/designaciones-lista.css'), false)
@@ -29,7 +29,7 @@ class JachasunDesignacionesListTest extends TestCase
             ->assertSee('2117')
             ->assertSee('SEMESTRAL 1/2023')
             ->assertSee('SOLICITADO')
-            ->assertSee('/designaciones/2117', false)
+            ->assertSee('designaciones\/__ID__', false)
             ->assertSee('Detalles', false)
             ->assertSee('Imprimir', false)
             ->assertDontSee('Copiar', false)
@@ -78,85 +78,82 @@ class JachasunDesignacionesListTest extends TestCase
         Log::spy();
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $this->mockService()->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 1, 10)
+        $this->mockService()->shouldReceive('listar')->once()
+            ->with('INF', '0', '0')
             ->andThrow(new RuntimeException('SQL password=secret SELECT private_rows'));
 
         $this->actingAs($director)->get('/designaciones')->assertStatus(503)
             ->assertSee('No fue posible consultar las designaciones.')
             ->assertDontSee('secret')
             ->assertDontSee('private_rows');
-        Log::shouldHaveReceived('warning')->once()->with('Lista Jachasun no disponible.', ['exception' => RuntimeException::class]);
+        Log::shouldHaveReceived('warning')->once()->with('Lista no disponible.', ['exception' => RuntimeException::class]);
     }
 
-    public function test_lista_pagina_de_10_con_links_de_navegacion(): void
+    public function test_lista_entrega_todas_las_designaciones_y_pagina_en_el_navegador(): void
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $this->mockService()->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 1, 10)
-            ->andReturn(['items' => collect(range(1, 10))->map(fn (int $id): array => $this->fila($id, "DETALLE $id")), 'total' => 25]);
+        $this->mockService()->shouldReceive('listar')->once()
+            ->with('INF', '0', '0')
+            ->andReturn(collect(range(1, 25))->map(fn (int $id): array => $this->fila($id, "DETALLE $id")));
 
         $respuesta = $this->actingAs($director)->get('/designaciones')->assertOk()
-            ->assertSee('Página 1 de 3')
+            ->assertSee('Mostrando', false)
             ->assertSee('Siguiente')
             ->assertSee('Anterior')
-            ->assertSee('Mostrando 1–10 de 25 designaciones');
+            ->assertSee(asset('resources/assets/js/shared/designaciones-filtros.js'), false);
 
-        $respuesta->assertSee('DETALLE 10')
-            ->assertDontSee('DETALLE 11');
+        $respuesta->assertSee('DETALLE 1')
+            ->assertSee('DETALLE 25');
+        $this->assertStringContainsString(
+            'porPagina: 10',
+            file_get_contents(resource_path('assets/js/shared/designaciones-filtros.js')),
+        );
     }
 
-    public function test_segunda_pagina_muestra_las_siguientes_diez(): void
+    public function test_el_parametro_de_pagina_no_recorta_la_lista(): void
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $this->mockService()->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 2, 10)
-            ->andReturn(['items' => collect(range(11, 20))->map(fn (int $id): array => $this->fila($id, "DETALLE $id")), 'total' => 25]);
+        $this->mockService()->shouldReceive('listar')->once()
+            ->with('INF', '0', '0')
+            ->andReturn(collect(range(1, 25))->map(fn (int $id): array => $this->fila($id, "DETALLE $id")));
 
-        $respuesta = $this->actingAs($director)->get('/designaciones?page=2')->assertOk()
-            ->assertSee('Página 2 de 3')
-            ->assertSee('Mostrando 11–20 de 25 designaciones');
-
-        $respuesta->assertSee('DETALLE 11')
-            ->assertSee('DETALLE 20')
-            ->assertDontSee('DETALLE 10')
-            ->assertDontSee('DETALLE 21');
+        $this->actingAs($director)->get('/designaciones?page=2')->assertOk()
+            ->assertSee('DETALLE 11')
+            ->assertSee('DETALLE 25');
     }
 
     public function test_lista_busca_por_descripcion_y_conserva_el_termino(): void
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $this->mockService()->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 1, 10, 'SEMESTRAL')
-            ->andReturn(['items' => collect([$this->fila(2117, 'SEMESTRAL 1/2023')]), 'total' => 1]);
+        $this->mockService()->shouldReceive('listar')->once()
+            ->with('INF', '0', '0')
+            ->andReturn(collect([$this->fila(2117, 'SEMESTRAL 1/2023')]));
 
-        $this->actingAs($director)->get('/designaciones?search=SEMESTRAL')->assertOk()
+        $respuesta = $this->actingAs($director)->get('/designaciones?search=SEMESTRAL')->assertOk()
             ->assertSee('SEMESTRAL 1/2023')
-            ->assertSee('name="search"', false)
-            ->assertSee('value="SEMESTRAL"', false);
+            ->assertSee('name="search"', false);
+
+        $this->assertSame('SEMESTRAL', $respuesta->viewData('busqueda'));
     }
 
-    public function test_pagina_fuera_de_rango_se_ajusta_a_la_ultima(): void
+    public function test_pagina_fuera_de_rango_no_rompe_la_lista(): void
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
         $director = User::factory()->director($carrera)->create();
-        $service = $this->mockService();
-        $service->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 99, 10)
-            ->andReturn(['items' => collect(), 'total' => 25]);
-        $service->shouldReceive('listarPaginado')->once()
-            ->with('INF', '0', '0', 3, 10)
-            ->andReturn(['items' => collect(range(21, 25))->map(fn (int $id): array => $this->fila($id, "DETALLE $id")), 'total' => 25]);
+        $this->mockService()->shouldReceive('listar')->once()
+            ->with('INF', '0', '0')
+            ->andReturn(collect(range(1, 25))->map(fn (int $id): array => $this->fila($id, "DETALLE $id")));
 
         $this->actingAs($director)->get('/designaciones?page=99')->assertOk()
-            ->assertSee('Página 3 de 3')
-            ->assertSee('Mostrando 21–25 de 25 designaciones')
             ->assertSee('DETALLE 21')
-            ->assertSee('DETALLE 25')
-            ->assertDontSee('DETALLE 20');
+            ->assertSee('DETALLE 25');
+        $this->assertStringContainsString(
+            'Math.min(this.totalPaginas(), Math.max(1, pagina))',
+            file_get_contents(resource_path('assets/js/shared/designaciones-filtros.js')),
+        );
     }
 
     public function test_rutas_heredadas_del_flujo_local_y_revision_no_se_registran(): void

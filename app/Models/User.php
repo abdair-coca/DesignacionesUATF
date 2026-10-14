@@ -23,6 +23,8 @@ class User extends Authenticatable
 
     public const ROL_VICERRECTORADO = 'vicerrectorado';
 
+    public const ROL_PERSONAL = 'personal';
+
     /**
      * Get the attributes that should be cast.
      *
@@ -51,6 +53,11 @@ class User extends Authenticatable
     public function esDecanatura(): bool
     {
         return $this->rol === self::ROL_DECANATURA;
+    }
+
+    public function esPersonal(): bool
+    {
+        return $this->rol === self::ROL_PERSONAL;
     }
 
     public function administraCarrera(int $carreraId): bool

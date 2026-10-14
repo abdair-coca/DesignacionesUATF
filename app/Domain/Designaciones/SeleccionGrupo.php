@@ -8,7 +8,7 @@ use InvalidArgumentException;
 final readonly class SeleccionGrupo
 {
     /**
-     * @param array<int, int> $gruposPermitidos
+     * @param  array<int, int>  $gruposPermitidos
      */
     private function __construct(
         public int $grupoSiguiente,
@@ -18,7 +18,7 @@ final readonly class SeleccionGrupo
     ) {}
 
     /**
-     * @param array<int, int|null> $gruposAsignados
+     * @param  array<int, int|null>  $gruposAsignados
      */
     public static function calcular(
         OfertaMateria $oferta,

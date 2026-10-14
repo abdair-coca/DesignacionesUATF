@@ -4,6 +4,7 @@ use App\Http\Controllers\DesignacionController;
 use App\Http\Controllers\FrontendAssetController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\PersonalDesignacionController;
 use App\Http\Controllers\VicerrectoradoDesignacionController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,10 @@ Route::get('resources/assets/{path}', FrontendAssetController::class)
 Route::middleware('auth')->group(function () {
     // Lleva directo a designaciones sin importar el rol
     Route::get('/', function () {
+        if (auth()->user()?->esPersonal()) {
+            return redirect()->route('personal.designaciones.index');
+        }
+
         return redirect()->route(auth()->user()?->esVicerrectorado()
             ? 'vicerrectorado.designaciones.index'
             : 'designaciones.index');
@@ -63,6 +68,23 @@ Route::middleware('auth')->group(function () {
     Route::post('designaciones/{id}/detalle', [DesignacionController::class, 'actualizarDetalle'])
         ->whereNumber('id')
         ->name('designaciones.actualizar_detalle');
+
+    Route::prefix('personal')
+        ->name('personal.')
+        ->middleware('rol:personal')
+        ->group(function () {
+            Route::get('designaciones', [PersonalDesignacionController::class, 'index'])
+                ->name('designaciones.index');
+            Route::get('designaciones/{id}/pdf', [PersonalDesignacionController::class, 'pdf'])
+                ->whereNumber('id')
+                ->name('designaciones.pdf');
+            Route::get('designaciones/{id}', [PersonalDesignacionController::class, 'show'])
+                ->whereNumber('id')
+                ->name('designaciones.show');
+            Route::post('designaciones/{id}/carta-pdf', [PersonalDesignacionController::class, 'cartaPdf'])
+                ->whereNumber('id')
+                ->name('designaciones.carta_pdf');
+        });
 
     Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
     Route::post('notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas'])->name('notificaciones.leer_todas');

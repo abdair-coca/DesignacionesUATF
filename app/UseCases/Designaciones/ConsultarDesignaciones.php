@@ -47,6 +47,26 @@ final class ConsultarDesignaciones
         return $this->lectura->listarUniversidadPaginado($gestion, $pagina, $porPagina);
     }
 
+    /** @return Collection<int, DesignacionResumen> */
+    public function aprobadasUniversidad(string|int $gestion): Collection
+    {
+        return $this->lectura->listarUniversidad($gestion)
+            ->filter(fn (DesignacionResumen $designacion): bool => $this->esAprobada($designacion))
+            ->values();
+    }
+
+    public function aprobadaUniversidad(int $id, string|int $gestion): ?DesignacionResumen
+    {
+        $designacion = $this->lectura->obtenerUniversidad($id, $gestion);
+
+        return $designacion !== null && $this->esAprobada($designacion) ? $designacion : null;
+    }
+
+    private function esAprobada(DesignacionResumen $designacion): bool
+    {
+        return strtoupper(trim((string) $designacion->estado)) === 'APROBADO';
+    }
+
     /** @return array{items: Collection<int, DesignacionResumen>, total: int} */
     public function carreraPaginada(
         string $programa,

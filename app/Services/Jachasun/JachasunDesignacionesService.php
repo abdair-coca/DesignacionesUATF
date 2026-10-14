@@ -183,6 +183,22 @@ class JachasunDesignacionesService
     /**
      * @return Collection<int, array<string, int|string|null>>
      */
+    public function listarAprobadasUniversidad(string|int $gestion): Collection
+    {
+        return $this->consultarDesignaciones->aprobadasUniversidad($gestion)
+            ->map(fn ($designacion): array => $designacion->toArray())
+            ->values();
+    }
+
+    /** @return array<string, int|string|null>|null */
+    public function obtenerAprobadaUniversidad(int $id, string|int $gestion): ?array
+    {
+        return $this->consultarDesignaciones->aprobadaUniversidad($id, $gestion)?->toArray();
+    }
+
+    /**
+     * @return Collection<int, array<string, int|string|null>>
+     */
     public function detallar(int $id): Collection
     {
         return $this->consultarDetalle->filas($id)

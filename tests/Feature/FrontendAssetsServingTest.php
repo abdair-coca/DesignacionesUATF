@@ -21,6 +21,11 @@ class FrontendAssetsServingTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'text/javascript; charset=UTF-8')
             ->assertSee('window.designacionesLista', false);
+
+        $this->get('/resources/assets/js/personal/designaciones/lista.js')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/javascript; charset=UTF-8')
+            ->assertSee('window.personalDesignacionesLista', false);
     }
 
     public function test_assets_route_cannot_read_files_outside_resources_assets(): void

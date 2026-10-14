@@ -52,5 +52,11 @@ return [
             'rol' => User::ROL_DECANATURA,
             'facultad_id' => 3,
         ],
+        [
+            'id' => 'demo-personal',
+            'name' => 'Personal',
+            'email' => 'personal@uatf.edu.bo',
+            'rol' => User::ROL_PERSONAL,
+        ],
     ],
 ];

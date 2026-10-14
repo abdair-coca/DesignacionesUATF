@@ -11,7 +11,7 @@ final class TestingDatasetValidator
     public static function validate(): array
     {
         $errors = [];
-        $allowedRoles = [User::ROL_DIRECTOR_CARRERA, User::ROL_DECANATURA, User::ROL_VICERRECTORADO];
+        $allowedRoles = [User::ROL_DIRECTOR_CARRERA, User::ROL_DECANATURA, User::ROL_VICERRECTORADO, User::ROL_PERSONAL];
         $allowedLegacyStates = ['propuesta', 'aprobada', 'rechazada'];
 
         self::expectZero($errors, 'roles inválidos', DB::table('users')->whereNotIn('rol', $allowedRoles)->count());
@@ -21,6 +21,7 @@ final class TestingDatasetValidator
         self::expectZero($errors, 'Decanatura con carrera', DB::table('users')->where('rol', User::ROL_DECANATURA)->whereNotNull('carrera_id')->count());
         self::expectZero($errors, 'Vicerrectorado con carrera', DB::table('users')->where('rol', User::ROL_VICERRECTORADO)->whereNotNull('carrera_id')->count());
         self::expectZero($errors, 'Vicerrectorado con facultad', DB::table('users')->where('rol', User::ROL_VICERRECTORADO)->whereNotNull('facultad_id')->count());
+        self::expectZero($errors, 'Personal con carrera o facultad', DB::table('users')->where('rol', User::ROL_PERSONAL)->where(fn ($query) => $query->whereNotNull('carrera_id')->orWhereNotNull('facultad_id'))->count());
         self::expectZero($errors, 'emails fuera de example.test', DB::table('users')->where('email', 'not like', '%@example.test')->count());
         self::expectZero($errors, 'emails duplicados', DB::table('users')->select('email')->groupBy('email')->havingRaw('COUNT(*) > 1')->count());
         self::expectZero($errors, 'estados legado inválidos', DB::table('designaciones')->whereNotIn('estado', $allowedLegacyStates)->count());

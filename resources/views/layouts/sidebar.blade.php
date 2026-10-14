@@ -53,6 +53,19 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </a>
+        @elseif(Auth::user()?->esPersonal())
+            <a href="{{ route('personal.designaciones.index') }}"
+               class="flex items-center justify-between px-4 py-2.5 transition-all duration-150 {{ request()->routeIs('personal.designaciones*') ? 'bg-[#20252a] text-[#00acac] font-semibold border-l-4 border-[#00acac]' : 'hover:bg-[#23282c] hover:text-white text-[#a8b6c1]' }}">
+                <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 {{ request()->routeIs('personal.designaciones*') ? 'text-[#00acac]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5h18M3 12h18M3 19h18" />
+                    </svg>
+                    <span>Designaciones aprobadas</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
         @endif
 
         <a href="{{ route('notificaciones.index') }}"

@@ -14,8 +14,6 @@ use Tests\TestCase;
 
 class JachasunDesignacionesDetailTest extends TestCase
 {
-    protected $connectionsToTransact = [];
-
     public function test_selector_de_grupo_se_mantiene_editable(): void
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF', 'nombre' => 'Ingenieria Informatica']);
@@ -34,8 +32,9 @@ class JachasunDesignacionesDetailTest extends TestCase
         $this->mockDetail(2117, [1, 2]);
 
         $this->actingAs($director)->get('/designaciones/2117')->assertOk()
-            ->assertSee(asset('resources/assets/js/designaciones/carrera.js'), false)
-            ->assertSee('grupo_siguiente', false);
+            ->assertSee(asset('resources/assets/js/designaciones/carrera.js'), false);
+
+        $this->assertStringContainsString('grupo_siguiente', $this->contenidoJs());
     }
 
     public function test_modal_muestra_la_ayuda_del_siguiente_grupo_de_la_materia(): void
@@ -46,9 +45,9 @@ class JachasunDesignacionesDetailTest extends TestCase
 
         $response = $this->actingAs($director)->get('/designaciones/2117')->assertOk();
 
-        $response->assertSee('La materia ya tiene designaciones.', false);
-        $response->assertSee('siguiente grupo disponible', false);
-        $response->assertSee('grupoSiguienteMateria()', false);
+        $this->assertStringContainsString('La materia ya tiene designaciones.', $this->contenidoJs());
+        $this->assertStringContainsString('siguiente grupo disponible', $this->contenidoJs());
+        $this->assertStringContainsString('grupoSiguienteMateria()', $this->contenidoJs());
     }
 
     public function test_modal_permite_materia_sin_docente_y_envia_horas_y_grupo(): void
@@ -67,7 +66,9 @@ class JachasunDesignacionesDetailTest extends TestCase
             ->assertSee('name="hrs_laboratorio"', false)
             ->assertSee('name="id_docente"', false)
             ->assertSee('name="id_materia"', false)
-            ->assertSee('formulario.requestSubmit()', false);
+            ->assertSee(asset('resources/assets/js/designaciones/carrera.js'), false);
+
+        $this->assertStringContainsString('formulario.requestSubmit()', $this->contenidoJs());
     }
 
     public function test_detalle_es_imprimible_y_muestra_acciones_por_fila_y_de_cabecera(): void
@@ -102,7 +103,8 @@ class JachasunDesignacionesDetailTest extends TestCase
             ->assertSee('/designaciones/2117/pdf', false)
             ->assertDontSee('Enviar Propuesta', false);
 
-        $this->assertGreaterThanOrEqual(2, substr_count($response->getContent(), '/designaciones/2117/pdf'));
+        // La impresión por fila es la carta, desde el modal; el encabezado conserva el reporte.
+        $this->assertSame(1, substr_count($response->getContent(), '/designaciones/2117/pdf'));
     }
 
     public function test_designacion_aprobada_se_muestra_solo_para_consulta_a_direccion(): void
@@ -284,17 +286,24 @@ class JachasunDesignacionesDetailTest extends TestCase
         $director = User::factory()->director($carrera)->create();
         $this->mockDetail(2117, [1, 2]);
 
+        $this->assertStringContainsString('validarFila()', $this->contenidoJs());
+
         $this->actingAs($director)->get('/designaciones/2117')->assertOk()
             ->assertSee('erroresFila', false)
-            ->assertSee('validarFila()', false)
             ->assertSee('@click="guardarFila()"', false)
             ->assertDontSee('@click="confirmarEdicionFila()"', false)
-            ->assertSee('@click="confirmarEdicionCabecera()"', false)
-            ->assertSee('Seleccione un docente.', false)
-            ->assertSee('Seleccione una materia.', false)
-            ->assertSee('Seleccione un grupo.', false)
-            ->assertSee('Las horas deben ser enteros no negativos.', false)
-            ->assertSee('Las horas no pueden ser todas cero.', false);
+            ->assertSee('@click="confirmarEdicionCabecera()"', false);
+
+        // Los mensajes de validación se generan en el script del detalle.
+        foreach ([
+            'Seleccione un docente.',
+            'Seleccione una materia.',
+            'Seleccione un grupo.',
+            'Las horas deben ser enteros no negativos.',
+            'Las horas no pueden ser todas cero.',
+        ] as $mensaje) {
+            $this->assertStringContainsString($mensaje, $this->contenidoJs());
+        }
     }
 
     public function test_detalle_sigue_disponible_si_no_se_pueden_cargar_grupos(): void
@@ -431,7 +440,7 @@ class JachasunDesignacionesDetailTest extends TestCase
             ->assertSee('No fue posible consultar el detalle de la designación.')
             ->assertDontSee('secret')
             ->assertDontSee('private_rows');
-        Log::shouldHaveReceived('warning')->once()->with('Detalle Jachasun no disponible.', ['exception' => RuntimeException::class]);
+        Log::shouldHaveReceived('warning')->once()->with('Detalle no disponible.', ['exception' => RuntimeException::class]);
     }
 
     public function test_modal_permite_modificar_horas_aunque_no_haya_catalogo_de_grupos(): void
@@ -443,6 +452,12 @@ class JachasunDesignacionesDetailTest extends TestCase
             ->assertSee('name="hrs_teoria"', false)
             ->assertSee('name="hrs_practica"', false)
             ->assertSee('name="hrs_laboratorio"', false);
+    }
+
+    /** Los textos de la modal viven en el script del detalle, no en el HTML de la página. */
+    private function contenidoJs(): string
+    {
+        return file_get_contents(resource_path('assets/js/designaciones/carrera.js'));
     }
 
     private function mockDetail(

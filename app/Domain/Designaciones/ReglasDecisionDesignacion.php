@@ -54,7 +54,7 @@ final class ReglasDecisionDesignacion
      * Un estado ausente o no reconocido representa una fila pendiente, igual
      * que el contrato vigente de revisión general.
      *
-     * @param array<int, string|null> $decisiones
+     * @param  array<int, string|null>  $decisiones
      */
     public function estadoGeneralCalculado(array $decisiones): string
     {

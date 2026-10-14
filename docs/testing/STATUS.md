@@ -2560,3 +2560,340 @@ Ver informe de regresion en
 
 No se ejecutaron escrituras reales en producción. La verificación manual queda
 pendiente hasta disponer de un navegador en el entorno.
+
+## Fase P1: datos y rol Personal (14/10/2026)
+
+Estado: implementada y verificada en la base de testing. Pendiente de
+aprobación antes de la fase P2 (acceso y autorización).
+
+### Entorno de pruebas
+
+- PostgreSQL 17 se ejecuta en espacio de usuario (`~/.local/pgsql`), fuera del
+  repositorio, en `127.0.0.1:55432` y solo en loopback, con la base
+  `designaciones_uatf_testing`. Se inicializó con `initdb` y se migró con
+  `php artisan migrate --env=testing --force`.
+- Antes de esta fase el servidor de testing no estaba disponible aquí; por eso
+  los registros previos de Feature no ejecutaron aserciones.
+
+### Pruebas ejecutadas
+
+- `RoleAuthorizationTest`, antes del cambio: 3 pruebas nuevas fallaron porque
+  `personal()` no existía y la restricción no aceptaba el rol.
+- `RoleAuthorizationTest`, después del cambio: 12/12 OK.
+- `RoleAuthorizationTest`, `DemoUserProviderTest` y `DemoAuthenticationTest`:
+  22/22 OK.
+- Rollback de la migración: revierte sin usuarios `personal`; con un usuario
+  sintético lo bloquea. El usuario sintético se eliminó después.
+- Suite completa (`php artisan test --env=testing --no-coverage`): 241 pruebas,
+  188 aprobadas, 10 fallas y 43 errores. La línea base de `main` (0a7c527),
+  sin cambios de P1, da 238 pruebas, 185 aprobadas, 10 fallas y 43 errores.
+  Los 53 nombres de fallas y errores son idénticos: P1 no introduce regresiones.
+- `vendor/bin/pint --test` en los archivos modificados: OK.
+- `git diff --check`: OK.
+- `composer audit --locked`: sin avisos. `npm audit`: 0 vulnerabilidades.
+- `npm run build:css`: no aplica; no hubo cambios de clases Tailwind.
+
+### Fallas previas, no introducidas por P1
+
+- `GuestAccessTest` (3 pruebas): el login redirige a `/designaciones` donde la
+  prueba espera `/notificaciones`, y el límite de intentos devuelve bloqueo
+  inesperado.
+- `PageAccessTest::test_director_ve_lista_jachasun_y_rutas_locales_no_existen`:
+  espera el texto "Designaciones de Jachasun", que ya no existe en las vistas.
+- 40 errores de llave única en `carreras_sigla_unique` (`INF`): alguna prueba de
+  Feature deja filas confirmadas fuera de la transacción. Reiniciar la base no
+  lo evita; la causa exacta no está identificada.
+- Otras fallas en pruebas de Jachasun, Decanatura y PDF con respuestas 422, 404,
+  503 y claves indefinidas.
+
+### Archivos modificados
+
+- `database/migrations/2026_10_14_120000_add_personal_rol_to_users_table.php`
+  (nuevo)
+- `app/Models/User.php`
+- `database/factories/UserFactory.php`
+- `database/seeders/Testing/TestingUsersSeeder.php`
+- `database/seeders/Testing/TestingDatasetValidator.php`
+- `config/demo-auth.php`
+- `tests/Feature/RoleAuthorizationTest.php`
+
+### Riesgos y pendientes
+
+- `NEEDS_BUSINESS_CONFIRMATION`: el correo de la cuenta demo
+  `personal@uatf.edu.bo` sigue el patrón de las demás cuentas demo; confirmar
+  o cambiar.
+- `TestingDatasetValidator` se modificó por lectura. No se ejecutó ni tiene
+  prueba automatizada.
+- Las fallas previas siguen abiertas. Se corregirán en una fase aparte, con
+  informe en `docs/testing/BUG_REPORTS/` y prueba de regresión.
+
+## Fase P2: acceso y autorización de Personal (14/10/2026)
+
+Estado: implementada y verificada. Pendiente de aprobación antes de la fase P3
+(interfaz de solo lectura). Las vistas de esta fase son provisionales.
+
+### Implementación
+
+- `PersonalDesignacionController` con `index`, `show` y `pdf`, bajo
+  `personal/designaciones` y middleware `rol:personal`, con `whereNumber`.
+- Solo designaciones con estado `APROBADO`: el filtro vive en
+  `ConsultarDesignaciones` sobre el contrato de lectura existente. No se cambió
+  el contrato de Jachasun.
+- Las vistas reutilizan las de Decanatura, que son de solo lectura. Sus enlaces
+  apuntan a `designaciones.show` y `designaciones.pdf`; para Personal responden
+  403 hasta P3.
+
+### Pruebas ejecutadas
+
+- `UseCasesDesignacionesTest`, 3 pruebas nuevas: antes fallaron por método
+  inexistente; después OK.
+- `RoleAuthorizationTest`, 3 pruebas nuevas: antes las rutas `/personal`
+  devolvían 404 en vez de 403; después OK.
+- `PersonalDesignacionesTest`, 9 pruebas nuevas: antes fallaron por ruta
+  inexistente; después OK.
+- Conjunto de la fase: 35/35 OK.
+- Suite completa (`php artisan test --env=testing --no-coverage`) con la base
+  reiniciada antes de la corrida: 256 pruebas, 203 aprobadas, 10 fallas y 43
+  errores. Las 53 fallas y errores son idénticas a las de `main`; ninguna
+  involucra a Personal ni a los roles.
+- `vendor/bin/pint --test` en los archivos de P1 y P2: OK.
+- `vendor/bin/pint --test` del proyecto completo: falla en 3 archivos previos
+  (app/Domain/Designaciones/ReglasDecisionDesignacion.php,app/Domain/Designaciones/SeleccionGrupo.php,app/Data/Designaciones/PreparacionEdicionDesignacion.php), ninguno tocado por P1 ni P2.
+
+### Archivos modificados
+
+- `app/Http/Controllers/PersonalDesignacionController.php` (nuevo)
+- `app/UseCases/Designaciones/ConsultarDesignaciones.php`
+- `app/Services/Jachasun/JachasunDesignacionesService.php`
+- `routes/web.php`
+- `tests/Feature/PersonalDesignacionesTest.php` (nuevo)
+- `tests/Feature/RoleAuthorizationTest.php`
+- `tests/Unit/UseCasesDesignacionesTest.php` (incluye formato de Pint en importaciones y una referencia completa)
+
+### Riesgos y pendientes
+
+- El filtro `APROBADO` se aplica en PHP sobre la lista completa de la gestión.
+  Es correcto, pero el costo crece con el número de designaciones; si la gestión
+  crece mucho, conviene moverlo a la consulta.
+- Las vistas enlazan a rutas de Director y Decanatura hasta P3.
+- Pruebas previas a P1 siguen abiertas; ver la sección de fase P1.
+
+## Fase P3: interfaz de solo lectura de Personal (14/10/2026)
+
+Estado: implementada y verificada con pruebas de HTML y de rutas. Pendiente de
+aprobación antes de la fase P4 (impresión de carta). No se hizo verificación
+visual en navegador: el entorno no lo permite.
+
+### Implementación
+
+- Vistas propias de solo lectura en `resources/views/personal/designaciones/`
+  (lista y detalle). Reutilizan clases y hojas de estilo de Decanatura, pero
+  enlazan solo a rutas de Personal y muestran "Imprimir designación".
+- Lista con formulario de gestión (`GET`, campo `gestion`), igual que la bandeja
+  de Vicerrectorado.
+- `resources/assets/js/personal/designaciones/lista.js`: fábrica propia; la de
+  Decanatura se dejó intacta.
+- Sidebar: ítem "Designaciones aprobadas" para Personal.
+- Encabezado: etiqueta "Personal".
+- Login (`AuthenticatedSessionController::rutaInicial`) y ruta `/`: Personal va a
+  `personal.designaciones.index`.
+
+### Pruebas ejecutadas
+
+- `PageAccessTest`: 3 pruebas nuevas, antes fallaron; después OK. Cubren
+  redirección por login y raíz, navegación y etiqueta de rol, lista sin
+  controles de escritura, y detalle con impresión y sin rutas de escritura.
+- `FrontendAssetsServingTest`: el script nuevo se sirve con el tipo correcto.
+- Suite completa con la base reiniciada: 259 pruebas, 206 aprobadas, 10 fallas y
+  43 errores. Las 53 fallas y errores son idénticas a `main`.
+- `vendor/bin/pint --test` en los archivos modificados: OK.
+- `npm run build:css`: regeneró `resources/assets/css/tailwind.generated.css`.
+  El único cambio de selectores es `.border-collapse`, que viene de
+  `resources/views/designaciones/carta-pdf.blade.php` (commit `0a7c527`, ya en
+  `main`); el CSS publicado en `main` estaba desactualizado. No lo causó P3.
+
+### Archivos modificados
+
+- `app/Http/Controllers/PersonalDesignacionController.php`
+- `app/Http/Controllers/Auth/AuthenticatedSessionController.php`
+- `routes/web.php`
+- `resources/views/layouts/sidebar.blade.php`
+- `resources/views/layouts/header.blade.php`
+- `resources/views/personal/designaciones/lista.blade.php` (nuevo)
+- `resources/views/personal/designaciones/detalle.blade.php` (nuevo)
+- `resources/assets/js/personal/designaciones/lista.js` (nuevo)
+- `resources/assets/css/tailwind.generated.css`
+- `tests/Feature/PageAccessTest.php`
+- `tests/Feature/FrontendAssetsServingTest.php`
+
+### Riesgos y pendientes
+
+- Sin verificación visual en navegador. Antes de aprobar, conviene revisar la
+  lista y el detalle de Personal en el navegador.
+- Las vistas de Personal y de Decanatura duplican marcado. Si cambian, hay que
+  revisar ambas.
+- Las fallas previas siguen abiertas, como se indica en la sección de fase P1.
+
+## Fase P4: impresión de carta para Personal (14/10/2026)
+
+Estado: implementada y verificada con pruebas. Pendiente de aprobación antes de
+cerrar el rol Personal. Decisión del usuario: P4 continúa con las variantes que
+existen (DocOrdTit, DocOrdCont y DocExtr). DocExtrCalIntr y DocExtrcak quedan
+pendientes y no se ofrecen en la carta de Personal.
+
+### Implementación
+
+- `POST personal/designaciones/{id}/carta-pdf` (`personal.designaciones.carta_pdf`)
+  con `rol:personal`, `whereNumber` y gestión por query, igual que las demás
+  rutas de Personal.
+- `GenerarCartaPersonalRequest` hereda las reglas de la carta del Director y solo
+  cambia la autorización a Personal. El `FormRequest` del Director no se modificó.
+- `PersonalDesignacionController::cartaPdf` obtiene la designación desde
+  `obtenerAprobadaUniversidad` (404 si no está aprobada), valida que la fila
+  pertenezca a la designación (422), filtra las materias del mismo docente y usa
+  `PrepararCartaDesignacion` y la vista compartida `designaciones.carta-pdf`.
+- La carrera sale de la propia designación. La facultad sigue siendo el campo del
+  modal, igual que para el Director; la derivación desde Decanatura sigue
+  `NEEDS_BUSINESS_CONFIRMATION`.
+- La impresión no escribe nada: las pruebas usan mocks que fallan ante cualquier
+  escritura en Jachasun.
+- Vista de detalle: botón "Carta" por docente, columna oculta al imprimir, y el
+  modal compartido `partials/modal-designacion-pdf` con la plantilla de Personal.
+
+### Pruebas ejecutadas
+
+- `PersonalCartaPdfTest`, 7 pruebas nuevas: antes fallaron por ruta inexistente;
+  después OK. Cubren el PDF con solo las materias del docente elegido, un PDF real
+  renderizado, 404 para no aprobadas, 422 para fila ajena y condición inválida, no
+  escritura en Jachasun, y 403 para Director, Decanatura y Vicerrectorado.
+- `PersonalDesignacionesTest`: el detalle muestra el botón de carta y el modal.
+- Conjunto de P4 y Personal: 16/16 OK.
+- Suite completa con la base reiniciada: 266 pruebas, 213 aprobadas, 10 fallas y
+  43 errores. Las 53 fallas y errores son idénticas a `main`.
+- `vendor/bin/pint --test` en los archivos de P4: OK.
+
+### Regresión del Director
+
+- Sin cambios de código: `DesignacionController.php`,
+  `GenerarCartaDesignacionRequest.php`, `PrepararCartaDesignacion.php`,
+  `carta-pdf.blade.php`, `carrera.blade.php` y el modal compartido tienen
+  diferencias vacías contra `HEAD`.
+- `DesignacionPdfTest` falla igual en `main` y en P4 cuando se ejecuta sola en una
+  base limpia: 6 pruebas aprobadas, 6 fallidas y 3 con error. Causas en las pruebas,
+  no en el código: el helper `datosCarta` no envía `fila_id`, que es obligatorio
+  desde el commit `0a7c527` (422), y algunas pruebas renderizan la vista con datos
+  sin `fecha_resolucion_anio`. Corregirlas es un cambio de pruebas aparte.
+
+### Archivos modificados
+
+- `app/Http/Controllers/PersonalDesignacionController.php`
+- `app/Http/Requests/GenerarCartaPersonalRequest.php` (nuevo)
+- `routes/web.php`
+- `resources/views/personal/designaciones/detalle.blade.php`
+- `tests/Feature/PersonalCartaPdfTest.php` (nuevo)
+- `tests/Feature/PersonalDesignacionesTest.php`
+
+### Riesgos y pendientes
+
+- La aprobación explícita de DocExtr sigue pendiente en el registro de carta; P4
+  la usa por decisión del usuario.
+- Facultad sigue siendo un campo capturado en el modal hasta confirmar la fuente.
+- Sin verificación visual en navegador del modal dentro de la vista de Personal.
+- Las pruebas de carta del Director siguen fallando por causas de pruebas
+  (helper sin `fila_id`, fixtures sin `fecha_resolucion_anio`).
+
+## Cierre del rol Personal: fase P5 (14/10/2026)
+
+Estado: cierre técnico completo. El rol Personal queda implementado (P1 a P4).
+Quedan abiertos los bugs previos de la suite, documentados en
+`docs/testing/BUG_REPORTS/`. Pendiente de aprobación del cierre.
+
+### Verificaciones de cierre
+
+- `vendor/bin/pint --test`: OK en todo el proyecto. Pint fallaba en 3 archivos
+  previos (`app/Domain/Designaciones/ReglasDecisionDesignacion.php`,
+  `app/Domain/Designaciones/SeleccionGrupo.php` y
+  `app/Data/Designaciones/PreparacionEdicionDesignacion.php`). Se aplicó solo
+  formato; `git diff -w` no muestra cambios en esos archivos.
+- Suite completa (`php artisan test --env=testing --no-coverage`) con la base
+  reiniciada y migrada: 266 pruebas, 213 aprobadas, 10 fallas y 43 errores.
+  Las 53 fallas y errores son idénticas a las de `main` (`0a7c527`). Ninguna
+  involucra a Personal.
+- `npm run build:css`: el único cambio es el selector `.border-collapse` de la
+  carta en `0a7c527`, ya conocido desde P3.
+- `npm audit`: 0 vulnerabilidades. `composer audit --locked`: sin avisos.
+- `git diff --check`: OK en archivos rastreados; sin espacios al final en los
+  archivos nuevos.
+
+### Fallas previas abiertas
+
+Las 53 fallas y errores vienen de cuatro causas. Cada una tiene informe en
+`docs/testing/BUG_REPORTS/` con su prueba de regresión.
+
+| Causa | Pruebas | Informe | Estado |
+|---|---|---|---|
+| Filas confirmadas por clases con `$connectionsToTransact = []` rompen las pruebas posteriores | 40 | `BUG-2026-10-14-aislamiento-jachasun.md` | Abierto; causa del override no verificada |
+| `DesignacionPdfTest` envía sin `fila_id` y usa fixtures sin `fecha_resolucion_anio` | 9 | `BUG-2026-10-14-carta-director-pruebas-desfasadas.md` | Abierto; cambio de pruebas |
+| `GuestAccessTest` espera `/notificaciones` y tiene `sesión` corrupto | 3 | `BUG-2026-10-14-login-pruebas-desfasadas.md` | Abierto; cambio de pruebas |
+| `PageAccessTest` espera el texto "Designaciones de Jachasun" | 1 | `BUG-2026-10-14-pagina-director-jachasun.md` | Abierto; decisión de copy pendiente |
+
+### Entorno
+
+- PostgreSQL 17 corre en espacio de usuario (`~/.local/pgsql`), fuera del
+  repositorio, en `127.0.0.1:55432`, solo en loopback. Sigue activo.
+
+### Archivos de cierre
+
+- `app/Domain/Designaciones/ReglasDecisionDesignacion.php`,
+  `app/Domain/Designaciones/SeleccionGrupo.php` y
+  `app/Data/Designaciones/PreparacionEdicionDesignacion.php`: solo formato.
+- `docs/testing/BUG_REPORTS/BUG-2026-10-14-*.md` (4 informes nuevos).
+
+### Pendientes del rol Personal
+
+- Confirmar el correo de la cuenta demo `personal@uatf.edu.bo`.
+- Decidir la fuente de la facultad para la carta (`NEEDS_BUSINESS_CONFIRMATION`).
+- Aprobar DocExtr de forma explícita; DocExtrCalIntr y DocExtrcak siguen pendientes.
+- Revisar en navegador la lista, el detalle y el modal de carta de Personal.
+
+## Corrección de fallas previas (14/10/2026)
+
+Por decisión del usuario se corrigieron tres de las cuatro causas. La cuarta,
+la carta del Director, queda aceptada sin cambios.
+
+| Causa | Resultado | Informe |
+|---|---|---|
+| Aislamiento de Jachasun | Corregido: se quitó `$connectionsToTransact = []`. Las 40 pruebas corren; quedaron visibles 12 fallas ocultas, ajustadas al código vigente | `BUG-2026-10-14-aislamiento-jachasun.md` |
+| Login con redirección vieja y codificación corrupta | Corregido: expectativas `/designaciones` y `ó` en UTF-8 | `BUG-2026-10-14-login-pruebas-desfasadas.md` |
+| Título de la lista del Director | Corregido: la prueba espera "Lista de Designaciones", el título vigente | `BUG-2026-10-14-pagina-director-jachasun.md` |
+| Carta del Director: helper sin `fila_id` y fixtures sin `fecha_resolucion_anio` | Aceptado sin corrección | `BUG-2026-10-14-carta-director-pruebas-desfasadas.md` |
+
+### Ajustes en pruebas de Jachasun
+
+Al quitar la protección, estas pruebas dejaron de fallar por llave única y
+mostraron expectativas viejas. Se ajustaron al código vigente, sin quitar casos:
+
+- 5 de lista: la paginación y la búsqueda ocurren en el navegador
+  (`designaciones-filtros.js`). Las pruebas mockean `listar` y verifican ese
+  contrato.
+- 2 de log: los textos esperados ahora son los que el controlador escribe.
+- 4 de la modal de detalle: sus textos viven en `resources/assets/js/designaciones/carrera.js`.
+- 1 de impresión: la vista tiene un enlace de reporte en el encabezado; las filas
+  usan el botón de carta. Se espera exactamente uno.
+
+### Resultados
+
+- Los cinco archivos afectados: 68/68 OK.
+- Suite completa con la base limpia: 266 pruebas, 257 aprobadas, 6 fallas y
+  3 errores. Todas las fallas restantes están en `DesignacionPdfTest` (carta del
+  Director), aceptadas tal como están.
+- Al terminar la suite, `carreras` y `users` quedan sin filas.
+- `vendor/bin/pint --test` en todo el proyecto: OK.
+
+### Límites
+
+- Las verificaciones de JavaScript comprueban el texto del archivo fuente, no el
+  comportamiento en el navegador.
+- Las pruebas de paginación verifican el contrato, no la paginación en pantalla.
+- La suite no queda verde: la carta del Director sigue con 9 casos fallidos por
+  decisión del usuario.

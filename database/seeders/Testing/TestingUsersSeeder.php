@@ -23,7 +23,7 @@ class TestingUsersSeeder extends Seeder
 
     public static function seedForCareers(Collection $careers, int $totalUsers): void
     {
-        $totalUsers = max(3, $totalUsers);
+        $totalUsers = max(4, $totalUsers);
         $password = Hash::make(self::PASSWORD);
 
         User::updateOrCreate(
@@ -47,8 +47,19 @@ class TestingUsersSeeder extends Seeder
             ],
         );
 
+        User::updateOrCreate(
+            ['email' => 'personal.testing@example.test'],
+            [
+                'name' => 'Personal de Prueba',
+                'password' => $password,
+                'rol' => User::ROL_PERSONAL,
+                'carrera_id' => null,
+                'facultad_id' => null,
+            ],
+        );
+
         $careers = $careers->values();
-        for ($index = 0; $index < $totalUsers - 2; $index++) {
+        for ($index = 0; $index < $totalUsers - 3; $index++) {
             $career = $careers[$index % $careers->count()];
             $email = sprintf('director.%s.%02d.testing@example.test', strtolower($career->sigla), $index + 1);
 

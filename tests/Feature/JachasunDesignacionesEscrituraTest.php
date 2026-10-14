@@ -14,8 +14,6 @@ use Tests\TestCase;
 
 class JachasunDesignacionesEscrituraTest extends TestCase
 {
-    protected $connectionsToTransact = [];
-
     public function test_director_crea_una_designacion_nueva(): void
     {
         $carrera = Carrera::factory()->create(['sigla' => 'INF']);
